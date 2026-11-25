@@ -7,11 +7,11 @@
     "dev": "wrangler dev --config wrangler.jsonc --persist-to ../../.wrangler/state",
     "build": "wrangler deploy --dry-run --config wrangler.jsonc --outdir dist",
     "typecheck": "tsc -p tsconfig.json",
-    "deploy": "node ../../scripts/check-worker-config.mjs && wrangler deploy --config wrangler.jsonc"
+    "deploy": "node ../../scripts/check-worker-config.mjs && wrangler deploy --config wrangler.jsonc",
+    "dev:local": "wrangler dev --local --config wrangler.local.jsonc --ip 127.0.0.1 --port 8787 --persist-to ../../.wrangler/state"
   },
   "dependencies": {
     "@joese/contracts": "*",
     "@joese/market-rules": "*"
   }
 }
-

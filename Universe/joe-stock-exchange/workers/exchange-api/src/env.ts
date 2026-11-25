@@ -1,5 +1,22 @@
 export interface Env {
   DB: D1Database;
+  BANKING_MODE?: string;
+  BANKING_API_URL?: string;
+  LOCAL_DEMO?: string;
+  LOCAL_SERVICE_SECRET?: string;
+  APP_ORIGIN?: string;
+  CONSOLE_ORIGIN?: string;
+  JOEAUTH_ISSUER?: string;
+  JOEAUTH_CLIENT_ID?: string;
+  JOEAUTH_CLIENT_SECRET?: string;
+  JOEAUTH_CONSOLE_CLIENT_ID?: string;
+  JOEAUTH_CONSOLE_CLIENT_SECRET?: string;
+  JOEAUTH_APP_ID?: string;
+  JOEAUTH_CONSOLE_APP_ID?: string;
+  JOEAUTH_WEBHOOK_SECRET?: string;
+  JOEAUTH_CONSOLE_WEBHOOK_SECRET?: string;
+  JOEAUTH_SERVICE_CLIENT_ID?: string;
+  JOEAUTH_SERVICE_CLIENT_SECRET?: string;
   ENVIRONMENT: string;
   ALLOWED_EMAIL_DOMAINS: string;
   ALLOWED_ORIGINS: string;
@@ -16,4 +33,3 @@ export interface Env {
   JOE_BANK_DEFAULT_RATE_BPS?: string;
   JOE_BANK_MAX_RATE_BPS?: string;
 }
-

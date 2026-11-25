@@ -5,13 +5,17 @@ function id(prefix: string): string {
 export async function delistingReleaseStatements(
   db: D1Database,
   asset: { id: string; type: "stock" | "crypto" },
+  connected = false,
 ): Promise<D1PreparedStatement[]> {
-  const orders = await db.prepare(
-    `SELECT id, user_id, side, remaining_quantity, reserved_cash_cents
+  const orders = await db
+    .prepare(
+      `SELECT id, user_id, side, remaining_quantity, reserved_cash_cents
        FROM orders
       WHERE asset_id = ? AND status IN ('open', 'partially_filled')
       ORDER BY created_at`,
-  ).bind(asset.id).all<Record<string, unknown>>();
+    )
+    .bind(asset.id)
+    .all<Record<string, unknown>>();
   const holdingKind = asset.type === "stock" ? "stock" : "crypto";
   const allStatements: D1PreparedStatement[] = [];
 
@@ -20,38 +24,75 @@ export async function delistingReleaseStatements(
     const userId = String(order.user_id);
     const remaining = Number(order.remaining_quantity);
     const statements: D1PreparedStatement[] = [
-      db.prepare(
-        `INSERT INTO state_transition_locks (entity_type, entity_id, version_key, action, actor_id)
+      db
+        .prepare(
+          `INSERT INTO state_transition_locks (entity_type, entity_id, version_key, action, actor_id)
          VALUES ('order', ?, ?, 'delisting_cancel', ?)`,
-      ).bind(orderId, String(remaining), userId),
-      db.prepare(
-        `UPDATE orders SET status = 'cancelled', remaining_quantity = 0, reserved_cash_cents = 0,
+        )
+        .bind(orderId, String(remaining), userId),
+      db
+        .prepare(
+          `UPDATE orders SET status = 'cancelled', remaining_quantity = 0, reserved_cash_cents = 0,
                 updated_at = CURRENT_TIMESTAMP
           WHERE id = ? AND status IN ('open', 'partially_filled')`,
-      ).bind(orderId),
+        )
+        .bind(orderId),
     ];
     if (order.side === "buy") {
       const refund = Number(order.reserved_cash_cents);
-      statements.unshift(db.prepare(
-        "UPDATE users SET disposable_balance_cents = disposable_balance_cents + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-      ).bind(refund, userId));
-      statements.push(db.prepare(
-        `INSERT INTO ledger_entries
+      if (connected) {
+        const member = await db
+          .prepare("SELECT bank_customer_id FROM users WHERE id=?")
+          .bind(userId)
+          .first<{ bank_customer_id: string }>();
+        if (!member?.bank_customer_id)
+          throw new Error("Banking link required before connected delisting");
+        statements.push(
+          db
+            .prepare(
+              "INSERT OR IGNORE INTO bank_release_jobs(id,customer_id,hold_id) VALUES(?,?,?)",
+            )
+            .bind(`delist:${orderId}`, member.bank_customer_id, orderId),
+        );
+        allStatements.push(...statements);
+        continue;
+      }
+      statements.unshift(
+        db
+          .prepare(
+            "UPDATE users SET disposable_balance_cents = disposable_balance_cents + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+          )
+          .bind(refund, userId),
+      );
+      statements.push(
+        db
+          .prepare(
+            `INSERT INTO ledger_entries
           (id, user_id, entry_type, amount_cents, balance_after_cents, asset_id, reference_type, reference_id)
          VALUES (?, ?, 'delisting_order_refund', ?,
            (SELECT disposable_balance_cents FROM users WHERE id = ?), ?, 'order', ?)`,
-      ).bind(id("led"), userId, refund, userId, asset.id, orderId));
+          )
+          .bind(id("led"), userId, refund, userId, asset.id, orderId),
+      );
     } else {
-      statements.unshift(db.prepare(
-        `UPDATE holdings SET reserved_quantity = reserved_quantity - ?, updated_at = CURRENT_TIMESTAMP
+      statements.unshift(
+        db
+          .prepare(
+            `UPDATE holdings SET reserved_quantity = reserved_quantity - ?, updated_at = CURRENT_TIMESTAMP
           WHERE user_id = ? AND asset_id = ? AND holding_kind = ? AND reserved_quantity >= ?`,
-      ).bind(remaining, userId, asset.id, holdingKind, remaining));
-      statements.push(db.prepare(
-        `INSERT INTO ledger_entries
+          )
+          .bind(remaining, userId, asset.id, holdingKind, remaining),
+      );
+      statements.push(
+        db
+          .prepare(
+            `INSERT INTO ledger_entries
           (id, user_id, entry_type, amount_cents, balance_after_cents, asset_id, quantity, reference_type, reference_id)
          VALUES (?, ?, 'delisting_order_release', 0,
            (SELECT disposable_balance_cents FROM users WHERE id = ?), ?, ?, 'order', ?)`,
-      ).bind(id("led"), userId, userId, asset.id, remaining, orderId));
+          )
+          .bind(id("led"), userId, userId, asset.id, remaining, orderId),
+      );
     }
     allStatements.push(...statements);
   }

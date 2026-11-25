@@ -1,5 +1,13 @@
-import type { Asset, MarketComment, NewsEvent, PricePoint } from "@joese/contracts";
-import { marketTradingStatus, nextScheduledMarketTick } from "@joese/market-rules";
+import type {
+  Asset,
+  MarketComment,
+  NewsEvent,
+  PricePoint,
+} from "@joese/contracts";
+import {
+  marketTradingStatus,
+  nextScheduledMarketTick,
+} from "@joese/market-rules";
 import type { Env } from "../env";
 import { json } from "../lib/http";
 
@@ -20,7 +28,9 @@ function mapAsset(row: Record<string, unknown>): Asset {
     name: String(row.name),
     type: row.asset_type as Asset["type"],
     description: String(row.description),
-    companyDetails: parseJson(row.company_details_json, { overview: String(row.description) }),
+    companyDetails: parseJson(row.company_details_json, {
+      overview: String(row.description),
+    }),
     currentPriceCents: current,
     openPriceCents: Number(row.open_price_cents),
     highPriceCents: Number(row.high_price_cents),
@@ -60,7 +70,9 @@ function mapComment(row: Record<string, unknown>): MarketComment {
 }
 
 async function listAssets(env: Env): Promise<Asset[]> {
-  const result = await env.DB.prepare("SELECT * FROM assets WHERE active = 1 ORDER BY asset_type DESC, ticker ASC").all<Record<string, unknown>>();
+  const result = await env.DB.prepare(
+    "SELECT * FROM assets WHERE active = 1 ORDER BY asset_type DESC, ticker ASC",
+  ).all<Record<string, unknown>>();
   return result.results.map(mapAsset);
 }
 
@@ -72,10 +84,15 @@ async function listNews(env: Env, ticker?: string): Promise<NewsEvent[]> {
       ORDER BY n.published_at DESC LIMIT 50`,
   ).all<Record<string, unknown>>();
   const events = result.results.map(mapNews);
-  return ticker ? events.filter((event) => event.affectedTickers.includes(ticker)) : events;
+  return ticker
+    ? events.filter((event) => event.affectedTickers.includes(ticker))
+    : events;
 }
 
-async function listComments(env: Env, ticker?: string): Promise<MarketComment[]> {
+async function listComments(
+  env: Env,
+  ticker?: string,
+): Promise<MarketComment[]> {
   const statement = ticker
     ? env.DB.prepare(
         `SELECT c.*, a.ticker AS asset_ticker, u.username AS author_name
@@ -91,16 +108,24 @@ async function listComments(env: Env, ticker?: string): Promise<MarketComment[]>
   return result.results.map(mapComment);
 }
 
-export async function handleMarket(request: Request, url: URL, env: Env): Promise<Response | null> {
+export async function handleMarket(
+  request: Request,
+  url: URL,
+  env: Env,
+): Promise<Response | null> {
   if (request.method !== "GET") return null;
 
   if (url.pathname === "/v1/market/assets") {
     return json(await listAssets(env));
   }
 
-  const tickerMatch = url.pathname.match(/^\/v1\/market\/assets\/([A-Z0-9]+)$/i);
+  const tickerMatch = url.pathname.match(
+    /^\/v1\/market\/assets\/([A-Z0-9]+)$/i,
+  );
   if (tickerMatch) {
-    const row = await env.DB.prepare("SELECT * FROM assets WHERE ticker = ? LIMIT 1")
+    const row = await env.DB.prepare(
+      "SELECT * FROM assets WHERE ticker = ? LIMIT 1",
+    )
       .bind(tickerMatch[1].toUpperCase())
       .first<Record<string, unknown>>();
     if (!row) return null;
@@ -109,7 +134,9 @@ export async function handleMarket(request: Request, url: URL, env: Env): Promis
          SELECT asset_id, price_cents, recorded_at
            FROM price_points WHERE asset_id = ? ORDER BY recorded_at DESC LIMIT 240
        ) ORDER BY recorded_at ASC`,
-    ).bind(row.id).all<Record<string, unknown>>();
+    )
+      .bind(row.id)
+      .all<Record<string, unknown>>();
     return json({
       asset: mapAsset(row),
       priceHistory: history.results.map((point): PricePoint => ({
@@ -139,12 +166,21 @@ export async function handleMarket(request: Request, url: URL, env: Env): Promis
         priceCents: Number(row.price_cents),
         recordedAt: String(row.recorded_at),
       };
-      historyByAsset.set(point.assetId, [...(historyByAsset.get(point.assetId) ?? []), point]);
+      historyByAsset.set(point.assetId, [
+        ...(historyByAsset.get(point.assetId) ?? []),
+        point,
+      ]);
     }
     const priceHistory = Object.fromEntries(
       assets.map((asset) => [
         asset.ticker,
-        historyByAsset.get(asset.id) ?? [{ assetId: asset.id, priceCents: asset.currentPriceCents, recordedAt: asset.updatedAt }],
+        historyByAsset.get(asset.id) ?? [
+          {
+            assetId: asset.id,
+            priceCents: asset.currentPriceCents,
+            recordedAt: asset.updatedAt,
+          },
+        ],
       ]),
     );
     const activeTick = await env.DB.prepare(
@@ -160,7 +196,12 @@ export async function handleMarket(request: Request, url: URL, env: Env): Promis
       priceHistory,
       news: await listNews(env),
       comments: await listComments(env),
-      marketStatus: activeTick?.status === "running" ? "locked" : scheduledStatus,
+      marketStatus:
+        activeTick?.status === "running"
+          ? "locked"
+          : env.ENFORCE_TRADING_SCHEDULE === "false"
+            ? "open"
+            : scheduledStatus,
       nextTickAt: nextTick,
     });
   }
@@ -179,4 +220,3 @@ export async function handleMarket(request: Request, url: URL, env: Env): Promis
 }
 
 export { mapAsset, mapComment, mapNews };
-

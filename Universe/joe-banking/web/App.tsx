@@ -74,6 +74,7 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const actionKeys = useRef(new Map<string, string>());
+  const initialLoad = useRef<Promise<void> | null>(null);
 
   const load = useCallback(async () => {
     const session = await api<AuthState>("/auth/session");
@@ -95,7 +96,18 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    void load()
+    // Share startup across React's development effect replay so a test session
+    // is created once. The server still requires the loopback-only demo gate.
+    initialLoad.current ??= (async () => {
+      if (import.meta.env.VITE_AUTO_DEMO === "true") {
+        const current = await api<AuthState>("/auth/session");
+        if (current.local_demo && !current.customer) {
+          await api("/dev/session", { body: { customer_id: "demo-alice" } });
+        }
+      }
+      await load();
+    })();
+    void initialLoad.current
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   }, [load]);

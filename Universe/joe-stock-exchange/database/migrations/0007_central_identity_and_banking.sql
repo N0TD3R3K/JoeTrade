@@ -1,0 +1,14 @@
+ALTER TABLE users ADD COLUMN joe_auth_user_id TEXT;
+ALTER TABLE users ADD COLUMN bank_customer_id TEXT;
+CREATE UNIQUE INDEX central_subject_unique ON users(joe_auth_user_id) WHERE joe_auth_user_id IS NOT NULL;
+CREATE UNIQUE INDEX banking_customer_unique ON users(bank_customer_id) WHERE bank_customer_id IS NOT NULL;
+CREATE TABLE central_sessions(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),token_hash TEXT NOT NULL UNIQUE,csrf_token TEXT NOT NULL,access_cipher TEXT,kind TEXT NOT NULL CHECK(kind IN ('demo','joeauth')),surface TEXT NOT NULL CHECK(surface IN ('member','console')),expires_at INTEGER NOT NULL);
+CREATE TABLE central_logins(state_hash TEXT PRIMARY KEY,browser_hash TEXT NOT NULL,verifier TEXT NOT NULL,nonce TEXT NOT NULL,surface TEXT NOT NULL,expires_at INTEGER NOT NULL,consumed_at INTEGER);
+CREATE TABLE central_webhooks(event_id TEXT PRIMARY KEY,subject TEXT NOT NULL);
+CREATE TRIGGER revoke_central_sessions AFTER INSERT ON central_webhooks BEGIN DELETE FROM central_sessions WHERE user_id IN(SELECT id FROM users WHERE joe_auth_user_id=NEW.subject);END;
+CREATE TABLE financial_operations(id TEXT PRIMARY KEY,actor_id TEXT NOT NULL,request_hash TEXT NOT NULL,state TEXT NOT NULL CHECK(state IN ('planning','pending','complete','failed')),bank_json TEXT,statements_json TEXT,response_json TEXT,error_json TEXT,created_at INTEGER NOT NULL DEFAULT(unixepoch()));
+CREATE TABLE financial_mutex(id TEXT PRIMARY KEY CHECK(id='market'),operation_id TEXT NOT NULL);
+CREATE TABLE financial_receipts(operation_id TEXT PRIMARY KEY REFERENCES financial_operations(id));
+CREATE TABLE bank_release_jobs(id TEXT PRIMARY KEY,customer_id TEXT NOT NULL,hold_id TEXT NOT NULL,complete INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE listing_proposals(id TEXT PRIMARY KEY,ticker TEXT NOT NULL UNIQUE,name TEXT NOT NULL,description TEXT NOT NULL,project_url TEXT NOT NULL,developer_user_id TEXT NOT NULL REFERENCES users(id),contribution_cents INTEGER NOT NULL CHECK(contribution_cents>=500000),shares INTEGER NOT NULL CHECK(shares>0),status TEXT NOT NULL DEFAULT 'awaiting_review' CHECK(status IN ('awaiting_review','awaiting_founder','launched','declined')),created_by TEXT NOT NULL REFERENCES users(id),created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,launched_asset_id TEXT REFERENCES assets(id));
+CREATE TRIGGER connected_cash_is_read_only BEFORE UPDATE OF disposable_balance_cents ON users WHEN OLD.bank_customer_id IS NOT NULL AND NEW.disposable_balance_cents!=OLD.disposable_balance_cents BEGIN SELECT RAISE(ABORT,'CASH_OWNED_BY_BANKING');END;

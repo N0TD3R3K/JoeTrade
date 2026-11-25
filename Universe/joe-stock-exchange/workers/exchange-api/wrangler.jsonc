@@ -6,28 +6,41 @@
   "upload_source_maps": true,
   "workers_dev": false,
   "routes": [
-    { "pattern": "api.joese.derekli.dev", "custom_domain": true }
+    {
+      "pattern": "stock-api.joe-univer.se",
+      "custom_domain": true,
+    },
   ],
   "vars": {
     "ENVIRONMENT": "production",
     "ALLOWED_EMAIL_DOMAINS": "sstx.org,hamdenhall.org",
-    "ALLOWED_ORIGINS": "https://joese.derekli.dev,https://joese-console.derekli.dev",
+    "ALLOWED_ORIGINS": "https://stock.joe-univer.se,https://stock-console.joe-univer.se",
     "REQUIRE_INVITE": "true",
     "ENFORCE_TRADING_SCHEDULE": "true",
-    "RESEND_FROM_EMAIL": "JOESE <noreply@joese.derekli.dev>",
+    "RESEND_FROM_EMAIL": "JOESE <noreply@joe-univer.se>",
     "EMAIL_VERIFICATION_TTL_MINUTES": "1440",
     "JOE_BANK_MAX_LOAN_CENTS": "1000000",
     "JOE_BANK_DEFAULT_RATE_BPS": "800",
-    "JOE_BANK_MAX_RATE_BPS": "5000"
+    "JOE_BANK_MAX_RATE_BPS": "5000",
+    "BANKING_MODE": "connected",
+    "LOCAL_DEMO": "false",
+    "APP_ORIGIN": "https://stock.joe-univer.se",
+    "CONSOLE_ORIGIN": "https://stock-console.joe-univer.se",
+    "JOEAUTH_ISSUER": "https://auth.joe-univer.se",
+    "BANKING_API_URL": "https://bank.joe-univer.se",
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "joese",
-      "database_id": "01dc7c78-f63d-4491-adb4-0bb692b6c0a3",
-      "migrations_dir": "../../database/migrations"
-    }
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "../../database/migrations",
+    },
   ],
-  "observability": { "enabled": true }
+  "observability": {
+    "enabled": true,
+  },
+  "triggers": {
+    "crons": ["*/5 * * * *"],
+  },
 }
-

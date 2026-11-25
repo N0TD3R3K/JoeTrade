@@ -26,7 +26,6 @@ input:focus, textarea:focus, select:focus { border-color: rgba(242, 191, 86, .62
 .header-actions { display: flex; align-items: center; gap: 5px; }
 .header-actions > button { position: relative; display: grid; place-items: center; width: 34px; height: 34px; color: var(--muted); border-radius: 9px; }
 .header-actions > button:hover { background: var(--panel-strong); color: var(--text); }
-.notification-dot { position: absolute; top: 7px; right: 7px; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); border: 1px solid var(--bg); }
 .user-chip, .mini-avatar { display: grid; place-items: center; border-radius: 9px; background: linear-gradient(145deg, #2b3039, #171b22); color: #dce1e8; font-weight: 800; font-size: 11px; }
 .user-chip { width: 34px; height: 34px; margin-left: 5px; border: 1px solid #303641; }
 .mobile-menu { display: none; }
@@ -297,3 +296,18 @@ input:focus, textarea:focus, select:focus { border-color: rgba(242, 191, 86, .62
   .settings-shell { padding-top: 35px; }
 }
 
+
+.exchange-panel-scrim { display:none; }
+@media(max-width:930px){
+ .exchange-app.mobile-listings .asset-rail { display:block;z-index:35;width:min(300px,85vw);box-shadow:20px 0 45px #0009; }
+ .exchange-app.mobile-portfolio .portfolio-rail { display:flex;z-index:35;width:min(360px,90vw);box-shadow:-20px 0 45px #0009; }
+ .exchange-panel-scrim { display:block;position:fixed;inset:var(--header-height) 0 0;z-index:25;background:#0009; }
+ .exchange-app .test-account-select { display:block; }
+ .header-actions { gap:6px; }
+}
+@media(max-width:520px){.exchange-header>.brand-lockup>div{display:none}.exchange-header{gap:7px}.test-account-select{width:118px}.header-actions>button{width:29px;height:32px}.exchange-header>.mobile-menu{width:29px}.market-workspace h1{font-size:23px}}
+
+.header-actions > .header-guide { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; gap: 7px; min-width: 34px; min-height: 34px; padding: 0 9px; border-radius: 9px; color: var(--accent); font-size: 14px; text-decoration: none; }
+.header-actions > .header-guide:hover { background: var(--panel-strong); }
+.header-actions > .header-guide:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media(max-width:620px) { .header-guide span { display: none; } .header-actions > .header-guide { padding: 0; min-width: 29px; } }

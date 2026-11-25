@@ -22,10 +22,15 @@ export async function summary(env: Env, customer: Customer) {
       "Your banking account has not been provisioned.",
     );
   const holds = await env.DB.prepare(
-    `SELECT purpose, SUM(h.amount_cents) AS amount_cents FROM fund_holds h
-    JOIN bank_accounts a ON a.id = h.account_id WHERE a.customer_id = ? AND h.status = 'active' GROUP BY purpose`,
+    `SELECT purpose, SUM(amount_cents) AS amount_cents FROM (
+      SELECT purpose, h.amount_cents FROM fund_holds h JOIN bank_accounts a ON a.id=h.account_id
+      WHERE a.customer_id=? AND h.status='active'
+      UNION ALL
+      SELECT 'joese_order' AS purpose, remaining_cents FROM exchange_holds
+      WHERE customer_id=? AND status='active'
+    ) GROUP BY purpose`,
   )
-    .bind(customer.id)
+    .bind(customer.id, customer.id)
     .all<{ purpose: string; amount_cents: number }>();
   const inbox = await env.DB.prepare(
     "SELECT COUNT(*) AS count FROM member_wires WHERE receiver_customer_id = ? AND status = 'pending_receiver'",
@@ -42,7 +47,7 @@ export async function summary(env: Env, customer: Customer) {
       rows.results.find((row) => row.account_kind === "flexible_deposit")
         ?.posted_cents ?? 0,
     inbox_count: inbox?.count ?? 0,
-    features: { wires: true, deposits: false, loans: false, joese: false },
+    features: { wires: true, deposits: false, loans: false, joese: true },
   };
 }
 

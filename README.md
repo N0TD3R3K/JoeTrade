@@ -17,11 +17,13 @@ The existing Universe projects are now under [`Universe/`](Universe/).
 member balances, an append-only double-entry ledger, held funds, receiver-approved
 wires, transaction history, and a responsive member website. JoeAuth integration
 code is present and tested with synthetic identity responses; live app registration
-and account linking are still required. The exchange is preserved as an independent
+and account linking are still required. JOESE now uses Banking for order holds, fills, wires and
+member share sales, with a founder-confirmed listing launch. It remains an independent
 project in [`joe-stock-exchange`](Universe/joe-stock-exchange/README.md).
 
 This is a local development release. Banking deposits, interest jobs, lending,
-the full operations console, and live JOESE settlement remain future work. No
+the full banking operations console, production migration and live SSO verification
+remain future work. The exchange console and connected settlement are available locally. No
 production data has been migrated and no new websites have been deployed.
 
 Start with the [development plan](DEVELOPMENT_PLAN.md) for milestones, open
@@ -29,12 +31,12 @@ decisions, migration requirements, and launch checks.
 
 ## Planned products
 
-| Product | Responsibility |
-| --- | --- |
-| Joe Banking | Available J$, holds, receiver-approved wires, savings, term deposits, loans, and ledger history |
-| JOESE | Fictional listings, portfolios, orders, matched trades, scheduled prices, and Joe Wire news |
-| Operations consoles | Product-specific administration, investigations, reconciliation, and audit |
-| Developer APIs | Documented, versioned integration with market data and authorized account operations |
+| Product             | Responsibility                                                                                  |
+| ------------------- | ----------------------------------------------------------------------------------------------- |
+| Joe Banking         | Available J$, holds, receiver-approved wires, savings, term deposits, loans, and ledger history |
+| JOESE               | Fictional listings, portfolios, orders, matched trades, scheduled prices, and Joe Wire news     |
+| Operations consoles | Product-specific administration, investigations, reconciliation, and audit                      |
+| Developer APIs      | Documented, versioned integration with market data and authorized account operations            |
 
 ## Connection to the Joe Universe
 
@@ -42,14 +44,15 @@ JoeAuth provides sign-in, verified identity, and account recovery. JoeTrade
 retains its own product membership and permissions. A JoeAuth account does not
 automatically grant trading access, administrator access, or a starting balance.
 
-| Address | Purpose | Status |
-| --- | --- | --- |
-| `joe-univer.se` | Joe Universe homepage, maintained separately by the Joe team | Not online at planning time |
-| `auth.joe-univer.se` | Central JoeAuth identity provider | Live discovery checked November 24, 2026 |
-| `stock.joe-univer.se` | JOESE member website | Planned |
-| `bank.joe-univer.se` | Joe Banking member website | Planned |
+| Address               | Purpose                                                      | Status                                   |
+| --------------------- | ------------------------------------------------------------ | ---------------------------------------- |
+| `joe-univer.se`       | Joe Universe homepage, maintained separately by the Joe team | Not online at planning time              |
+| `auth.joe-univer.se`  | Central JoeAuth identity provider                            | Live discovery checked November 24, 2026 |
+| `stock.joe-univer.se` | JOESE member website                                         | Planned                                  |
+| `bank.joe-univer.se`  | Joe Banking member website                                   | Planned                                  |
 
-Console and API hostnames will be confirmed with the domain owner. The member
+The prepared exchange console and API hostnames are `stock-console.joe-univer.se`
+and `stock-api.joe-univer.se`; confirm these with the domain owner. The member
 sites can launch before the homepage. The Back to Universe control stays
 disabled until its destination is available.
 
@@ -109,7 +112,10 @@ menu and receive it as Bob. All demonstration records stay in the local database
 Run `npm run check:bank` for banking type checks, integration tests, the frontend
 build, and a Worker deployment dry run. For the imported exchange, install its
 dependencies with `npm --prefix Universe/joe-stock-exchange ci`, then run
-`npm run check:exchange`. These checks do not deploy services.
+`npm run check:exchange`. These checks do not deploy services. For the connected exchange and console with
+Alice and Bob, follow the [exchange quick start](Universe/joe-stock-exchange/README.md#run-with-the-two-test-accounts).
+See the [current integration notes](Universe/joe-stock-exchange/docs/connected-economy.md)
+and [Cloudflare deployment guide](Universe/joe-stock-exchange/docs/cloudflare-deployment.md).
 
 The current layout keeps both projects under `Universe/`. The
 [development plan](DEVELOPMENT_PLAN.md#2-proposed-repository-layout) describes a

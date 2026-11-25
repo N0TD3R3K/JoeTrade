@@ -6,16 +6,20 @@
   "upload_source_maps": true,
   "workers_dev": false,
   "triggers": {
-    "crons": ["0 * * * *"]
+    "crons": ["0 * * * *"],
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "joese",
-      "database_id": "01dc7c78-f63d-4491-adb4-0bb692b6c0a3",
-      "migrations_dir": "../../database/migrations"
-    }
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "../../database/migrations",
+    },
   ],
-  "observability": { "enabled": true }
+  "observability": {
+    "enabled": true,
+  },
+  "vars": {
+    "BANKING_MODE": "connected",
+  },
 }
-

@@ -4,7 +4,8 @@ Joe Banking is the fictional banking layer of the Joe Universe. It manages a
 member's liquid Joellars (J$), person-to-person wires, savings deposits, term
 deposits, and loans. It is being built around JoeAuth as its identity provider
 and is intended to provide the authoritative liquid J$ balance used by JOE Stock
-Exchange (JOESE). The live exchange is not connected to this new ledger yet.
+Exchange (JOESE). The local exchange now uses this ledger for holds, trading settlement,
+company capital and member wires; production migration is still pending.
 
 Joe Banking is a closed simulation. J$ has no real-world value and cannot be
 deposited from, withdrawn to, exchanged for, or redeemed as real currency,
@@ -25,8 +26,9 @@ The first local implementation is available:
 - A loopback-only local demonstration using synthetic Alice and Bob accounts.
 
 Deposit plans and rate rules can be viewed, but funding, interest, lending,
-the complete staff console, production linking/migration, and JOESE settlement
-are not implemented. No real initial rate has been chosen. No new service has
+the complete banking staff console and production linking/migration
+are not implemented. Local JOESE settlement is described in
+[the exchange integration notes](../joe-stock-exchange/docs/connected-economy.md). No real initial rate has been chosen. No new service has
 been deployed.
 
 See [implementation status](docs/implementation-status.md) and the
@@ -60,6 +62,12 @@ Start the member site in another terminal:
 npm run dev
 ```
 
+For a local testing session that opens a demo account automatically, use
+`npm run dev:test` instead of `npm run dev`. No JoeAuth sign-in is required.
+It opens Alice when there is no valid session, or keeps the current demo member.
+The account menu lets you switch between Alice and Bob. This convenience works
+only while the API's loopback-only local demo mode is enabled.
+
 Open [http://127.0.0.1:4180/](http://127.0.0.1:4180/). Open Alice's account,
 send a wire to the exact username `bob`, and switch to Bob through the account
 menu to receive or decline it. The local sessions last one hour. Demonstration
@@ -70,8 +78,8 @@ the frontend build, and a Worker deployment dry run. Application data and ledger
 records live in D1, not browser storage or KV.
 
 The checked-in Wrangler configuration is deliberately local-only, has a placeholder
-database ID, no public routes, and disabled `workers.dev` access. A separate reviewed
-production configuration is required before deployment. Do not apply the local
+database ID, no public routes, and disabled `workers.dev` access. The separate `wrangler.production.jsonc` prepares `bank.joe-univer.se`
+with demo mode disabled; production IDs, secrets and staging review are still required. Do not apply the local
 seed to a remote database.
 
 ## JoeAuth setup for staging
@@ -110,11 +118,11 @@ UI is future work. The global JoeAuth administrator role grants no banking role.
   no more than **0.200 percentage points**.
 - Fixed-term deposits are unaffected by later variable-rate changes:
 
-| Term | Fixed weekly rate |
-| --- | ---: |
-| 2 weeks | 1.000% |
-| 4 weeks | 1.500% |
-| 8 weeks | 2.250% |
+| Term    | Fixed weekly rate |
+| ------- | ----------------: |
+| 2 weeks |            1.000% |
+| 4 weeks |            1.500% |
+| 8 weeks |            2.250% |
 
 - Fixed-rate loan contracts are also unaffected by later variable-rate
   changes. Their product terms and offered rates still require a separate
@@ -130,10 +138,9 @@ and market data, but reserves and settles liquid J$ through the banking ledger.
 This prevents a member from spending the same J$ once in the bank and again in
 the stock market.
 
-Until JoeAuth is deployed and approved for central identity, a temporary
-identity-link table maps an existing JOESE member ID to one banking customer.
-JoeAuth will later replace that temporary identity source without changing
-historical banking or JOESE financial record IDs.
+The exchange stores an explicit banking customer ID and the same immutable
+JoeAuth subject. Historical bank and exchange IDs remain unchanged. Synthetic
+local members bypass live SSO only in the isolated local configuration.
 
 ## Document map
 
@@ -162,4 +169,3 @@ historical banking or JOESE financial record IDs.
    readiness gates documented in `docs/joeauth-adaptation.md`.
 6. Banking operator and administrator assignments, backup ownership, and the
    beta migration date.
-

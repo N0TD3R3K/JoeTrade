@@ -1,0 +1,37 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "joese-exchange-api-local",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-11",
+  "upload_source_maps": true,
+  "workers_dev": false,
+  "vars": {
+    "ENVIRONMENT": "local",
+    "ALLOWED_EMAIL_DOMAINS": "sstx.org,hamdenhall.org",
+    "ALLOWED_ORIGINS": "http://127.0.0.1:4173,http://127.0.0.1:4174",
+    "REQUIRE_INVITE": "true",
+    "ENFORCE_TRADING_SCHEDULE": "false",
+    "RESEND_FROM_EMAIL": "JOESE <noreply@joe-univer.se>",
+    "EMAIL_VERIFICATION_TTL_MINUTES": "1440",
+    "JOE_BANK_MAX_LOAN_CENTS": "1000000",
+    "JOE_BANK_DEFAULT_RATE_BPS": "800",
+    "JOE_BANK_MAX_RATE_BPS": "5000",
+    "BANKING_MODE": "connected",
+    "LOCAL_DEMO": "true",
+    "APP_ORIGIN": "http://127.0.0.1:4173",
+    "CONSOLE_ORIGIN": "http://127.0.0.1:4174",
+    "JOEAUTH_ISSUER": "https://auth.joe-univer.se",
+    "BANKING_API_URL": "http://127.0.0.1:8788",
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "joese-local",
+      "database_id": "11111111-1111-1111-1111-111111111111",
+      "migrations_dir": "../../database/migrations",
+    },
+  ],
+  "observability": {
+    "enabled": true,
+  },
+}

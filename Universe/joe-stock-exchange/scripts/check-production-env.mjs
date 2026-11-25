@@ -1,35 +1,27 @@
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-
-function readEnvironmentFile() {
-  try {
-    return Object.fromEntries(
-      readFileSync(resolve(process.cwd(), ".env.production"), "utf8")
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter((line) => line && !line.startsWith("#") && line.includes("="))
-        .map((line) => {
-          const separator = line.indexOf("=");
-          return [line.slice(0, separator).trim(), line.slice(separator + 1).trim().replace(/^['"]|['"]$/g, "")];
-        }),
-    );
-  } catch {
-    return {};
-  }
-}
-
-const values = { ...readEnvironmentFile(), ...process.env };
-const problems = [];
-if (!String(values.VITE_API_BASE_URL ?? "").startsWith("https://")) {
-  problems.push("VITE_API_BASE_URL must be the production HTTPS API URL.");
-}
-if (values.VITE_DEMO_MODE !== "false") {
-  problems.push("VITE_DEMO_MODE must be false.");
-}
-if (!values.VITE_TURNSTILE_SITE_KEY || values.VITE_TURNSTILE_SITE_KEY === "replace-with-the-public-site-key") {
-  problems.push("VITE_TURNSTILE_SITE_KEY must contain the production public site key.");
-}
-if (problems.length) {
-  console.error(`Production environment check failed:\n- ${problems.join("\n- ")}`);
+let settings = {};
+try {
+  settings = Object.fromEntries(
+    readFileSync(".env.production", "utf8")
+      .split(/\r?\n/)
+      .filter((l) => l && !l.startsWith("#"))
+      .map((l) => {
+        const i = l.indexOf("=");
+        return [l.slice(0, i), l.slice(i + 1).trim()];
+      }),
+  );
+} catch {}
+const values = { ...settings, ...process.env };
+const errors = [];
+if (values.VITE_API_BASE_URL !== "/v1")
+  errors.push(
+    "Use VITE_API_BASE_URL=/v1 for the same-origin Worker API proxy.",
+  );
+if (values.VITE_DEMO_MODE !== "false")
+  errors.push("Disable synthetic frontend demo mode.");
+if (values.VITE_IDENTITY_MODE !== "joeauth")
+  errors.push("Set VITE_IDENTITY_MODE=joeauth.");
+if (errors.length) {
+  console.error(errors.join("\n"));
   process.exit(1);
 }

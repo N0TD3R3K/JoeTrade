@@ -19,6 +19,7 @@ import {
   wires,
 } from "./banking";
 import type { Env } from "./env";
+import { handleExchange } from "./exchange";
 import {
   amountField,
   ApiError,
@@ -32,6 +33,8 @@ import {
 
 async function route(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
+  const exchange = await handleExchange(request, env);
+  if (exchange) return exchange;
   if (!url.pathname.startsWith("/v1/")) return env.ASSETS.fetch(request);
   if (request.method === "POST" && url.pathname === "/v1/auth/webhook")
     return lifecycleWebhook(request, env);

@@ -126,7 +126,7 @@ async function liveIdentity(
   const response = await fetch(`${env.JOEAUTH_ISSUER}/api/oauth/userinfo`, {
     headers: { authorization: `Bearer ${accessToken}` },
     signal: AbortSignal.timeout(5000),
-    redirect: "error",
+    redirect: "manual",
   });
   if (!response.ok)
     throw new ApiError(
@@ -347,7 +347,7 @@ export async function completeLogin(request: Request, env: Env) {
     );
   const response = await fetch(`${env.JOEAUTH_ISSUER}/api/oauth/token`, {
     method: "POST",
-    redirect: "error",
+    redirect: "manual",
     signal: AbortSignal.timeout(5000),
     body: new URLSearchParams({
       grant_type: "authorization_code",

@@ -23,7 +23,13 @@
     "deploy:exchange": "npm run deploy -w @joese/exchange-web",
     "deploy:console": "npm run deploy -w @joese/operations-console",
     "deploy:api": "npm run deploy -w @joese/exchange-api",
-    "deploy:engine": "npm run deploy -w @joese/market-engine"
+    "deploy:engine": "npm run deploy -w @joese/market-engine",
+    "dev:api:local": "npm run dev:local -w @joese/exchange-api",
+    "dev:exchange:test": "npm run dev:test -w @joese/exchange-web",
+    "dev:console:test": "npm run dev:test -w @joese/operations-console",
+    "db:migrate:test": "wrangler d1 migrations apply joese-local --local --persist-to .wrangler/state --config workers/exchange-api/wrangler.local.jsonc",
+    "db:seed:test": "wrangler d1 execute joese-local --local --persist-to .wrangler/state --config workers/exchange-api/wrangler.local.jsonc --file database/seed/0001_reference_data.sql && wrangler d1 execute joese-local --local --persist-to .wrangler/state --config workers/exchange-api/wrangler.local.jsonc --file database/seed/local-members.sql",
+    "prepare:local": "node scripts/prepare-local-service.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261110.1",
@@ -32,6 +38,8 @@
     "vite": "^8.0.3",
     "vitest": "^4.0.18",
     "wrangler": "^4.158.0"
+  },
+  "dependencies": {
+    "jose": "^6.2.18"
   }
 }
-

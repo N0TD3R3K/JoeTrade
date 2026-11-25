@@ -1,5 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import type { Env } from "../src/env";
 
 type Value = string | number | bigint | Uint8Array | null;
@@ -35,15 +35,11 @@ class Statement {
 export class TestD1 {
   db = new DatabaseSync(":memory:");
   constructor() {
-    this.db.exec(
-      readFileSync(
-        new URL(
-          "../database/migrations/0001_banking_foundation.sql",
-          import.meta.url,
-        ),
-        "utf8",
-      ),
-    );
+    const migrations = new URL("../database/migrations/", import.meta.url);
+    for (const file of readdirSync(migrations)
+      .filter((f) => f.endsWith(".sql"))
+      .sort())
+      this.db.exec(readFileSync(new URL(file, migrations), "utf8"));
     this.db.exec(
       readFileSync(
         new URL("../database/seed/local-demo.sql", import.meta.url),

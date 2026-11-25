@@ -30,7 +30,10 @@ the target specification; this file distinguishes working behavior from plans.
 Ledger lines balance in the database before projections change. Wire creation
 and its hold commit together in a D1 batch. Resolution performs its hold,
 ledger, audit, and notification changes through database triggers in the same
-transaction. Cross-database JOESE settlement is not implemented or simulated.
+transaction. The new exchange service API adds order holds to the same available-balance view,
+partial settlements, releases, founding capital and member sale credits.
+A durable exchange plan and idempotent bank operations recover cross-database
+settlement. See [the current integration notes](../../joe-stock-exchange/docs/connected-economy.md).
 
 ## Verification
 
@@ -43,7 +46,9 @@ The migration and synthetic seed have also run under Wrangler's local D1
 emulator. Browser smoke testing completed a J$125.50 Alice-to-Bob wire, checked
 the held amount before acceptance, received it as Bob, and verified the new
 balance after reloading. Mobile navigation and desktop layouts were inspected.
-The imported exchange passes its existing 16 tests, type checks, and builds.
+The exchange has additional connected-economy tests against both migration sets,
+and its local browser review launched a company and transferred exact frozen
+shares between Alice and Bob. Live identity behavior remains a staging gate.
 
 ## Not ready for production
 
@@ -55,8 +60,9 @@ The imported exchange passes its existing 16 tests, type checks, and builds.
   accrual/posting, flexible funding, term contracts, and scheduled maturity.
 - Approved loan policy and lending implementation; preserve legacy terms during
   any future conversion.
-- Internal service-token allowlists, order holds, partial settlements, outbox/
-  inbox delivery, and reconciliation with JOESE.
+- Live service-token allowlist verification, end-to-end staging failure recovery
+  and cross-product operational reconciliation. The local implementation now
+  includes authenticated holds, partial settlement and recovery.
 - Rehearsed production migration and recovery, production resource provisioning,
   secret management, domain attachment, and monitoring of free-tier limits.
 - Cursor pagination beyond the first 100 activity/wire results, notification

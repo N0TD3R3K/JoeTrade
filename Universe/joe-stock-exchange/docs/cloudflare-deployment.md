@@ -1,122 +1,106 @@
 # Cloudflare deployment
 
-## Deployed services
+These are deployment preparations for the connected JoeTrade version. No remote
+service or DNS record was changed during local implementation. Use staging
+first; live JoeAuth and bank service-token checks still need verification.
 
-| Service | Cloudflare product | Intended address |
-| --- | --- | --- |
-| Member exchange | Worker static assets | `joese.derekli.dev` |
-| Operations console | Worker static assets | `joese-console.derekli.dev` |
-| Exchange API | Worker + D1 | `api.joese.derekli.dev` |
-| Market engine | Worker Cron Trigger + D1 | private Worker |
+## Services and access
 
-The Cron Trigger runs every UTC hour. The engine checks `America/New_York` at
-runtime and produces ticks only from 2:00 PM through 10:00 PM local time. This
-avoids a fixed UTC schedule drifting when daylight-saving time changes.
-All four production Workers disable their default `workers.dev` address. The
-three browser/API surfaces use only their reviewed custom domains; the market
-engine has no public route and is invoked by its Cron Trigger.
+| Service          | Address                       | Configuration                              |
+| ---------------- | ----------------------------- | ------------------------------------------ |
+| Member exchange  | `stock.joe-univer.se`         | `apps/exchange-web/wrangler.jsonc`         |
+| Exchange console | `stock-console.joe-univer.se` | `apps/operations-console/wrangler.jsonc`   |
+| Exchange API     | `stock-api.joe-univer.se`     | `workers/exchange-api/wrangler.jsonc`      |
+| Joe Banking      | `bank.joe-univer.se`          | `../joe-banking/wrangler.production.jsonc` |
+| Market engine    | Private scheduled Worker      | `workers/market-engine/wrangler.jsonc`     |
 
-## First deployment
+Ask the domain owner for an invitation to the Cloudflare account that owns the
+`joe-univer.se` zone, with permission to manage the assigned DNS/custom domains,
+Workers and D1 resources. Agree who owns deployments, secrets and recovery.
+Do not share the owner's password or Global API Key. A scoped deployment token
+can be created after the account/zone and required resource permissions are
+known. The existing `auth.joe-univer.se` stays managed by its maintainer.
+The homepage does not need to be online for these subdomains to work.
 
-1. Authenticate Wrangler with the intended Cloudflare account.
-2. Create the database:
+All production configs disable `workers.dev`. The member and console Workers
+serve static assets and proxy `/v1/*` through their `EXCHANGE_API` service binding.
+Build both apps with `VITE_API_BASE_URL=/v1`, `VITE_IDENTITY_MODE=joeauth`, and
+`VITE_DEMO_MODE=false`; examples are included per app. Do not use the visual-only
+static demo build or expose the local test configs.
 
-   ```sh
-   npx wrangler d1 create joese
-   ```
+## JoeAuth registration
 
-3. Put the returned `database_id` in both Worker Wrangler files.
-4. Create production secrets without committing their values:
+Register separate confidential apps for banking members, exchange members and
+exchange staff, plus an application service identity for exchange settlement.
+Use scopes `openid profile email` for member/staff sign-in and `app:service`
+for the service token. Confirm these exact deployed endpoints with the JoeAuth
+maintainer and rehearse them on distinct staging origins first.
 
-   ```sh
-   npx wrangler secret put SESSION_SECRET --config workers/exchange-api/wrangler.jsonc
-   npx wrangler secret put RESEND_API_KEY --config workers/exchange-api/wrangler.jsonc
-   npx wrangler secret put RESEND_WEBHOOK_SECRET --config workers/exchange-api/wrangler.jsonc
-   npx wrangler secret put TURNSTILE_SECRET_KEY --config workers/exchange-api/wrangler.jsonc
-   npx wrangler secret put INTERNAL_API_KEY --config workers/exchange-api/wrangler.jsonc
-   npx wrangler secret put INTERNAL_API_KEY --config workers/market-engine/wrangler.jsonc
-   ```
+| App              | Callback                                                      | Signed webhook                                               |
+| ---------------- | ------------------------------------------------------------- | ------------------------------------------------------------ |
+| Banking members  | `https://bank.joe-univer.se/v1/auth/callback`                 | `https://bank.joe-univer.se/v1/auth/webhook`                 |
+| Exchange members | `https://stock.joe-univer.se/v1/sso/member/callback`          | `https://stock.joe-univer.se/v1/sso/member/webhook`          |
+| Exchange staff   | `https://stock-console.joe-univer.se/v1/sso/console/callback` | `https://stock-console.joe-univer.se/v1/sso/console/webhook` |
 
-5. Create a Turnstile widget for both web hostnames. Copy each app's
-   `.env.production.example` to `.env.production`, set its public site key, and
-   keep demo mode disabled. The deploy scripts refuse to continue if these
-   values are incomplete. Review
-   `ALLOWED_EMAIL_DOMAINS`, `ALLOWED_ORIGINS`, and `RESEND_FROM_EMAIL` in the
-   API Wrangler file. Also confirm the Joe Bank application limit, suggested
-   rate, and maximum rate; the Worker deployment check rejects invalid values.
-   In Resend, create a webhook for `https://api.joese.derekli.dev/v1/webhooks/resend`
-   with sent, delivered, delayed, bounced, suppressed, complained, and failed
-   email events. Store its signing secret as `RESEND_WEBHOOK_SECRET`.
-6. Apply migrations and seed only the reference data:
+Configure the exact issuer `https://auth.joe-univer.se`. The service's `client_id`
+and internal `app_id` must match the bank allowlist. The service token verifier
+requires an EdDSA application JWT with the expected subject, issuer, audience,
+client and app claims. Test key rotation, suspension, consent revocation and
+webhook replay. Do not equate JoeAuth staff status with exchange permissions.
 
-   ```sh
-   npm run db:migrate:remote
-   npx wrangler d1 execute joese --remote \
-     --config workers/exchange-api/wrangler.jsonc \
-     --file database/seed/0001_reference_data.sql
-   ```
+## Secrets and environment
 
-7. Create the first administrator exactly once through the internal bootstrap
-   endpoint, using the `INTERNAL_API_KEY` header. The endpoint closes as soon as
-   an administrator exists. Then sign in and create invitations through the
-   administrator-only console API. Never commit or log the bootstrap password,
-   plaintext invitation, or internal key.
-8. Build with production app variables and run the full check:
+Use `wrangler secret put NAME --config CONFIG_PATH` for each value; never put
+values in source files, shell history or frontend variables. Configure separate
+secrets per environment.
 
-   ```sh
-   VITE_API_BASE_URL=https://api.joese.derekli.dev/v1 \
-   VITE_TURNSTILE_SITE_KEY=replace-with-the-public-site-key \
-   VITE_DEMO_MODE=false npm run check
-   ```
+| Worker        | Required values                                                                                                                                                                                                                                                                                                                     |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Exchange API  | `SESSION_SECRET` (random, at least 32 characters), `JOEAUTH_CLIENT_ID`, `JOEAUTH_CLIENT_SECRET`, `JOEAUTH_APP_ID`, `JOEAUTH_WEBHOOK_SECRET`, `JOEAUTH_CONSOLE_CLIENT_ID`, `JOEAUTH_CONSOLE_CLIENT_SECRET`, `JOEAUTH_CONSOLE_APP_ID`, `JOEAUTH_CONSOLE_WEBHOOK_SECRET`, `JOEAUTH_SERVICE_CLIENT_ID`, `JOEAUTH_SERVICE_CLIENT_SECRET` |
+| Banking       | `SESSION_SECRET` (independent random value), `JOEAUTH_CLIENT_ID`, `JOEAUTH_CLIENT_SECRET`, `JOEAUTH_APP_ID`, `JOEAUTH_WEBHOOK_SECRET`, `JOESE_CLIENT_ID`, `JOESE_APP_ID`                                                                                                                                                            |
+| Market engine | `INTERNAL_API_KEY` for its optional protected internal endpoint                                                                                                                                                                                                                                                                     |
 
-9. Deploy in dependency order:
+The exchange and engine must use `BANKING_MODE=connected`; the API requires
+`LOCAL_DEMO=false`, production origins and HTTPS `BANKING_API_URL`. Banking uses
+`ENVIRONMENT=production` and `ALLOW_LOCAL_DEMO=false`. Never configure
+`LOCAL_SERVICE_SECRET` or `JOESE_LOCAL_SERVICE_SECRET` in production. Legacy
+exchange password/email/loan variables are retained for historical code only;
+Turnstile/Resend are not prerequisites for JoeAuth sign-in in connected mode.
 
-   ```sh
-   npm run deploy:api
-   npm run deploy:engine
-   npm run deploy:exchange
-   npm run deploy:console
-   ```
+## Database and release order
 
-10. Attach or confirm the three custom domains in Cloudflare and verify
-    `/v1/health`, login, a console edit, and a scheduled tick in a staging
-    environment before opening the production exchange.
+1. Authenticate Wrangler to the agreed account and create separate banking and
+   exchange D1 databases. Replace all all-zero IDs with the reviewed database IDs.
+   The exchange API and market engine share the exchange DB, not the bank DB.
+2. Back up any existing deployment and record its exact migration state. Rehearse
+   all migrations on staging before remote use. Do not replay or edit old
+   migrations. An existing exchange wallet needs a reviewed one-time migration
+   into Banking, not a second opening grant or unverified balance copy.
+3. Apply banking migrations using `--config ../joe-banking/wrangler.production.jsonc`
+   and the production bank database name. Apply exchange migrations using
+   `npm run db:migrate:remote`. These commands change the selected remote DB;
+   inspect the selected account and IDs before running them.
+4. A fresh exchange may load `database/seed/0001_reference_data.sql` once. Never
+   load `local-members.sql` or the banking demo seed remotely.
+5. Provision approved product users and staff with unique JoeAuth subjects;
+   member links must point to bank customers with that same subject. The old
+   password bootstrap endpoint is disabled. Automated enrollment and legacy
+   account linking tools are not implemented yet.
+6. Set the secrets and frontend production variables. Run both projects'
+   `npm run check`, then deploy Banking, exchange API, private market engine,
+   member site and console in that order. Banking's deployment must explicitly
+   use `wrangler.production.jsonc`; its default config is local-only.
+7. Attach the four reviewed custom domains in the existing Cloudflare zone and
+   verify TLS, DNS and service bindings. The frontend deploy commands use their
+   checked-in `joe-univer.se` domain routes.
+8. Verify health and same-origin `/v1` on both sites, separate member/staff
+   sessions, founder confirmation, bank holds, partial fills, cancellation,
+   share offers, wires, outage recovery and signed identity revocation in staging.
+   Reconcile both ledgers and share totals before opening production access.
 
-## Runtime variables
-
-| Name | Service | Secret | Purpose |
-| --- | --- | --- | --- |
-| `ALLOWED_EMAIL_DOMAINS` | API | No | Comma-separated eligible school domains. |
-| `ALLOWED_ORIGINS` | API | No | Exact member and console origins allowed by CORS. |
-| `REQUIRE_INVITE` | API | No | Require a valid invitation during registration. |
-| `RESEND_FROM_EMAIL` | API | No | Verified transactional sender. |
-| `EMAIL_VERIFICATION_TTL_MINUTES` | API | No | Verification-link lifetime; production defaults to 1,440 minutes. |
-| `SESSION_SECRET` | API | Yes | Additional entropy for session-token hashing. |
-| `RESEND_API_KEY` | API | Yes | Verification and password-recovery email delivery. |
-| `RESEND_WEBHOOK_SECRET` | API | Yes | Verifies Resend delivery and bounce events before recording them. |
-| `TURNSTILE_SECRET_KEY` | API | Yes | Server-side registration and login challenge validation. |
-| `INTERNAL_API_KEY` | API and engine | Yes | Protects internal tick and health coordination. |
-| `JOE_BANK_MAX_LOAN_CENTS` | API | No | Maximum requested recovery loan in whole cents. |
-| `JOE_BANK_DEFAULT_RATE_BPS` | API | No | Suggested variable APR shown to operators, in basis points. |
-| `JOE_BANK_MAX_RATE_BPS` | API | No | Server-enforced maximum variable APR, in basis points. |
-
-## Pre-launch checks
-
-- Replace every placeholder D1 ID.
-- Confirm production builds do not enable demo mode.
-- Confirm the Turnstile widget renders and Siteverify accepts each token only once.
-- Confirm operator accounts cannot trade.
-- Confirm all console writes require an operator or administrator session.
-- Confirm allowed CORS origins are exact HTTPS origins.
-- Confirm invitation plaintext and API secrets are absent from source and D1
-  query logs.
-- Confirm a transfer remains pending until the receiver accepts it.
-- Confirm only a seller can initiate a frozen-share offer.
-- Confirm the market engine is idempotent for the same hourly tick.
-- Confirm backups, retention, incident response, and account-recovery ownership.
-- Confirm password-reset links expire, work once, and revoke prior sessions.
-- Confirm verification links expire, resend invalidates earlier links, and
-  delivery/bounce events appear on the console Members page.
-- Confirm bankruptcy changes require an operator reason, members accept offered
-  loan terms before disbursement, and the 10:00 PM interest accrual runs once.
-
+The engine Cron Trigger runs hourly and checks New York time, preserving the
+existing market schedule and daylight-saving rules. The API recovery cron runs
+every five minutes and performs bounded settlement/release/queued matching work.
+Ten active members is a small test audience, but free-plan capacity still depends
+on traffic, tick size and database queries. Measure these in staging; a small
+member count alone is not a production capacity check.

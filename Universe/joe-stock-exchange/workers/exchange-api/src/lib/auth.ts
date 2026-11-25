@@ -2,8 +2,10 @@ import type { UserPreferences } from "@joese/contracts";
 import type { Env } from "../env";
 import { hashSessionToken } from "./crypto";
 import { HttpError } from "./http";
+import { centralUser } from "./central-auth";
 
 export interface SessionUser {
+  bankCustomerId?: string;
   id: string;
   email: string;
   username: string;
@@ -26,7 +28,11 @@ function cookieValue(request: Request, name: string): string | null {
   return null;
 }
 
-export function sessionCookie(token: string, environment: string, maxAge = 60 * 60 * 24 * 30): string {
+export function sessionCookie(
+  token: string,
+  environment: string,
+  maxAge = 60 * 60 * 24 * 30,
+): string {
   const secure = environment === "production" ? "; Secure" : "";
   return `joese_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure}`;
 }
@@ -35,7 +41,11 @@ export function clearSessionCookie(environment: string): string {
   return sessionCookie("", environment, 0);
 }
 
-export async function getSessionUser(request: Request, env: Env): Promise<SessionUser | null> {
+export async function getSessionUser(
+  request: Request,
+  env: Env,
+): Promise<SessionUser | null> {
+  if (env.BANKING_MODE === "connected") return centralUser(request, env);
   const token = cookieValue(request, "joese_session");
   if (!token) return null;
   const tokenHash = await hashSessionToken(token, env.SESSION_SECRET);
@@ -47,9 +57,15 @@ export async function getSessionUser(request: Request, env: Env): Promise<Sessio
        JOIN users u ON u.id = s.user_id
       WHERE s.token_hash = ? AND unixepoch(s.expires_at) > unixepoch()
       LIMIT 1`,
-  ).bind(tokenHash).first<Record<string, unknown>>();
+  )
+    .bind(tokenHash)
+    .first<Record<string, unknown>>();
   if (!row) return null;
-  let preferences: UserPreferences = { growthColor: "#38d39f", fallColor: "#ff6577", compactNumbers: false };
+  let preferences: UserPreferences = {
+    growthColor: "#38d39f",
+    fallColor: "#ff6577",
+    compactNumbers: false,
+  };
   try {
     preferences = JSON.parse(String(row.preferences_json)) as UserPreferences;
   } catch {
@@ -69,27 +85,47 @@ export async function getSessionUser(request: Request, env: Env): Promise<Sessio
   };
 }
 
-export async function requireUser(request: Request, env: Env): Promise<SessionUser> {
+export async function requireUser(
+  request: Request,
+  env: Env,
+): Promise<SessionUser> {
   const user = await getSessionUser(request, env);
   if (!user || user.status !== "active") {
-    throw new HttpError(401, "AUTH_REQUIRED", "Sign in with an active verified account.");
+    throw new HttpError(
+      401,
+      "AUTH_REQUIRED",
+      "Sign in with an active verified account.",
+    );
   }
   return user;
 }
 
-export async function requireOperator(request: Request, env: Env): Promise<SessionUser> {
+export async function requireOperator(
+  request: Request,
+  env: Env,
+): Promise<SessionUser> {
   const user = await requireUser(request, env);
   if (user.role !== "operator" && user.role !== "administrator") {
-    throw new HttpError(403, "OPERATOR_REQUIRED", "This action requires a market operator account.");
+    throw new HttpError(
+      403,
+      "OPERATOR_REQUIRED",
+      "This action requires a market operator account.",
+    );
   }
   return user;
 }
 
-export async function requireAdministrator(request: Request, env: Env): Promise<SessionUser> {
+export async function requireAdministrator(
+  request: Request,
+  env: Env,
+): Promise<SessionUser> {
   const user = await requireUser(request, env);
   if (user.role !== "administrator") {
-    throw new HttpError(403, "ADMIN_REQUIRED", "This action requires an administrator account.");
+    throw new HttpError(
+      403,
+      "ADMIN_REQUIRED",
+      "This action requires an administrator account.",
+    );
   }
   return user;
 }
-

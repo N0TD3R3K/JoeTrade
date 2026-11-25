@@ -1,0 +1,251 @@
+JOETRADE — NEXT-MORNING HANDOFF
+Prepared: November 25, 2026 (America/New_York)
+Purpose: Record the owner's requested next-session work. These are PLANNED
+changes, not implemented features. No application code was changed for this
+handoff. Do not start this work automatically overnight.
+
+WORKSPACE AND CURRENT BASELINE
+Repository: /Users/lizexi/Documents/joelib/JoeTrade
+Edit the imported projects inside JoeTrade/Universe, not the original sibling
+/Users/lizexi/Documents/joelib/Universe folder.
+
+Joe Banking owns liquid J$, holds, receiver-approved wires and the ledger.
+JoeSE owns listings, stock/crypto holdings, frozen company shares, orders,
+market ticks and news. JoeAuth supplies central identity; product permissions
+remain separate. All J$ and assets are fictional, nonredeemable and have no
+real-world value.
+
+The local connected version already includes:
+- Bank-backed exchange holds, fills, member share sales and shared wires.
+- Alice and Bob linked to the same synthetic bank and exchange accounts.
+- A separate local operator fixture that cannot trade.
+- Single-founder company proposals, operator review, explicit founder funding,
+  frozen shares and exact-quantity private share offers.
+- The member guide at /guide, with five requested sections and joint-venture
+  examples. A Guide link replaces the unused JoeSE header bell; Inbox works.
+- Corrected padding/margins on the console's current Joe Banking information
+  card, plus responsive console navigation and larger text.
+
+Actual live JoeAuth registration, reviewed legacy account linking, production
+migration, Cloudflare resources and remote deployment are still pending.
+The current Joe Bank console page is an information card. Connected mode blocks
+legacy exchange-local loan writes. Do not turn that old wallet/lending code back
+on as a shortcut.
+
+Verification baseline: 37 bank tests and 34 exchange tests passed in the earlier
+connected-economy work. The most recent guide/spacing changes passed both
+frontend builds (including TypeScript checks) and desktop/mobile browser checks.
+Do not claim the newly planned rate, loan or navigation work is already tested.
+
+Preserve local test records, including the owner's DRK / Derek Company listing
+and the earlier TST company, balances, wires, orders and share transfers.
+Do not reseed or reset the existing bank database. Do not commit secrets,
+.wrangler state, dependency folders or generated builds. There are existing
+uncommitted changes from this work; preserve them. No commit/push/deploy was
+requested as part of this handoff.
+
+1. CONSOLE: JOE BANK — INTEREST-RATE OPERATIONS
+
+Owner's requested behavior:
+- Put bank rate operations and loan creation in the console's "Joe Bank" section.
+- Add a rate-adjustment button opening a popup/modal.
+- Require the operation date and a signed amount of change.
+- A future operation is scheduled and can be canceled before execution.
+- Minimum absolute change: 0.005 percentage points.
+- Maximum absolute change: 0.200 percentage points.
+- Adjustment step: 0.005 percentage points; negative changes are allowed.
+- Automatically create a stock-market news event for the rate operation.
+
+Existing authoritative rate rules:
+Read Universe/joe-banking/docs/interest-policy-and-news.md first.
+- Joe Rate is quoted PER WEEK, not APR.
+- Resulting variable weekly rate must remain within 0.300%–2.000%.
+- At most TWO successful effective adjustments per New York calendar week.
+- "0.200% change" means 0.200 percentage points, not 20% relative growth.
+  Example: 1.000% + 0.005 percentage points = 1.005% per week.
+- Exact storage: weekly_rate_ppm; 0.005 percentage points = 50 ppm.
+  Allowed nonzero signed changes are multiples of 50 ppm, absolute value
+  50–2,000 ppm. Variable-rate bounds are 3,000–20,000 ppm.
+- Require a rate-policy entitlement or banking administrator role, reason
+  category, member-visible explanation, internal note and policy-version check.
+  An exchange operator is not automatically a banking rate-policy operator.
+- Never backdate an effective rate or rewrite accrued interest/history.
+- Variable products use the new rate prospectively. Fixed contracts retain
+  their accepted rates. A reversal after execution is a new adjustment and
+  consumes another weekly allowance; it is not cancellation.
+- Initial Joe Rate is still unconfirmed; 1.000% per week was only a proposal.
+
+Scheduling design to resolve/implement next session:
+- Interpret dates in America/New_York and persist explicit effective UTC times.
+  Decide how a date-only input maps to a time; do not silently schedule a past
+  midnight or apply a retroactive rate. A date/time field with a timezone label
+  and preview is a sensible implementation option.
+- Preview current rate, signed change, proposed new rate, effective date/time,
+  affected variable products, remaining weekly allowance and market direction.
+- Show pending operations with status and a Cancel action.
+- Use auditable pending/applied/canceled/failed states and stable operation IDs.
+- Cancellation and execution must be atomic competitors; only one may win.
+  Canceling an unexecuted job must not change the rate or create market impact.
+- Revalidate bounds, entitlement, policy version and weekly quota at execution.
+  Check the sequence of pending operations as well, so scheduling cannot
+  overbook a week or silently invalidate later changes. Decide whether pending
+  jobs reserve quota; successful effective changes remain the canonical count.
+- Jobs delayed by downtime need a documented catch-up rule with actual,
+  nonretroactive effective times. Do not change past accrual silently.
+
+Rate changes and stock-market news:
+The owner's proposed direction is a reasonable simplified simulation rule:
+- Rate cut -> bullish pressure.
+- Rate increase -> bearish pressure.
+Real equity reactions depend on expectations, reasons for the change and other
+conditions; neither direction guarantees every stock will rise or fall.
+Reference: Federal Reserve, transmission of monetary policy (April 22, 2025):
+https://www.federalreserve.gov/newsevents/speech/kugler20250422a.htm
+
+Preserve the existing architecture: a rate operation creates a visible,
+attributed, structured Joe Wire event; it must not directly overwrite prices.
+The market engine applies news alongside other inputs, hourly/daily caps and
+market timing. The user now explicitly requests automatic event creation;
+update the older optional/manual news wording to reflect that decision while
+keeping the bank rate and market event as distinct, linked records.
+
+Recommended timing, to make cancellation meaningful: publish the effective
+market-impact event exactly once when the rate change successfully applies.
+A scheduled announcement may be displayed earlier, but it must not apply the
+same price effect again at execution. Record the selected timing policy.
+Use durable delivery/retry protection between Banking and JoeSE so an outage
+cannot lose or duplicate the event. Preserve a cancellation audit trail.
+
+Still to decide: affected stock listings, event category, severity/magnitude,
+duration, treatment of crypto and announcement-versus-effective-time behavior.
+Do not invent a fixed stock-price return from the rate delta. A bullish event
+can coexist with other inputs that produce an overall market decline.
+
+2. CONSOLE: JOE BANK — LOAN CREATION
+
+Owner requests the ability to create loans in this section.
+Read Universe/joe-banking/docs/deposits-and-loans.md and the banking ledger,
+permission and migration documents before designing the form/API.
+
+Implement bank-owned loan offers/contracts, not a duplicate exchange wallet.
+Preserve explicit member acceptance of the exact offer before disbursement.
+Creating an operator offer alone must not credit J$ or start interest.
+A useful offer form includes member, fictional principal, purpose, rate kind,
+weekly rate, term, payment schedule and expiry, with validation and an audit log.
+Acceptance posts a balanced bank transaction and creates the liability once.
+Repayment uses available bank funds with defined interest/principal allocation.
+Retain separate banking permissions, CSRF/origin checks, stable operation keys
+and member isolation.
+
+Loan policy still needs concrete decisions: principal limits, terms, fixed-rate
+catalog, minimum payments, first due date, grace periods, unpaid interest,
+multiple active loans and whether loan proceeds can fund JoeSE purchases.
+The existing docs do not approve production penalty or fixed-loan terms.
+Flag these decisions early next session; progress on independent UI/API work
+without silently inventing financial terms. Preserve accepted legacy contracts
+until a reviewed migration policy exists.
+
+3. JOESE MEMBER WEBSITE — NEW LEFT NAVIGATION
+
+Replace the current overall arrangement with a left navigation containing the
+following sections, in this order. Retain responsive/mobile navigation, the
+shared JoeAuth identity, live Banking balance, Inbox and the public member guide.
+
+A. Account Overview
+- Show disposable balance, ordinary asset value and frozen asset value clearly.
+- Show company shareholdings and other holdings.
+- Include the transaction button, Inbox button and link to the banking website.
+- Preserve existing New transaction / Receive / Decline and private share-offer
+  flows; do not lose the ability to sell an exact quantity of frozen shares.
+
+B. Stock Listings
+- Contain all stock listings, the listing sidebar and the asset/trading view.
+- Preserve search, company details, charts, orders, + Add Listing and funding.
+- Existing crypto listings/trading must stay reachable; the owner has not asked
+  for their removal. Decide whether they remain a Crypto group inside this page
+  or get a later separate destination.
+
+C. News
+- Show published Joe Wire articles from the console.
+- Include the new interest-rate-change events, with direction, effective time
+  and a link to the corresponding rate operation/bulletin.
+- Exclude internal notes, drafts and canceled unpublished events from the
+  member feed. Do not duplicate a rate event across retries.
+
+D. Posts (new feature; details deferred)
+- Developers and shareholders may post updates/progress about their own company.
+- A member with no company ownership or shares cannot post here.
+- Future permission checks must be server-side and specific to the company,
+  using the real developer link or current holdings, not a typed company name.
+- Clarify which share types qualify and how ownership changes affect existing
+  posts/edits. Moderation, attachments, editing and other details are not decided.
+- For the navigation restructuring, provide a clearly labeled planned state;
+  do not invent the deferred posting system or show a working-looking fake form.
+
+E. Discussion (new feature; details deferred)
+- All members may post their opinions.
+- Detailed posting, threading, moderation and editing behavior remains to be
+  specified. Provide the navigation/planned state while those details are deferred.
+
+Other sections/features remain to be implemented later. Keep Guide accessible
+in the redesigned navigation. Prefer shareable routes with sensible back/forward
+behavior; preserve /guide as a public route independent of account/API loading.
+Avoid inactive decorative buttons or placeholder controls that appear functional.
+
+4. SUGGESTED NEXT-SESSION ORDER AND CHECKS
+
+1) Read this handoff, current component READMEs and the referenced bank policies.
+2) Confirm initial rate, loan terms and rate-event impact/timing decisions.
+3) Add durable Banking rate operations, scheduling/cancellation and permissions;
+   connect the Joe Bank console popup and operation/history list.
+4) Publish linked, deduplicated Joe Wire events through the normal market path.
+5) Add bank-owned loan offers/acceptance under the approved policy.
+6) Restructure JoeSE navigation/pages; keep Posts/Discussion details deferred.
+7) Update the member guide and implementation/deployment documentation to match
+   actual behavior. Do not describe pending features as completed.
+8) Run focused checks and browser review with Alice, Bob and the isolated staff
+   fixture; preserve the owner's existing local records.
+
+Meaningful checks for new behavior:
+- Positive/negative step values, zero/out-of-step rejection and resulting bounds.
+- Third adjustment in a New York week, concurrent submissions and week rollover.
+- Stale versions, chronological future changes, cancel-versus-execute races,
+  overdue jobs, no retroactivity and fixed-contract invariance.
+- Exactly one market event per applied rate operation; no effect for canceled
+  or failed jobs; retries after either service is unavailable.
+- No disbursement before member acceptance, balanced ledger postings, duplicate
+  acceptance/retry safety, correct weekly-rate accrual and permission isolation.
+- No member/console role escalation through JoeAuth's global roles.
+- New navigation, direct links, back/forward, mobile layouts, guide access and
+  visible availability of all existing member financial actions.
+- Posts ownership checks when that feature is later implemented; Discussion
+  available to members under the eventual posting/moderation rules.
+
+RESTART NOTES (NEXT SESSION ONLY)
+Prerequisites: dependencies and local migrations/seeds are already present.
+Do not reset or reseed the databases simply to start the preview.
+
+Four terminals:
+1. cd /Users/lizexi/Documents/joelib/JoeTrade/Universe/joe-banking
+   npm run dev:api
+2. cd /Users/lizexi/Documents/joelib/JoeTrade/Universe/joe-stock-exchange
+   npm run dev:api:local
+3. Same exchange directory: npm run dev:exchange:test
+4. Same exchange directory: npm run dev:console:test
+
+Member site: http://127.0.0.1:4173/
+Guide:       http://127.0.0.1:4173/guide
+Console:     http://127.0.0.1:4174/
+Bank API:    http://127.0.0.1:8788/
+Exchange API:http://127.0.0.1:8787/
+
+Use the Alice/Bob test-member selector. The console uses its isolated operator.
+Local credentials are already in ignored .dev.vars files; do not print them.
+The standalone bank frontend (4180) is not required for these two previews.
+
+END-OF-SESSION STATE
+The member frontend, console frontend, exchange API and Banking API were stopped
+for the night. Local persistent databases and source changes were preserved.
+No new application features, remote deployment, DNS changes or commits were made
+while preparing this handoff. Verified no listeners remain on ports 4173, 4174,
+4180, 8787 or 8788. No in-app preview tabs remained open.
