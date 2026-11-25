@@ -1,0 +1,12 @@
+{
+  "name": "joetrade",
+  "private": true,
+  "scripts": {
+    "dev:bank": "npm --prefix Universe/joe-banking run dev",
+    "dev:bank:api": "npm --prefix Universe/joe-banking run dev:api",
+    "db:bank:local": "npm --prefix Universe/joe-banking run db:migrate:local",
+    "db:bank:demo": "npm --prefix Universe/joe-banking run db:seed:local",
+    "check:bank": "npm --prefix Universe/joe-banking run check",
+    "check:exchange": "npm --prefix Universe/joe-stock-exchange run check"
+  }
+}

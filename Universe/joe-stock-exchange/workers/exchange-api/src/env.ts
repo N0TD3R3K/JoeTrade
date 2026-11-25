@@ -1,0 +1,19 @@
+export interface Env {
+  DB: D1Database;
+  ENVIRONMENT: string;
+  ALLOWED_EMAIL_DOMAINS: string;
+  ALLOWED_ORIGINS: string;
+  REQUIRE_INVITE: string;
+  ENFORCE_TRADING_SCHEDULE: string;
+  RESEND_FROM_EMAIL: string;
+  EMAIL_VERIFICATION_TTL_MINUTES?: string;
+  SESSION_SECRET: string;
+  RESEND_API_KEY?: string;
+  RESEND_WEBHOOK_SECRET?: string;
+  TURNSTILE_SECRET_KEY?: string;
+  INTERNAL_API_KEY: string;
+  JOE_BANK_MAX_LOAN_CENTS?: string;
+  JOE_BANK_DEFAULT_RATE_BPS?: string;
+  JOE_BANK_MAX_RATE_BPS?: string;
+}
+

@@ -1,6 +1,6 @@
 # JoeTrade
 
-JoeTrade is the planned home of the Joe Universe's fictional economy: **Joe
+JoeTrade is the home of the Joe Universe's fictional economy: **Joe
 Banking**, **JOE Stock Exchange (JOESE)**, and their developer APIs. It connects
 these products through [JoeAuth](https://github.com/Histar4522/JoeAuth) while
 keeping identity, banking, and market responsibilities separate.
@@ -12,11 +12,17 @@ and collaborative world-building.
 
 ## Project status
 
-JoeTrade is in the planning stage. This repository currently contains the
-README, development plan, and license. The existing JOESE implementation and
-banking design documents have not yet been imported here. Banking is currently
-a design, and the features below are development goals rather than available
-services.
+The existing Universe projects are now under [`Universe/`](Universe/).
+[`Joe Banking`](Universe/joe-banking/README.md) has a working local foundation:
+member balances, an append-only double-entry ledger, held funds, receiver-approved
+wires, transaction history, and a responsive member website. JoeAuth integration
+code is present and tested with synthetic identity responses; live app registration
+and account linking are still required. The exchange is preserved as an independent
+project in [`joe-stock-exchange`](Universe/joe-stock-exchange/README.md).
+
+This is a local development release. Banking deposits, interest jobs, lending,
+the full operations console, and live JOESE settlement remain future work. No
+production data has been migrated and no new websites have been deployed.
 
 Start with the [development plan](DEVELOPMENT_PLAN.md) for milestones, open
 decisions, migration requirements, and launch checks.
@@ -74,13 +80,41 @@ git clone https://github.com/N0TD3R3K/JoeTrade.git
 cd JoeTrade
 ```
 
-There are no application install, run, test, or deployment commands yet.
-Those instructions will be added as the corresponding components are imported
-or implemented. The intended platform is Cloudflare Workers, static assets,
-D1, and scheduled Workers, following the existing JOESE architecture.
+Use Node.js 24 or newer. Set up the bank from the repository root:
 
-The [development plan](DEVELOPMENT_PLAN.md#proposed-repository-layout) describes
-the proposed layout; those application directories do not exist yet.
+```sh
+npm --prefix Universe/joe-banking ci
+npm --prefix Universe/joe-banking run build
+npm run db:bank:local
+npm run db:bank:demo
+```
+
+The last command creates two synthetic local accounts. Run it once per fresh
+local database; it deliberately rejects duplicate seed balances.
+
+Then run these in two terminals:
+
+```sh
+npm run dev:bank:api
+```
+
+```sh
+npm run dev:bank
+```
+
+Open [the local banking site](http://127.0.0.1:4180/). Choose Alice's account,
+send a wire to the exact username `bob`, then switch members through the account
+menu and receive it as Bob. All demonstration records stay in the local database.
+
+Run `npm run check:bank` for banking type checks, integration tests, the frontend
+build, and a Worker deployment dry run. For the imported exchange, install its
+dependencies with `npm --prefix Universe/joe-stock-exchange ci`, then run
+`npm run check:exchange`. These checks do not deploy services.
+
+The current layout keeps both projects under `Universe/`. The
+[development plan](DEVELOPMENT_PLAN.md#2-proposed-repository-layout) describes a
+possible later reorganization. See [import notes](Universe/IMPORT_NOTES.md) for
+provenance, exclusions, and the boundary between old and new deployment settings.
 
 ## Contributing
 

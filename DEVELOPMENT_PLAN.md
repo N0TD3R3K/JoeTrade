@@ -10,9 +10,13 @@ repository, integrate both products with JoeAuth, publish supported developer
 APIs, and deploy the member websites at `stock.joe-univer.se` and
 `bank.joe-univer.se`.
 
-JoeTrade currently contains documentation and an MIT license. JOESE has an
-existing implementation outside this repository; Banking has design documents
-only. Importing either is a future milestone, not completed work.
+The Universe projects have been copied into `Universe/` with their original
+structure. The exchange implementation passes its existing checks. Banking now
+has a local member website, a D1 ledger and held balances, receiver-approved
+wires, transaction history, and JoeAuth integration code. See
+[the implementation status](Universe/joe-banking/docs/implementation-status.md)
+for the exact working scope and remaining requirements. No production migration
+or deployment has taken place.
 
 JoeAuth and the Joe Universe homepage remain separately maintained projects.
 JoeTrade owns their integration, not every Joe Universe application's migration.
@@ -79,12 +83,12 @@ automatically grant banking or exchange privileges.
 
 - [ ] Select the authoritative JOESE source revision and banking document set;
   record repository, commit, authorship, and license provenance.
-- [ ] Import application source, migrations, reference data, tests, and design
+- [x] Import application source, migrations, reference data, tests, and design
   documents without credentials, member data, dependencies, or generated builds.
 - [ ] Preserve existing migration history and IDs; do not replay migrations
   against a live database merely because the repository moved.
 - [ ] Keep one authoritative document set and repair internal links.
-- [ ] Record imported CC0 material and preserve dependency/asset license notices.
+- [x] Record imported CC0 material and preserve dependency/asset license notices.
 - [ ] Resolve the old decision prohibiting member transfers against the later
   receiver-approved wire rules.
 - [ ] Reconcile existing annual-rate/daily-interest exchange loans with the new
@@ -275,11 +279,12 @@ term-deposit catalog. Do not silently substitute annual rates for weekly rates.
 
 ## 7. Planning sources
 
-This plan is based on the local `Universe/joe-banking` and
-`Universe/joe-stock-exchange` Markdown documents, their identical counterparts
-under `Joelib`, the Joelib license and contribution guidance, and the sources
-below. Those local documents have not yet been copied into JoeTrade; record
-their exact upstream revisions during Milestone 0.
+This plan is based on the `Universe/joe-banking` and
+`Universe/joe-stock-exchange` Markdown documents, their corresponding source
+copies under Joelib, the Joelib license and contribution guidance, and the sources
+below. The Universe documents are now copied into JoeTrade. See
+[import notes](Universe/IMPORT_NOTES.md) for source attribution; this is a local
+working-tree snapshot, not an asserted exact upstream release.
 
 - [JoeTrade repository](https://github.com/N0TD3R3K/JoeTrade)
 - [JoeAuth repository and current documentation](https://github.com/Histar4522/JoeAuth)

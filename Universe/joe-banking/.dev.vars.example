@@ -1,0 +1,9 @@
+# Optional for local demo; required random secret (at least 32 characters) for JoeAuth.
+SESSION_SECRET=
+JOEAUTH_CLIENT_ID=
+JOEAUTH_CLIENT_SECRET=
+# Internal JoeAuth app ID used in signed webhook data.app_id (confirm in JoeAuth).
+JOEAUTH_APP_ID=
+# Exact registered URL: http://127.0.0.1:4180/v1/auth/callback for this local setup.
+# JOEAUTH_WEBHOOK_SECRET is required before enabling lifecycle webhook delivery.
+JOEAUTH_WEBHOOK_SECRET=
