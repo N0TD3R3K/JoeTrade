@@ -83,6 +83,10 @@ export function App() {
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
+  const refreshBankPortfolio = useCallback(async () => {
+    setPortfolio(await loadPortfolio());
+  }, []);
+
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
@@ -331,6 +335,7 @@ export function App() {
       {page === "account" && (
         <AccountOverview
           portfolio={portfolio}
+          onBankChanged={refreshBankPortfolio}
           onTransaction={() => setModal("transaction")}
           onInbox={() => setModal("inbox")}
           onOffer={(holding) => {

@@ -30,6 +30,21 @@ export async function circulationAction(
   b: Input,
 ): Promise<unknown> {
   const { e } = c;
+  if (action === "income.batch") {
+    if (!Array.isArray(b.events) || b.events.length > 10)
+      fail("An income batch has at most ten events.", "INVALID_BATCH", 400);
+    for (const event of b.events) {
+      if (!event || typeof event !== "object" || Array.isArray(event))
+        fail("Invalid income event.", "INVALID_BATCH", 400);
+      await circulationAction(c, "income.record", event as Input);
+    }
+    if (b.completeThrough !== null && b.completeThrough !== undefined)
+      await circulationAction(c, "income.checkpoint", {
+        completeThrough: b.completeThrough,
+        reference: str(b.reference),
+      });
+    return { state: "recorded", events: b.events.length };
+  }
   if (action === "income.record") {
     const customer = str(b.customerId);
     if (
@@ -90,6 +105,24 @@ export async function circulationAction(
       )
     )
       fail("Resolve the existing basis review with attributed evidence.");
+    const prior = await one(
+      e,
+      "SELECT amount_cents,occurred_at FROM economy_income_events WHERE customer_id=? AND source_system='exchange' AND source_reference=? AND category=?",
+      customer,
+      reference,
+      String(b.category),
+    );
+    if (prior) {
+      if (
+        prior.amount_cents !== b.gainCents ||
+        prior.occurred_at !== occurredAt
+      )
+        fail(
+          "Income evidence conflicts with the recorded event.",
+          "IDEMPOTENCY_CONFLICT",
+        );
+      return { id: reference, state: "recorded" };
+    }
     income(
       c,
       customer,
@@ -157,6 +190,95 @@ export async function circulationAction(
       c.now,
     );
     return { state: "recorded" };
+  }
+  if (action === "snapshot.capture" || action === "snapshot.revise") {
+    operator(c.actor);
+    const today = calendar(c.now),
+      scheduled = wallToSeconds(today.dateKey + "T12:00");
+    if (c.now < scheduled) fail("The daily snapshot is due at New York noon.");
+    const old = await one(
+      e,
+      "SELECT * FROM economy_snapshots WHERE date_key=?",
+      today.dateKey,
+    );
+    if (old && action === "snapshot.capture")
+      return { dateKey: today.dateKey, state: old.state };
+    const component = await bankComponent(e, c.now),
+      exchange = b.exchange as Row | undefined;
+    const reconciled = Boolean(
+      exchange &&
+      b.bankCheckpoint === component.checkpoint &&
+      exchange.locked === true &&
+      exchange.memberCheckpoint === component.memberCheckpoint &&
+      Number.isSafeInteger(exchange.assetsCents) &&
+      exchange.asOf >= c.now - 30 &&
+      exchange.asOf <= c.now,
+    );
+    const count = component.metrics.memberCount as number,
+      assets = reconciled
+        ? integer(exchange!.assetsCents, "member market assets")
+        : null,
+      liabilities = component.metrics.loanLiabilityCents as number;
+    const metrics: Row = {
+      ...component.metrics,
+      totalMemberAssetsCents: assets,
+      averageAssetsCents:
+        assets !== null && count ? Math.round(assets / count) : null,
+      averageAssetsVs10kPercent:
+        assets !== null && count ? (assets / count / 1000000 - 1) * 100 : null,
+      averagePortfolioCents:
+        assets !== null && count
+          ? Math.round(
+              ((component.metrics.memberPostedCents as number) +
+                assets -
+                liabilities) /
+                count,
+            )
+          : null,
+      capturedAt: c.now,
+      scheduledFor: scheduled,
+      exchangeAsOf: exchange?.asOf ?? null,
+      comparison:
+        "Member assets exclude company treasury, issuer inventory and cash. Portfolio includes posted cash and loan liabilities.",
+    };
+    const state = reconciled ? "reconciled" : "provisional";
+    if (reconciled)
+      add(
+        c,
+        "INSERT INTO economy_snapshot_guards(command_id,unchanged) SELECT ?,CASE WHEN (SELECT json_group_array(json_array(id,customer_id,posted_cents,held_cents,role,status)) FROM (SELECT a.id,a.customer_id,a.posted_cents,a.held_cents,c.role,c.status FROM account_balances a LEFT JOIN bank_customers c ON c.id=a.customer_id ORDER BY a.id))=? THEN 1 ELSE 0 END",
+        c.id,
+        component.accountFingerprint,
+      );
+    if (!old)
+      add(
+        c,
+        "INSERT INTO economy_snapshots(date_key,scheduled_for,bank_as_of,exchange_as_of,state,metrics_json,bank_checkpoint,exchange_checkpoint) VALUES(?,?,?,?,?,?,?,?)",
+        today.dateKey,
+        scheduled,
+        c.now,
+        exchange?.asOf ?? c.now,
+        state,
+        JSON.stringify(metrics),
+        component.checkpoint,
+        String(exchange?.checkpoint ?? "unavailable"),
+      );
+    else {
+      const revision = (await one(
+        e,
+        "SELECT COALESCE(MAX(revision),0)+1 AS v FROM economy_snapshot_revisions WHERE date_key=?",
+        today.dateKey,
+      ))!.v;
+      add(
+        c,
+        "INSERT INTO economy_snapshot_revisions(date_key,revision,captured_at,actor_id,metrics_json) VALUES(?,?,?,?,?)",
+        today.dateKey,
+        revision,
+        c.now,
+        c.actor.id,
+        JSON.stringify({ state, metrics }),
+      );
+    }
+    return { dateKey: today.dateKey, state, metrics };
   }
   const p = await policy(c);
   if (action === "tax.assess") {
@@ -253,6 +375,11 @@ export async function circulationAction(
     );
     if (current!.id !== selected!.id || !current!.basis_complete)
       fail("Only the latest complete assessment can be settled.");
+    if (!(await taxEvidenceCurrent(e, current!)))
+      fail(
+        "Income or cost evidence changed. Create an attributed assessment revision before settlement.",
+        "ASSESSMENT_STALE",
+      );
     const paid = await netTaxPaid(e, current!.customer_id, current!.week_key),
       a = await account(e, current!.customer_id),
       difference = current!.assessed_cents - paid;
@@ -346,7 +473,7 @@ export async function circulationAction(
         assessment.customer_id,
         assessment.week_key,
       );
-      refundObligations += assessment.basis_complete
+      refundObligations += (await taxEvidenceCurrent(e, assessment))
         ? Math.max(0, paid - assessment.assessed_cents)
         : paid;
     }
@@ -406,95 +533,6 @@ export async function circulationAction(
       income(c, a.id, "redistribution", line.amount, ledger);
     }
     return { id: c.id, amountCents: amount, members: members.length };
-  }
-  if (action === "snapshot.capture" || action === "snapshot.revise") {
-    operator(c.actor);
-    const today = calendar(c.now),
-      scheduled = wallToSeconds(today.dateKey + "T12:00");
-    if (c.now < scheduled) fail("The daily snapshot is due at New York noon.");
-    const old = await one(
-      e,
-      "SELECT * FROM economy_snapshots WHERE date_key=?",
-      today.dateKey,
-    );
-    if (old && action === "snapshot.capture")
-      return { dateKey: today.dateKey, state: old.state };
-    const component = await bankComponent(e, c.now),
-      exchange = b.exchange as Row | undefined;
-    const reconciled = Boolean(
-      exchange &&
-      b.bankCheckpoint === component.checkpoint &&
-      exchange.locked === true &&
-      exchange.memberCheckpoint === component.memberCheckpoint &&
-      Number.isSafeInteger(exchange.assetsCents) &&
-      exchange.asOf >= c.now - 30 &&
-      exchange.asOf <= c.now,
-    );
-    const count = component.metrics.memberCount as number,
-      assets = reconciled
-        ? integer(exchange!.assetsCents, "member market assets")
-        : null,
-      liabilities = component.metrics.loanLiabilityCents as number;
-    const metrics: Row = {
-      ...component.metrics,
-      totalMemberAssetsCents: assets,
-      averageAssetsCents:
-        assets !== null && count ? Math.round(assets / count) : null,
-      averageAssetsVs10kPercent:
-        assets !== null && count ? (assets / count / 1000000 - 1) * 100 : null,
-      averagePortfolioCents:
-        assets !== null && count
-          ? Math.round(
-              ((component.metrics.memberPostedCents as number) +
-                assets -
-                liabilities) /
-                count,
-            )
-          : null,
-      capturedAt: c.now,
-      scheduledFor: scheduled,
-      exchangeAsOf: exchange?.asOf ?? null,
-      comparison:
-        "Member assets exclude company treasury, issuer inventory and cash. Portfolio includes posted cash and loan liabilities.",
-    };
-    const state = reconciled ? "reconciled" : "provisional";
-    if (reconciled)
-      add(
-        c,
-        "INSERT INTO economy_snapshot_guards(command_id,unchanged) SELECT ?,CASE WHEN (SELECT json_group_array(json_array(id,customer_id,posted_cents,held_cents,role,status)) FROM (SELECT a.id,a.customer_id,a.posted_cents,a.held_cents,c.role,c.status FROM account_balances a LEFT JOIN bank_customers c ON c.id=a.customer_id ORDER BY a.id))=? THEN 1 ELSE 0 END",
-        c.id,
-        component.accountFingerprint,
-      );
-    if (!old)
-      add(
-        c,
-        "INSERT INTO economy_snapshots(date_key,scheduled_for,bank_as_of,exchange_as_of,state,metrics_json,bank_checkpoint,exchange_checkpoint) VALUES(?,?,?,?,?,?,?,?)",
-        today.dateKey,
-        scheduled,
-        c.now,
-        exchange?.asOf ?? c.now,
-        state,
-        JSON.stringify(metrics),
-        component.checkpoint,
-        String(exchange?.checkpoint ?? "unavailable"),
-      );
-    else {
-      const revision = (await one(
-        e,
-        "SELECT COALESCE(MAX(revision),0)+1 AS v FROM economy_snapshot_revisions WHERE date_key=?",
-        today.dateKey,
-      ))!.v;
-      add(
-        c,
-        "INSERT INTO economy_snapshot_revisions(date_key,revision,captured_at,actor_id,metrics_json) VALUES(?,?,?,?,?)",
-        today.dateKey,
-        revision,
-        c.now,
-        c.actor.id,
-        JSON.stringify({ state, metrics }),
-      );
-    }
-    return { dateKey: today.dateKey, state, metrics };
   }
   return undefined;
 }
@@ -683,4 +721,33 @@ export async function recommendation(
     explanation: `A 0.005-point increase projects ${(total * 50) / 1e6} additional J$ cents of seven-day variable-loan interest; collection is uncertain.`,
     assumptions,
   };
+}
+
+/** A later correction cannot leave an earlier immutable bill collectible as current. */
+export async function taxEvidenceCurrent(e: Context["e"], assessment: Row) {
+  if (!assessment.basis_complete) return false;
+  const [start, end] = weekBounds(assessment.week_key);
+  const events = await all(
+    e,
+    "SELECT id FROM economy_income_events WHERE customer_id=? AND occurred_at>=? AND occurred_at<? ORDER BY occurred_at,id",
+    assessment.customer_id,
+    start,
+    end,
+  );
+  const hold = await one(
+    e,
+    "SELECT 1 FROM economy_basis_holds WHERE customer_id=? AND week_key=? AND resolved_at IS NULL LIMIT 1",
+    assessment.customer_id,
+    assessment.week_key,
+  );
+  const checkpoint = await one(
+    e,
+    "SELECT complete_through FROM economy_exchange_checkpoint",
+  );
+  const evidence = JSON.parse(assessment.evidence_json);
+  return (
+    !hold &&
+    checkpoint?.complete_through >= end &&
+    JSON.stringify(events.map((x) => x.id)) === JSON.stringify(evidence.events)
+  );
 }

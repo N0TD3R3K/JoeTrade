@@ -1,3 +1,4 @@
+import { captureEconomySnapshot } from "../lib/economy-snapshot";
 import type { CompanyView, CompanyPostView } from "@joese/contracts";
 import {
   calendar,
@@ -481,54 +482,16 @@ export async function handleCompanyEconomy(
       );
     }
     if (u.pathname === "/v1/console/economy/sync") {
-      await syncEconomy(e);
-      return json({ status: "synchronized" });
+      return json(await syncEconomy(e, 5));
     }
     if (u.pathname === "/v1/console/economy/snapshot") {
       await syncEconomy(e);
       return json(
-        await execute(
+        await captureEconomySnapshot(
           e,
-          user.id,
+          bankActor(user, e),
           key,
-          { route: u.pathname, revision: b.revise === true },
-          async () => {
-            const component = await bank<{ checkpoint: string }>(
-                e,
-                "/economy/component",
-              ),
-              assets = await row(
-                e,
-                "SELECT COALESCE(SUM(CAST(ROUND(h.quantity*a.current_price_cents) AS INTEGER)),0) AS amount FROM holdings h JOIN assets a ON a.id=h.asset_id JOIN users u ON u.id=h.user_id WHERE u.role='member' AND u.status='active'",
-              );
-            const response = await bank<Row>(e, "/economy/commands", {
-              actorId: bankActor(user, e),
-              key,
-              action: b.revise ? "snapshot.revise" : "snapshot.capture",
-              input: {
-                bankCheckpoint: component.checkpoint,
-                exchange: {
-                  assetsCents: assets!.amount,
-                  asOf: seconds(),
-                  locked: true,
-                  memberCheckpoint: await digest(
-                    JSON.stringify(
-                      (
-                        await rows(
-                          e,
-                          "SELECT bank_customer_id FROM users WHERE role='member' AND status='active' AND bank_customer_id IS NOT NULL",
-                        )
-                      )
-                        .map((m) => m.bank_customer_id)
-                        .sort(),
-                    ),
-                  ),
-                  checkpoint: await digest(JSON.stringify(assets)),
-                },
-              },
-            });
-            return { bank: { action: "noop" }, statements: [], response };
-          },
+          b.revise === true,
         ),
       );
     }

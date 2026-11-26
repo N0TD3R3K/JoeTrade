@@ -21,15 +21,16 @@ export function json(
 
 export async function readBody(
   request: Request,
+  maximumBytes = 8192,
 ): Promise<Record<string, unknown>> {
   if (!request.headers.get("content-type")?.startsWith("application/json")) {
     throw new ApiError(415, "JSON_REQUIRED", "Use application/json.");
   }
-  if (Number(request.headers.get("content-length")) > 8192) {
+  if (Number(request.headers.get("content-length")) > maximumBytes) {
     throw new ApiError(413, "BODY_TOO_LARGE", "The request is too large.");
   }
   const text = await request.text();
-  if (new TextEncoder().encode(text).length > 8192)
+  if (new TextEncoder().encode(text).length > maximumBytes)
     throw new ApiError(413, "BODY_TOO_LARGE", "The request is too large.");
   try {
     const data: unknown = JSON.parse(text);

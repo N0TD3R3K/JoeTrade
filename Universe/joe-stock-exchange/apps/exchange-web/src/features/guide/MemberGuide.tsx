@@ -304,8 +304,8 @@ export function MemberGuide() {
                 (including held funds when available), asset values and frozen
                 values, minus any displayed borrowing. It is a portfolio
                 estimate, not a cash balance or a promise that every asset can
-                be sold. Banking deposit and loan products are still being
-                developed.
+                be sold. Borrowing includes outstanding bank loan principal and
+                accrued interest. Deposit funding remains unavailable.
               </p>
             </Chapter>
 

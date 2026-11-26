@@ -10,7 +10,7 @@ import {
 } from "./http";
 import { createWire, recipient, resolveWire, summary, wires } from "./banking";
 import { demoEnabled } from "./auth";
-import { handleEconomyService } from "./economy/routes";
+import { handleEconomyService, settleEconomyDelivery } from "./economy/routes";
 const keys = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 async function authorize(r: Request, e: Env) {
   if (r.headers.has("origin"))
@@ -149,9 +149,18 @@ export async function handleExchange(
   }
   if (u.pathname !== "/internal/joese/operations" || r.method !== "POST")
     throw new ApiError(404, "NOT_FOUND", "Unknown settlement route.");
-  const b = await readBody(r),
+  const b = await readBody(r, 65536),
     id = textField(b.id, "operation", 128),
     hash = await sha256(JSON.stringify(b));
+  if (["income_batch", "economy_snapshot"].includes(String(b.action))) {
+    if (!b.input || typeof b.input !== "object" || Array.isArray(b.input))
+      throw new ApiError(400, "INVALID_INPUT", "Provide delivery input.");
+    return json({
+      result: await settleEconomyDelivery(r, e, b),
+      id,
+      status: "committed",
+    });
+  }
   const saved = async () => {
     const row = await e.DB.prepare(
       "SELECT request_hash,response_json FROM exchange_operations WHERE id=?",

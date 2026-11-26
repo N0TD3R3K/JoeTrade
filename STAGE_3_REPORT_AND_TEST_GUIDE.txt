@@ -1,0 +1,225 @@
+JOETRADE — STAGE 3 COMPLETION REPORT AND OWNER TEST GUIDE
+Completed November 26, 2026, America/New_York.
+
+STATUS
+Stage 3 implementation, migration rehearsal, automated checks, local HTTP tests
+and browser checks are complete. The three working websites and background
+services are running for owner review. Your own testing is the next step.
+This is a local development release, not a production deployment.
+
+SOURCES AND SCOPE
+Dev_Note.txt retains priority over HANDOFF_NEXT_SESSION.txt. The clarification
+that employee revenue goes to EMPLOYEES is preserved. Universe/staged_dev_note.txt
+remains the consolidated design plan. Those three source TXT files are unchanged;
+the earlier Stage 1 and Stage 2 reports remain historical records.
+Work is confined to JoeTrade; the original sibling Universe folder is untouched.
+J$ remains fictional and cannot be redeemed for outside money, goods or services.
+
+WHAT WAS FINISHED OR CORRECTED
+1. Durable exchange-to-bank delivery
+   Income batches are now prepared before bank writes, committed atomically on
+   the bank, and acknowledged on the exchange through the existing recovery
+   mechanism. A lost response retains a retryable prepared operation instead of
+   losing evidence or leaving an unrecoverable planning action. Multiple batches
+   with identical timestamps drain without waiting for another clock bucket.
+   Full settlement evidence is immutable; the bank retains compact proof hashes
+   and references. Manual delivery retries process up to fifty income events;
+   larger queues continue on later scheduled runs. Rate-event receipt and news
+   creation hold the market mutex so an engine tick cannot consume a new signal
+   halfway through its stock list.
+
+2. Scheduled banking work and noon reconciliation
+   Durable cursors rotate renewals, accrual, expiry, payroll, assessments and
+   collections past deferred items. Five blocked companies/members no longer
+   prevent later due items from running. Collection checks all latest assessments,
+   independent of the console's recent-results display limit.
+   Read-only noon capture works before cash policy approval. Exchange scheduled
+   recovery automatically attempts the guarded shared snapshot after New York
+   noon. A reconciled current-date observation is not recaptured every minute.
+   Actual capture time stays visible; missed historical noon values are not made up.
+
+3. Subscription and tax corrections
+   Retry payment is limited to past-due subscriptions; it cannot charge an active
+   subscription early. Repeated unfunded retries reuse the original past-due event
+   without conflicting with its unique delivery reference.
+   Tax collection/refund checks the current income IDs, unresolved basis holds
+   and exchange cutoff. Late evidence makes an old bill stale until an attributed
+   revision is created. Redistribution also accounts for possible tax-refund
+   obligations rather than spending cash owed back to members.
+
+4. Shared account UI
+   Consented payments and loan actions refresh JoeSE's cash and liabilities
+   immediately without replacing the entire page. Connected net position now
+   subtracts active bank loan principal plus accrued interest. Unaccepted offers
+   create no liability. Banking actions refresh their own products and balances.
+   Banking/JOESE links use local addresses during this preview and carry Alice/Bob
+   selection between sites. Production links retain joe-univer.se hostnames.
+   The bank overview now links to the connected exchange. The guide and console
+   market-health wording have been updated to describe the implemented features.
+
+5. Local preview runner
+   From the JoeTrade root, npm run dev:all starts all three websites, two APIs,
+   the price engine and local scheduled work. It reuses an existing owned group,
+   refuses occupied ports, and never seeds, migrates or approves policy.
+   npm run stop:local stops only the recorded owned preview group.
+   Local jobs run once per minute while the preview is running. Price ticks keep
+   their hourly keys and New York 14:00–22:00 session; prices are not forced.
+   Test order entry remains open locally. Production schedule/demo settings are
+   unchanged. Keep the runner's terminal/session running during testing.
+
+WORKING DATA AND MIGRATIONS
+Both working D1 stores were backed up BEFORE migration to:
+/Users/lizexi/Documents/joelib/JoeTrade/.wrangler/backups/stage3-20261126T173759Z/
+The ignored baseline.json there records source paths, migrations and fingerprints.
+
+Applied additive migrations:
+  Banking: 0003_economy.sql, 0004_stage3_recovery.sql.
+  Exchange: 0008_company_economy.sql, 0009_stage3_delivery.sql.
+Previously committed migrations were not rewritten. No demonstration seed ran
+against the working data.
+
+Reconciliation checked the original prepared settlements against posted bank
+journals, including exact net credits/debits and fees. Five remaining imported
+lots now have reviewed costs; both earlier frozen-share sales have attributed
+income evidence using their actual bank settlement times:
+  Alice: 900 TST, remaining cost J$4,500.00.
+  Alice: 500 DRK, remaining cost J$2,005.00 including acquisition fee.
+  Bob: 100 TST, remaining cost J$601.50 including acquisition fee.
+  Bob: 1,500 DRK, remaining cost J$6,000.00.
+  Bob: 1 JAI, remaining cost J$48.96 including acquisition fee.
+  Alice's historical TST sale: net gain J$98.50 after cost and fee.
+  Bob's historical DRK sale: net loss J$5.00 after cost and fee.
+No basis was inferred from a current market quote.
+
+DRK and TST company bank metadata now attribute the existing locked founding
+capital: J$8,000 and J$5,000 respectively. The two company operating accounts
+start at zero. Attribution did not unlock or move founding capital.
+
+Final comparison with the backup preserved all original values in:
+  9 bank transactions, 20 ledger lines, 7 original account-balance rows,
+  2 exchange holds, 2 wire holds, 14 listings, 17 holdings, 14 orders,
+  1 trade, 2 share offers and 2 listing proposals.
+Two zero-balance company operating accounts were added. No new working bank
+journal was posted during Stage 3. Both foreign-key checks are clean and all
+posted journals balance. Unknown cost lots, unresolved income reviews, pending
+income delivery and pending/planning settlements are zero at handoff.
+
+Working member cash is unchanged:
+  Alice: posted J$3,368.00; available J$3,368.00; held J$0.00.
+  Bob: posted J$3,570.04; available J$3,444.48; held J$125.56.
+All share quantities, DRK/TST listings, identities and existing credentials remain.
+Later owner actions and normal eligible price ticks can change these observations.
+Ignored proof and final verification summaries are under .wrangler/local/.
+
+VERIFICATION RESULTS
+117 automated tests passed: 71 Banking, 46 Exchange.
+Both project check commands passed type checks, tests, all three frontend builds
+and all three Worker deployment dry runs. Final builds were also rerun after the
+last display/documentation wording fixes, with logs redirected to temporary files.
+No dry run deployed anything.
+
+New regression coverage includes:
+  - 23 same-time income events spanning three batches.
+  - Bank-commit/response-loss recovery for income and noon capture.
+  - Immutable income evidence with a mutable delivery marker.
+  - Early subscription retry denial and repeated past-due retries.
+  - Calendar renewals across the actual New York spring DST transition.
+  - Cancel/renew races, deferred job fairness and stale tax evidence.
+  - Read-only snapshots with no approved policy and bank-owned loan liabilities.
+Existing coverage also exercises loan/rate changes, policy/quota races, refunds,
+payroll, tax corrections, permissions, account freezes and service boundaries.
+
+Eleven actual Worker HTTP scenarios passed on a separate disposable data copy:
+  1. Policy review and once-only reserve initialization.
+  2. Exact-consent purchase, retry protection and scoped company reporting.
+  3. Full service refund without duplicate customer credit.
+  4. Subscription consent, early-retry denial and cancellation.
+  5. Exact employee invitation acceptance.
+  6. Receiver-approved member wire using the shared bank.
+  7. Accepted reserve-funded loan and repayment.
+  8. Company post publication and console removal.
+  9. Future rate cancellation, effective-rate news and internal-note exclusion.
+  10. Native Banking API access to the same account.
+  11. Actual scheduled Worker entry points and reconciled noon reporting.
+The script is scripts/stage3-isolated-smoke.mjs; its fixed QA ports are 8789/8790.
+Its setup requirements and disposable-copy restriction are in the Stage 3 runbook.
+
+Browser checks used both Alice and Bob and the separate operator. On an isolated
+copy, accepted a J$25 loan in Banking, authorized a J$1.50 JoeSE checkout, repaid
+J$10 through JoeSE and J$15 through Banking. The balance refreshed immediately;
+net position deducted the remaining debt and did not increase with borrowed cash.
+Working-site checks covered both members, reconciled company reports, Posts
+permissions, public guide, cross-site account links and console policy controls.
+Banking, member navigation/guide and console were checked at mobile and desktop
+sizes; no horizontal page overflow was found. Temporary QA servers are stopped.
+
+OPEN THE THREE RUNNING WEBSITES
+  JoeSE:       http://127.0.0.1:4173/account
+  Console:     http://127.0.0.1:4174/
+  Joe Banking: http://127.0.0.1:4180/
+  Public guide: http://127.0.0.1:4173/guide
+No login is required. Use Test member in JoeSE; use the account menu in Banking.
+The console uses a separate local operator, not Alice or Bob's trading identity.
+The bank/exchange member session selections can be changed separately; follow
+the cross-site links to carry the selected test member to the other site.
+
+SUGGESTED OWNER TEST FLOWS
+1. Compare Alice's Banking balance with JoeSE Disposable; switch to Bob and
+   compare again. His held amount is separate from disposable cash.
+2. Send a small member wire, inspect the hold, receive/decline it as the named
+   receiver, and check both sites. Try a private share Offer with an exact whole
+   quantity; only buyer acceptance should move those shares and net cash.
+3. Inspect Stock Listings, crypto, + Add Listing, News, Posts and My Company.
+   Bob manages DRK, Alice manages TST; their other settled company interests have
+   aggregate reports without another manager's private receipts or employee tools.
+4. In Console -> Joe Bank inspect the reconciled noon figures and cleared review
+   queues. Current rate/reserve are deliberately unconfigured, not a load failure.
+5. To test rate/loan operations, open Bank policy configuration, enter reviewed
+   initial weekly rate, lending budget, redistribution budget and loan products,
+   save a draft, review it, then approve that exact version. Initial Joe Rate
+   must be 0.300–2.000% weekly. Initialize the J$100,000 reserve separately.
+   Zero lending/distribution budgets disable those uses. This is fictional local
+   testing; no sample loan terms or commercial policy were approved for you.
+6. Schedule a future signed rate change and cancel it before execution. Try an
+   effective change and check News after delivery. Changes use 0.005–0.200
+   percentage points in 0.005 steps, with two effective changes per New York week.
+7. Create a loan offer for the other member from an approved catalog product.
+   Inspect terms, explicitly accept in JoeSE or Banking, then repay. Cash starts
+   on acceptance; principal plus accrued interest is subtracted from net position.
+8. As company manager, request approval for a fictional local test service app;
+   approve the mapping in Console, create an immutable plan, and open its checkout
+   link as the other member. Review/consent to terms, inspect the company receipt,
+   try cancellation of a recurring plan, and issue a full refund when funded.
+9. Configure an employee pool, invite the other member and accept the exact
+   agreement. Payroll needs a closed week with funded company revenue and
+   accepted weights totaling 100%. It does not pay from locked founding capital.
+10. Read the public guide and try the narrow-screen navigation. Report the page,
+    selected member and action for any issue you find.
+
+REMAINING CONFIGURATION AND DELIBERATE LIMITS
+No policy is approved and no reserve is initialized in your WORKING stores.
+The test policy/reserve used for automated HTTP/browser QA exist only on the
+separate copy. Opening grants are not reapplied to the existing seeded members.
+Eligibility/redistribution require a real reviewed JoeAuth subject link; local
+demo subjects are not fabricated to bypass those requirements.
+
+Discussion, deposit funding, term-deposit contracts and deposit interest posting
+remain deferred by the plan. Loan interest is implemented separately. Revenue
+does not directly increase a company share price or automatically pay its owners.
+
+Real JoeAuth app registration, live staging sign-in/roles, reviewed legacy account
+linking and a real merchant receipt consumer remain external integration work.
+ChatJoePT must implement its own receipt deduplication/acknowledgement and securely
+receive its service-specific verification key; no third-party project was edited.
+Production Cloudflare resources/secrets, resource-limit review, migration rehearsal,
+DNS and deployment remain separate release work. Nothing was committed, pushed
+or deployed during this stage.
+
+RESTART / STOP
+From /Users/lizexi/Documents/joelib/JoeTrade:
+  npm run dev:all
+  npm run stop:local
+Logs/process status: ignored .wrangler/local/.
+Databases: each project's ignored .wrangler/state/.
+Do not reseed, delete state or restore a single database independently to clear a
+UI problem. Preserve both stores and investigate the recorded operation instead.

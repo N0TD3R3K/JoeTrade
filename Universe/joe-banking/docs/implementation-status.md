@@ -1,6 +1,6 @@
 # Banking implementation status
 
-> Current development status (November 26, 2026): Stage 2 services and UI are implemented. See [Stage 2 implementation](../../joe-stock-exchange/docs/stage-2/README.md) and the root Stage 2 TXT report. Earlier Stage 1/foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposits remain unavailable. Final owner review is Stage 3.
+> Current development status (November 26, 2026): Stage 3 implementation and local checks are complete. See the [Stage 3 report](../../../STAGE_3_REPORT_AND_TEST_GUIDE.txt) and [economy implementation](../../joe-stock-exchange/docs/stage-2/README.md). The foundation release record below is historical, including its original test count and unfinished-feature list. Reviewed policy configuration, live JoeAuth staging and production release work remain separate; deposit funding remains unavailable.
 
 First local foundation, November 24, 2026. The original design documents remain
 the target specification; this file distinguishes working behavior from plans.

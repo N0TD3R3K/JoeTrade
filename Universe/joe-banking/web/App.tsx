@@ -1,4 +1,5 @@
 import { BankProducts, BankRate } from "./EconomyProducts";
+import { stockAccountUrl } from "../../shared/economy/links";
 import {
   useCallback,
   useEffect,
@@ -102,8 +103,22 @@ export default function App() {
     initialLoad.current ??= (async () => {
       if (import.meta.env.VITE_AUTO_DEMO === "true") {
         const current = await api<AuthState>("/auth/session");
-        if (current.local_demo && !current.customer) {
-          await api("/dev/session", { body: { customer_id: "demo-alice" } });
+        const requested = new URLSearchParams(window.location.search).get(
+          "member",
+        );
+        const fixture =
+          requested === "bob"
+            ? "demo-bob"
+            : requested === "alice"
+              ? "demo-alice"
+              : null;
+        if (
+          current.local_demo &&
+          (!current.customer || (fixture && current.customer.id !== fixture))
+        ) {
+          await api("/dev/session", {
+            body: { customer_id: fixture ?? "demo-alice" },
+          });
         }
       }
       await load();
@@ -601,10 +616,18 @@ export default function App() {
                           <span className="eyebrow">ACROSS YOUR UNIVERSE</span>
                           <h3>JOE Stock Exchange</h3>
                           <p>
-                            Portfolio connection is coming next. Investments
-                            stay separate from available J$.
+                            View your investments and company shares with this
+                            same Joe Banking balance.
                           </p>
-                          <span className="status-pill">Not connected</span>
+                          <a
+                            className="button secondary"
+                            href={stockAccountUrl(
+                              window.location.hostname,
+                              member.id === "demo-bob" ? "bob" : "alice",
+                            )}
+                          >
+                            Open JoeSE <ExternalLink size={14} />
+                          </a>
                         </div>
                       </section>
                     </div>
@@ -726,6 +749,7 @@ export default function App() {
               {page === "Loans" && (
                 <BankProducts
                   key={member.id}
+                  memberId={member.id}
                   csrf={auth?.csrf_token ?? null}
                   onChanged={load}
                 />

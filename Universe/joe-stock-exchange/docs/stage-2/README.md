@@ -5,6 +5,12 @@ Completed November 26, 2026. Owner requirements remain in `Dev_Note.txt` and
 Stage 1 documents preserve the design record. This directory describes the
 implemented services. Final owner review belongs to Stage 3.
 
+Stage 3 integration and checks completed November 26, 2026. The working databases
+are now backed up and migrated through Banking `0004` and exchange `0009`, with
+original financial/share records preserved. See the [completion report](../../../../STAGE_3_REPORT_AND_TEST_GUIDE.txt)
+and [current local review procedure](STAGE_3.md). Policy and reserve remain
+unconfigured in the working stores until the operator reviews them.
+
 The implementation adds company Posts and removal/moderation, My Company reports,
 company operating accounts, service approval and immutable billing plans, member
 checkout, subscriptions and full refunds, accepted employee agreements and funded

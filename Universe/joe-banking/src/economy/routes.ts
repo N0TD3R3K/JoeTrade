@@ -1,3 +1,4 @@
+import { dueItems, attemptJob } from "./jobs";
 import type { Customer, Env } from "../env";
 import { demoEnabled } from "../auth";
 import { ApiError, idempotencyKey, json, readBody } from "../http";
@@ -11,6 +12,7 @@ import {
   bankComponent,
   circulationAction,
   netTaxPaid,
+  taxEvidenceCurrent,
   recommendation,
 } from "./circulation";
 import { activePlan, commerceAction, companyRevenue } from "./commerce";
@@ -30,6 +32,7 @@ const internalOnly = new Set([
   "snapshot.capture",
   "snapshot.revise",
   "company.register",
+  "income.batch",
   "income.record",
   "income.checkpoint",
   "rate.execute",
@@ -153,7 +156,7 @@ export async function taxViews(e: Env, customer?: string) {
       revision: a.revision,
       taxable_cents: a.taxable_cents,
       assessed_cents: a.assessed_cents,
-      basis_complete: a.basis_complete,
+      basis_complete: (await taxEvidenceCurrent(e, a)) ? 1 : 0,
       paid_cents: await netTaxPaid(e, a.customer_id, a.week_key),
     })),
   );
@@ -262,6 +265,28 @@ export async function companyReport(
     );
   return report;
 }
+export async function snapshotView(e: Env) {
+  const snapshot = await one(
+    e,
+    "SELECT * FROM economy_snapshots ORDER BY date_key DESC LIMIT 1",
+  );
+  let view = null;
+  if (snapshot) {
+    const revision = await one(
+        e,
+        "SELECT * FROM economy_snapshot_revisions WHERE date_key=? ORDER BY revision DESC LIMIT 1",
+        snapshot.date_key,
+      ),
+      value = revision ? JSON.parse(revision.metrics_json) : null;
+    view = {
+      dateKey: snapshot.date_key,
+      state: value?.state ?? snapshot.state,
+      metrics: value?.metrics ?? JSON.parse(snapshot.metrics_json),
+      capturedAt: revision?.captured_at ?? snapshot.bank_as_of,
+    };
+  }
+  return view;
+}
 export async function economyStatus(e: Env, actor: Customer) {
   operator(actor);
   const state = (await one(e, "SELECT * FROM economy_runtime"))!,
@@ -288,21 +313,7 @@ export async function economyStatus(e: Env, actor: Customer) {
       e,
       "SELECT * FROM economy_snapshots ORDER BY date_key DESC LIMIT 1",
     );
-  let view = null;
-  if (snapshot) {
-    const revision = await one(
-        e,
-        "SELECT * FROM economy_snapshot_revisions WHERE date_key=? ORDER BY revision DESC LIMIT 1",
-        snapshot.date_key,
-      ),
-      value = revision ? JSON.parse(revision.metrics_json) : null;
-    view = {
-      dateKey: snapshot.date_key,
-      state: value?.state ?? snapshot.state,
-      metrics: value?.metrics ?? JSON.parse(snapshot.metrics_json),
-      capturedAt: revision?.captured_at ?? snapshot.bank_as_of,
-    };
-  }
+  const view = await snapshotView(e);
   return {
     revision: state.revision,
     ratePpm: state.rate_ppm,
@@ -348,6 +359,7 @@ export async function handleEconomyService(r: Request, e: Env) {
   const u = new URL(r.url),
     path = u.pathname.replace("/internal/joese/economy", "");
   if (r.method === "GET") {
+    if (path === "/snapshot") return json(await snapshotView(e));
     if (path === "/outbox")
       return json(
         await all(
@@ -482,94 +494,101 @@ export const schedulerActor: Customer = {
   status: "active",
 };
 export async function runEconomyJobs(e: Env, now = seconds()) {
-  const runtime = await one(e, "SELECT active_policy_id FROM economy_runtime");
-  if (!runtime?.active_policy_id) return;
   const run = (key: string, action: string, input: Input) =>
     economyCommand(e, schedulerActor, key, action, input, now, true);
-  const attempt = async (key: string, action: string, input: Input) => {
-    try {
-      return await run(key, action, input);
-    } catch (error) {
-      if (error instanceof ApiError && error.status < 500) return null;
-      throw error;
-    }
-  };
-  for (const op of await all(
-    e,
-    "SELECT id FROM bank_rate_operations WHERE state='pending' AND requested_effective_at<=? ORDER BY requested_effective_at,id LIMIT 2",
-    now,
-  ))
-    await attempt(`rate_due_${op.id}`, "rate.execute", { id: op.id });
-  for (const sub of await all(
-    e,
-    "SELECT id,next_period_key FROM company_subscriptions WHERE state='active' AND next_charge_at<=? ORDER BY next_charge_at LIMIT 5",
-    now,
-  ))
-    await attempt(
-      `renew_${await (await import("../http")).sha256(sub.id + ":" + sub.next_period_key)}`,
-      "subscription.renew",
-      { id: sub.id },
-    );
-  for (const loan of await all(
-    e,
-    "SELECT id,accrual_checkpoint FROM bank_loan_contracts WHERE state='active' AND accrual_checkpoint<? ORDER BY accrual_checkpoint LIMIT 5",
-    now - 3600,
-  ))
-    await attempt(
-      `accrue_${await (await import("../http")).sha256(loan.id + ":" + loan.accrual_checkpoint)}`,
-      "loan.accrue",
-      { id: loan.id },
-    );
-  for (const offer of await all(
-    e,
-    "SELECT id FROM bank_loan_offers WHERE state='offered' AND expires_at<=? ORDER BY expires_at LIMIT 5",
-    now,
-  ))
-    await attempt(`expire_${offer.id}`, "loan.expire", { id: offer.id });
-  const thisWeek = calendar(now).weekKey,
-    [weekStart] = weekBounds(thisWeek),
-    lastWeek = calendar(weekStart - 1).weekKey;
-  for (const company of await all(
-    e,
-    "SELECT c.id FROM economy_companies c WHERE c.state='active' AND c.employee_pool_bps IS NOT NULL AND NOT EXISTS(SELECT 1 FROM company_payroll_runs r WHERE r.company_id=c.id AND r.period_key=?) ORDER BY c.id LIMIT 5",
-    lastWeek,
-  ))
-    await attempt(
-      `payroll_${await (await import("../http")).sha256(company.id + ":" + lastWeek)}`,
-      "payroll.run",
-      { companyId: company.id, week: lastWeek },
-    );
-  const checkpoint = await one(
-    e,
-    "SELECT complete_through FROM economy_exchange_checkpoint",
-  );
-  if (checkpoint && checkpoint.complete_through >= weekStart) {
-    for (const member of await all(
+  const hash = async (value: string) => (await import("../http")).sha256(value);
+  const runtime = await one(e, "SELECT active_policy_id FROM economy_runtime");
+  if (runtime?.active_policy_id) {
+    for (const op of await all(
       e,
-      "SELECT c.id FROM bank_customers c WHERE c.role='member' AND c.status='active' AND NOT EXISTS(SELECT 1 FROM weekly_tax_assessments a WHERE a.customer_id=c.id AND a.week_key=?) ORDER BY c.id LIMIT 5",
-      lastWeek,
+      "SELECT id AS item_id,id FROM bank_rate_operations WHERE state='pending' AND requested_effective_at<=? ORDER BY requested_effective_at,id LIMIT 2",
+      now,
     ))
-      await attempt(
-        `assess_${await (await import("../http")).sha256(member.id + ":" + lastWeek)}`,
-        "tax.assess",
-        { customerId: member.id, week: lastWeek },
+      await attemptJob(e, "rates", op, now, () =>
+        run(`rate_due_${op.id}`, "rate.execute", { id: op.id }),
       );
-    for (const assessment of await taxViews(e)) {
-      if (
-        !assessment.basis_complete ||
-        assessment.paid_cents >= assessment.assessed_cents
-      )
-        continue;
-      const a = await one(
+    for (const sub of await dueItems(
+      e,
+      "renewals",
+      "SELECT id AS item_id,id,next_period_key FROM company_subscriptions WHERE state='active' AND next_charge_at<=?",
+      [now],
+    ))
+      await attemptJob(e, "renewals", sub, now, async () =>
+        run(
+          `renew_${await hash(sub.id + ":" + sub.next_period_key)}`,
+          "subscription.renew",
+          { id: sub.id },
+        ),
+      );
+    for (const loan of await dueItems(
+      e,
+      "accruals",
+      "SELECT id AS item_id,id,accrual_checkpoint FROM bank_loan_contracts WHERE state='active' AND accrual_checkpoint<?",
+      [now - 3600],
+    ))
+      await attemptJob(e, "accruals", loan, now, async () =>
+        run(
+          `accrue_${await hash(loan.id + ":" + loan.accrual_checkpoint)}`,
+          "loan.accrue",
+          { id: loan.id },
+        ),
+      );
+    for (const offer of await dueItems(
+      e,
+      "expiries",
+      "SELECT id AS item_id,id FROM bank_loan_offers WHERE state='offered' AND expires_at<=?",
+      [now],
+    ))
+      await attemptJob(e, "expiries", offer, now, () =>
+        run(`expire_${offer.id}`, "loan.expire", { id: offer.id }),
+      );
+    const [weekStart] = weekBounds(calendar(now).weekKey),
+      lastWeek = calendar(weekStart - 1).weekKey;
+    for (const company of await dueItems(
+      e,
+      "payroll",
+      "SELECT c.id AS item_id,c.id FROM economy_companies c WHERE c.state='active' AND c.employee_pool_bps IS NOT NULL AND NOT EXISTS(SELECT 1 FROM company_payroll_runs r WHERE r.company_id=c.id AND r.period_key=?)",
+      [lastWeek],
+    ))
+      await attemptJob(e, "payroll", company, now, async () =>
+        run(
+          `payroll_${await hash(company.id + ":" + lastWeek)}`,
+          "payroll.run",
+          { companyId: company.id, week: lastWeek },
+        ),
+      );
+    const checkpoint = await one(
+      e,
+      "SELECT complete_through FROM economy_exchange_checkpoint",
+    );
+    if (checkpoint && checkpoint.complete_through >= weekStart) {
+      for (const member of await dueItems(
         e,
-        "SELECT available_cents FROM account_balances WHERE customer_id=? AND account_kind='transaction'",
-        assessment.customer_id,
+        "assessments",
+        "SELECT c.id AS item_id,c.id FROM bank_customers c WHERE c.role='member' AND c.status='active' AND NOT EXISTS(SELECT 1 FROM weekly_tax_assessments a WHERE a.customer_id=c.id AND a.week_key=?)",
+        [lastWeek],
+      ))
+        await attemptJob(e, "assessments", member, now, async () =>
+          run(
+            `assess_${await hash(member.id + ":" + lastWeek)}`,
+            "tax.assess",
+            { customerId: member.id, week: lastWeek },
+          ),
+        );
+      const unpaid = await dueItems(
+        e,
+        "collections",
+        `SELECT a.id AS item_id,a.id,a.customer_id,a.assessed_cents,
+    (SELECT COALESCE(SUM(c.amount_cents),0) FROM tax_collections c JOIN weekly_tax_assessments x ON x.id=c.assessment_id WHERE x.customer_id=a.customer_id AND x.week_key=a.week_key)-(SELECT COALESCE(SUM(r.amount_cents),0) FROM tax_refunds r JOIN weekly_tax_assessments x ON x.id=r.assessment_id WHERE x.customer_id=a.customer_id AND x.week_key=a.week_key) AS paid_cents,
+    b.available_cents FROM weekly_tax_assessments a JOIN account_balances b ON b.customer_id=a.customer_id AND b.account_kind='transaction' JOIN bank_customers c ON c.id=a.customer_id WHERE a.basis_complete=1 AND c.status='active' AND b.available_cents>0 AND NOT EXISTS(SELECT 1 FROM weekly_tax_assessments n WHERE n.supersedes_id=a.id) AND a.assessed_cents>paid_cents`,
       );
-      if (a && a.available_cents > 0)
-        await attempt(
-          `collect_${await (await import("../http")).sha256(assessment.id + ":" + assessment.paid_cents + ":" + a.available_cents)}`,
-          "tax.collect",
-          { id: assessment.id },
+      for (const assessment of unpaid)
+        await attemptJob(e, "collections", assessment, now, async () =>
+          run(
+            `collect_${await hash(assessment.id + ":" + assessment.paid_cents + ":" + assessment.available_cents)}`,
+            "tax.collect",
+            { id: assessment.id },
+          ),
         );
     }
   }
@@ -582,5 +601,37 @@ export async function runEconomyJobs(e: Env, now = seconds()) {
       today.dateKey,
     ))
   )
-    await attempt(`noon_${today.dateKey}`, "snapshot.capture", {});
+    await run(`noon_${today.dateKey}`, "snapshot.capture", {});
+}
+
+/** Prepared exchange plans deliver through their existing durable settlement path. */
+export async function settleEconomyDelivery(r: Request, e: Env, b: Input) {
+  const id = str(b.id),
+    action = b.action;
+  if (action === "income_batch")
+    return economyCommand(
+      e,
+      { ...schedulerActor, id: "economy-service" },
+      id,
+      "income.batch",
+      b.input as Input,
+      seconds(),
+      true,
+    );
+  if (action === "economy_snapshot") {
+    const actor =
+      b.actor_id === "economy-service"
+        ? { ...schedulerActor, id: "economy-service" }
+        : await actorFor(e, str(b.actor_id), demoEnabled(r, e));
+    return economyCommand(
+      e,
+      actor,
+      id,
+      b.revise === true ? "snapshot.revise" : "snapshot.capture",
+      b.input as Input,
+      seconds(),
+      true,
+    );
+  }
+  fail("Unknown economy delivery.", "NOT_FOUND", 404);
 }

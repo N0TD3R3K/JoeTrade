@@ -239,6 +239,8 @@ export async function commerceAction(
       (sub!.state !== "active" || sub!.next_charge_at > c.now)
     )
       fail("The subscription is not due.");
+    if (action === "subscription.retry" && sub!.state !== "past_due")
+      fail("Only a past-due subscription needs an explicit payment retry.");
     if (sub!.state === "past_due" && action !== "subscription.retry")
       fail("An explicit member retry is required.");
     const plan = await activePlan(e, sub!.plan_version_id),
@@ -253,17 +255,31 @@ export async function commerceAction(
         "UPDATE company_subscriptions SET state='past_due',version=version+1 WHERE id=?",
         sub!.id,
       );
-      await outbox(
-        c,
-        "subscription.past_due",
-        {
-          subscriptionId: sub!.id,
-          customerId: sub!.customer_id,
-          serviceId: plan?.service_id ?? null,
-          period: sub!.next_period_key,
-        },
-        `${sub!.id}:${sub!.next_period_key}`,
-      );
+      const reference = `${sub!.id}:${sub!.next_period_key}`;
+      if (
+        !(await one(
+          e,
+          "SELECT 1 FROM economy_outbox WHERE source_operation_id=? AND kind='subscription.past_due'",
+          reference,
+        ))
+      ) {
+        const originalPlan = await one(
+          e,
+          "SELECT service_id FROM company_plan_versions WHERE id=?",
+          sub!.plan_version_id,
+        );
+        await outbox(
+          c,
+          "subscription.past_due",
+          {
+            subscriptionId: sub!.id,
+            customerId: sub!.customer_id,
+            serviceId: originalPlan!.service_id,
+            period: sub!.next_period_key,
+          },
+          reference,
+        );
+      }
       return { id: sub!.id, state: "past_due" };
     }
     await charge(

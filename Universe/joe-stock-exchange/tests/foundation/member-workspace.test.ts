@@ -30,7 +30,7 @@ describe("Stage 1 member routes and isolated exchange draft", () => {
     try {
       const dir = new URL("../../database/migrations/", import.meta.url);
       for (const file of readdirSync(dir)
-        .filter((x) => x.endsWith(".sql") && !x.startsWith("0008"))
+        .filter((x) => x.endsWith(".sql") && parseInt(x, 10) < 8)
         .sort())
         db.exec(readFileSync(new URL(file, dir), "utf8"));
       db.exec(
@@ -97,7 +97,7 @@ describe("Stage 1 member routes and isolated exchange draft", () => {
     try {
       const dir = new URL("../../database/migrations/", import.meta.url);
       for (const file of readdirSync(dir)
-        .filter((f) => f.endsWith(".sql") && !f.startsWith("0008"))
+        .filter((f) => f.endsWith(".sql") && parseInt(f, 10) < 8)
         .sort())
         db.exec(readFileSync(new URL(file, dir), "utf8"));
       db.exec(

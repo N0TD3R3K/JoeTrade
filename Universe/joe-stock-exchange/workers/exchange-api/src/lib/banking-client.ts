@@ -111,6 +111,7 @@ export async function bankBalance(e: Env, customerId: string) {
     available_cents: number;
     posted_cents: number;
     held_cents: number;
+    loan_liability_cents: number;
     subject: string | null;
   }>(e, `/members/${encodeURIComponent(customerId)}/summary`);
 }

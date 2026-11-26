@@ -7,6 +7,8 @@
     "db:bank:local": "npm --prefix Universe/joe-banking run db:migrate:local",
     "db:bank:demo": "npm --prefix Universe/joe-banking run db:seed:local",
     "check:bank": "npm --prefix Universe/joe-banking run check",
-    "check:exchange": "npm --prefix Universe/joe-stock-exchange run check"
+    "check:exchange": "npm --prefix Universe/joe-stock-exchange run check",
+    "dev:all": "VITE_AUTO_DEMO=true VITE_IDENTITY_MODE=joeauth VITE_DEMO_MODE=false node scripts/local-dev.mjs",
+    "stop:local": "node scripts/local-dev.mjs --stop"
   }
 }

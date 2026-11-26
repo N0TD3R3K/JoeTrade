@@ -1,3 +1,4 @@
+import { bankSiteUrl } from "../../../../../../shared/economy/links";
 import { MemberBankPanel } from "./MemberBankPanel";
 import type { Holding, NewsEvent, PortfolioSnapshot } from "@joese/contracts";
 import { formatJoellars } from "@joese/ui";
@@ -10,6 +11,7 @@ export function AccountOverview({
   onOffer,
   onSettings,
   onJoeBank,
+  onBankChanged,
 }: {
   portfolio: PortfolioSnapshot;
   onTransaction: () => void;
@@ -17,6 +19,7 @@ export function AccountOverview({
   onOffer: (holding: Holding) => void;
   onSettings: () => void;
   onJoeBank: () => void;
+  onBankChanged: () => Promise<void>;
 }) {
   return (
     <section className="workspace-page account-page">
@@ -37,7 +40,12 @@ export function AccountOverview({
             portfolio.inbox.shareOffers.length}
           )
         </button>
-        <a href="https://bank.joe-univer.se">
+        <a
+          href={bankSiteUrl(
+            window.location.hostname,
+            portfolio.summary.id === "demo-bob" ? "bob" : "alice",
+          )}
+        >
           <Landmark size={18} />
           Joe Banking
         </a>
@@ -53,7 +61,7 @@ export function AccountOverview({
         onJoeBank={onJoeBank}
       />
       {import.meta.env.VITE_DEMO_MODE !== "true" && (
-        <MemberBankPanel key={portfolio.summary.id} />
+        <MemberBankPanel key={portfolio.summary.id} onChanged={onBankChanged} />
       )}
       <p className="workspace-footnote">
         Asset values are reference estimates. Frozen shares require a named

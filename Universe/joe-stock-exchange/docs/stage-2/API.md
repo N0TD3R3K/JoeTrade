@@ -28,11 +28,16 @@ GET `/console/posts` and POST `/console/posts/{id}/{withdraw|delete}` moderate p
 removal requires `{version,reason}`. No deleted body is copied into action logs.
 
 POST `/console/economy/commands` accepts an operator action below.
-POST `/console/economy/sync` retries durable income and bank-event delivery.
+POST `/console/economy/sync` retries up to five ten-event income batches and
+bank-event delivery. It returns `{status:"synchronized"|"pending",pendingIncome}`;
+larger queues continue on later calls or the recovery schedule.
 POST `/console/economy/snapshot` takes `{revise:boolean}` and acquires the market
 mutex, compares bank checkpoints/member sets and records a guarded snapshot or
-revision. It refuses a pre-noon capture. Scheduler-only bank captures are provisional
-until this shared capture reconciles them.
+revision. It refuses a pre-noon capture. Bank-only captures are provisional;
+the exchange recovery schedule automatically attempts the shared reconciliation
+after New York noon. Capture and reconciliation do not require an approved cash
+policy. Prepared bank deliveries survive lost responses without recapturing cash
+under the same operation ID.
 
 GET `/console/economy/cost-lots` lists unknown remaining cost lots.
 POST `/console/economy/cost-lots/{id}/verify` takes `expectedRemainingUnits`,

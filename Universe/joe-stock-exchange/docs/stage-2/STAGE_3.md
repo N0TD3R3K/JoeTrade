@@ -1,49 +1,94 @@
-# Stage 3 restart and validation
+# Stage 3 local review and restart
 
-Read the root `STAGE_2_REPORT_AND_STAGE_3_HANDOFF.txt` first, then the owner’s
-Dev_Note and consolidated staged note. Preserve the original sibling Universe
-folder and owner DRK/TST, balances, holds, shares and authentication configuration.
+Implementation and local checks completed November 26, 2026. Read the root
+[Stage 3 report and test guide](../../../../STAGE_3_REPORT_AND_TEST_GUIDE.txt)
+for the completed checks, preserved balances and owner test flows. The original
+`Dev_Note.txt` and `Universe/staged_dev_note.txt` remain the design authority.
 
-Stage 2 tested the new migrations on isolated copies of the existing local databases.
-The normal `.wrangler/state` stores were not migrated, reseeded or used for new cash
-operations. The Stage 2 QA policy exists only in the isolated copy and is not an
-owner-approved operating policy. Temporary QA servers are stopped at handoff.
+## Prepared working stores
 
-Before the real local review, back up both working D1 stores, compare reconciliation
-and share totals, then apply only the new additive numbered migrations using the
-existing local migration scripts. Never run the demonstration seeds against those
-working stores. Review imported unknown cost lots/historical sale evidence; do not
-make up exact bases or approve production policy to make reports look populated.
+Both local D1 stores were backed up before migration in the root ignored folder
+`.wrangler/backups/stage3-20261126T173759Z/`. Banking migrations `0003`/`0004`
+and exchange `0008`/`0009` are applied. Original ledger entries, balances, holds,
+holdings, orders, share offers and listings were compared with the backup.
+Do not reset or reseed these stores. Preserve the sibling original Universe folder.
 
-Run focused checks, then full integration/browser tests for the owner’s Stage 3 list:
-rate scheduling/cancel and execution races, weekly quota/delay/changed-policy cases,
-loan exact acceptance/fixed/variable accrual and repayment, grant/reserve retries,
-checkout/renewal/cancel/refund recovery, employee acceptance and funded payroll,
-tax corrections/partial collection/refunds and funded redistribution, noon/DST/common
-cutoffs, company ownership changes/moderation and data scope. Exercise legacy migration
-and provider/service outages. Check combined payroll/tax periods and queued jobs with
-more than one batch. Keep production resource limits and pagination on the release list.
+Five remaining imported cost lots and both historical share sales were reviewed
+using the original prepared settlements and posted bank journals. DRK/TST company
+accounts are initialized with attributed locked capital and zero operating cash.
+Member cash and share quantities were not changed by reconciliation. Unknown
+costs and unresolved income reviews are both zero at handoff.
 
-Real merchant integration remains external work: ChatJoePT must consume and deduplicate
-its signed payment results using the member’s JoeAuth subject, then acknowledge them.
-Provision the approved app identity and service-specific verification key securely.
-Bank deposits remain unavailable; do not infer new deposit interest from the loan engine.
+## Start or stop all three websites
 
-After any remaining integration/bug fixes, start the existing local services:
+From the JoeTrade root:
 
 ```sh
-# Universe/joe-banking
-npm run dev:api
-# Universe/joe-stock-exchange, separate terminals
-npm run dev:api:local
-npm run dev:exchange:test
-npm run dev:console:test
-# Optional separate bank member site, Universe/joe-banking
-npm run dev:test
+npm run dev:all
 ```
 
-Member http://127.0.0.1:4173; console http://127.0.0.1:4174;
-bank member site http://127.0.0.1:4180. Use Alice and Bob and the separate operator,
-not a shared staff/member identity. Leave these real local previews running for
-owner testing at the end of Stage 3, with clearly labeled remaining configuration.
-No production deployment or DNS action is authorized by these stages.
+| Website | Local address | Test identity |
+| --- | --- | --- |
+| JOESE | http://127.0.0.1:4173/account | Alice/Bob in Test member |
+| Console | http://127.0.0.1:4174/ | Separate local operator |
+| Joe Banking | http://127.0.0.1:4180/ | Alice/Bob in account menu |
+
+The runner starts the bank API (`8788`), exchange API (`8787`) and market engine
+(`8791`) as well as the three frontends. It uses the existing ignored local
+service credentials and refuses occupied ports. It neither migrates nor seeds
+nor approves policy. Keep its terminal running. Use the exact `127.0.0.1` links.
+
+Every minute the runner invokes local bank/exchange scheduled work and asks the
+engine for the current hourly tick. Market ticks still respect the engine's
+New York 14:00–22:00 session and stable hourly keys; there are no forced prices.
+The local order-entry schedule remains relaxed for member testing. Production
+configuration retains its normal trading schedule and disables demo sessions.
+
+Stop only this owned preview group with:
+
+```sh
+npm run stop:local
+```
+
+Logs and process status are ignored under `.wrangler/local/`. The runner does
+not kill unrelated processes or overwrite live JoeAuth credentials.
+
+## Configuration to review in the console
+
+The working policy, initial rate, lending catalog and budgets are deliberately
+unapproved; the reserve is uninitialized. In **Joe Bank → Bank policy
+configuration**, enter the reviewed settings, save a draft and approve that exact
+version. Then use the separate once-only reserve initialization if testing lending.
+The initial reserve is J$100,000. A zero lending/distribution budget disables that
+use. The sample policy used in isolated QA was not copied into the working stores.
+
+Rates, service billing, bank offers, employee payroll, tax and redistribution have
+been tested on an isolated copy. Eligibility grants need a real, reviewed JoeAuth
+subject link; do not fabricate links for Alice or Bob or grant duplicate seed cash.
+
+## Validation completed
+
+- 71 banking and 46 exchange tests pass, including real SQLite migrations.
+- Type checks, three frontend builds and three Worker dry runs pass.
+- Eleven scenarios pass through actual local Worker HTTP APIs on an isolated copy.
+- Browser tests cover exact loan acceptance, repayment on both sites, consented
+  checkout, immediate portfolio refresh, both members, company reports, the public
+  guide and responsive member/banking/console layouts.
+- Migration comparison preserves every original financial/share row; both foreign
+  key checks are clean, all posted journals balance, and recovery queues are empty.
+
+The isolated HTTP script is `scripts/stage3-isolated-smoke.mjs`. It is intentionally
+fixed to QA API ports `8789`/`8790`. Run only on a fresh disposable copy migrated
+through the current schema, with matching ignored credentials and the member/console
+origins `4173`/`4174` and bank origin `4180`. It approves a test policy and moves
+fictional test cash on that copy. Recreate the disposable copy before a full rerun.
+Do not point it at working or remote data. Temporary QA servers are stopped.
+
+## Separate release work
+
+Live JoeAuth app/role provisioning, reviewed account links, real service receipt
+consumers, Cloudflare resources, secrets, staging sign-in, resource-limit review,
+production migration rehearsal, DNS and deployment remain separate release work.
+No production deployment or DNS action was performed. Discussion and bank deposit
+funding/interest posting remain explicitly deferred. The three local previews are
+left running for owner testing.

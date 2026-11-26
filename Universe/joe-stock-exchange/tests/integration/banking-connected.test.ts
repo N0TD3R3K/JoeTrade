@@ -1,3 +1,4 @@
+import { captureDueEconomySnapshot } from "../../workers/exchange-api/src/lib/economy-snapshot";
 import {
   syncEconomy,
   receiveEconomyEvent,
@@ -1049,11 +1050,128 @@ describe("JoeTrade connected economy", () => {
     ).toBe(200);
     expect(balance("demo-alice")).toBe(1010000);
     expect(
+      (await call(alice, "/me/portfolio")).data.summary.borrowedCents,
+    ).toBe(10000);
+    expect(
       bankDB.db
         .prepare(
           "SELECT posted_cents FROM bank_accounts WHERE id='economy-reserve'",
         )
         .get()!.posted_cents,
     ).toBe(9990000);
+  });
+  function queuedIncome(count: number) {
+    const at = Math.floor(Date.now() / 1000) - 60;
+    for (let n = 0; n < count; n++)
+      db.db
+        .prepare(
+          "INSERT INTO trade_income_outbox(id,customer_id,sale_reference,category,occurred_at,basis_complete,evidence_json) VALUES(?,'demo-alice',?,'realized_stock_gain',?,0,'{}')",
+        )
+        .run(`queued-${String(n).padStart(3, "0")}`, `historical-${n}`, at);
+  }
+  it("drains multiple same-time income batches without waiting for another clock bucket", async () => {
+    queuedIncome(23);
+    await syncEconomy(env);
+    expect(
+      db.db
+        .prepare(
+          "SELECT COUNT(*) AS n FROM trade_income_outbox WHERE delivered_at IS NOT NULL",
+        )
+        .get()!.n,
+    ).toBe(10);
+    await syncEconomy(env);
+    expect(
+      db.db
+        .prepare(
+          "SELECT COUNT(*) AS n FROM trade_income_outbox WHERE delivered_at IS NOT NULL",
+        )
+        .get()!.n,
+    ).toBe(20);
+    await syncEconomy(env);
+    expect(
+      bankDB.db.prepare("SELECT COUNT(*) AS n FROM economy_basis_holds").get()!
+        .n,
+    ).toBe(23);
+    expect(
+      db.db
+        .prepare(
+          "SELECT COUNT(*) AS n FROM trade_income_outbox WHERE delivered_at IS NULL",
+        )
+        .get()!.n,
+    ).toBe(0);
+  });
+  it("recovers income delivery after a bank commit loses its response, without duplicate evidence", async () => {
+    queuedIncome(2);
+    lostResponse = true;
+    await expect(syncEconomy(env)).rejects.toMatchObject({
+      code: "SETTLEMENT_PENDING",
+    });
+    expect(
+      bankDB.db.prepare("SELECT COUNT(*) AS n FROM economy_basis_holds").get()!
+        .n,
+    ).toBe(2);
+    expect(
+      db.db
+        .prepare(
+          "SELECT COUNT(*) AS n FROM trade_income_outbox WHERE delivered_at IS NOT NULL",
+        )
+        .get()!.n,
+    ).toBe(0);
+    await recover(env);
+    await syncEconomy(env);
+    expect(
+      bankDB.db.prepare("SELECT COUNT(*) AS n FROM economy_basis_holds").get()!
+        .n,
+    ).toBe(2);
+    expect(
+      db.db
+        .prepare(
+          "SELECT COUNT(*) AS n FROM trade_income_outbox WHERE delivered_at IS NULL",
+        )
+        .get()!.n,
+    ).toBe(0);
+    expect(
+      db.db.prepare("SELECT COUNT(*) AS n FROM financial_mutex").get()!.n,
+    ).toBe(0);
+  });
+  it("rejects changes to settlement income evidence while permitting its delivery marker", () => {
+    queuedIncome(1);
+    expect(() =>
+      db.db.exec(
+        "UPDATE trade_income_outbox SET gain_cents=1 WHERE id='queued-000'",
+      ),
+    ).toThrow("INCOME_EVIDENCE_IMMUTABLE");
+    db.db.exec(
+      "UPDATE trade_income_outbox SET delivered_at=unixepoch() WHERE id='queued-000'",
+    );
+  });
+  it("automatically captures reconciled noon figures without policy approval and retries once after response loss", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(new Date("2026-11-26T18:00:00Z"));
+      lostResponse = true;
+      await expect(captureDueEconomySnapshot(env)).rejects.toMatchObject({
+        code: "SETTLEMENT_PENDING",
+      });
+      await recover(env);
+      await captureDueEconomySnapshot(env);
+      const snapshot = bankDB.db
+        .prepare("SELECT * FROM economy_snapshots")
+        .get()!;
+      expect(snapshot.state).toBe("reconciled");
+      expect(snapshot.date_key).toBe("2026-11-26");
+      const before = bankDB.db
+        .prepare("SELECT COUNT(*) AS n FROM economy_snapshot_revisions")
+        .get()!.n;
+      await captureDueEconomySnapshot(env);
+      expect(
+        bankDB.db
+          .prepare("SELECT COUNT(*) AS n FROM economy_snapshot_revisions")
+          .get()!.n,
+      ).toBe(before);
+      expect(balance("demo-alice")).toBe(1000000);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

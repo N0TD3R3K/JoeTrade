@@ -1,6 +1,6 @@
 # Joe Banking
 
-> Current development status (November 26, 2026): Stage 2 services and UI are implemented. See [Stage 2 economy implementation](../joe-stock-exchange/docs/stage-2/README.md) and the root Stage 2 TXT report. Earlier Stage 1/foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposits remain unavailable. Final owner review is Stage 3.
+> Current development status (November 26, 2026): Stage 3 implementation and local checks are complete. See the [Stage 3 report and test guide](../../STAGE_3_REPORT_AND_TEST_GUIDE.txt) and [economy implementation](../joe-stock-exchange/docs/stage-2/README.md). Earlier foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposit funding remains unavailable. The three local websites are ready for owner review.
 
 Joe Banking is the fictional banking layer of the Joe Universe. It manages a
 member's liquid Joellars (J$), person-to-person wires, savings deposits, term
@@ -27,9 +27,10 @@ The first local implementation is available:
   banking memberships still need to be provisioned and tested in staging.
 - A loopback-only local demonstration using synthetic Alice and Bob accounts.
 
-Deposit plans and rate rules can be viewed, but funding, interest, lending,
-the complete banking staff console and production linking/migration
-are not implemented. Local JOESE settlement is described in
+Deposit funding, term-deposit contracts and deposit interest posting remain
+unavailable. Weekly rate operations, bank-owned loans, accrual and the Joe Bank
+console are implemented and require reviewed policy configuration. Production
+linking/migration remains separate. Local JOESE settlement is described in
 [the exchange integration notes](../joe-stock-exchange/docs/connected-economy.md). No real initial rate has been chosen. No new service has
 been deployed.
 
@@ -38,6 +39,13 @@ See [implementation status](docs/implementation-status.md) and the
 the target system; they are not a claim that every feature exists.
 
 ## Run locally
+
+For the already prepared working stores, run `npm run dev:all` from the JoeTrade
+root. This starts Banking, JOESE, the console and their scheduled jobs together.
+Use `npm run stop:local` in that same root to stop this group. Preserve existing
+balances and do not repeat the bank seed. Follow the [Stage 3 runbook](../joe-stock-exchange/docs/stage-2/STAGE_3.md).
+
+The following commands are for a fresh checkout/database only.
 
 Use Node.js 24 or newer. From this directory:
 

@@ -81,7 +81,9 @@ export async function handlePortfolio(
         : {}),
       frozenAssetValueCents,
       assetValueCents,
-      borrowedCents: user.borrowedPrincipalCents,
+      borrowedCents: bankSnapshot
+        ? bankSnapshot.loan_liability_cents
+        : user.borrowedPrincipalCents,
       preferences: user.preferences,
     };
     return json({ summary, holdings });

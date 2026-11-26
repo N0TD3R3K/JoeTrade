@@ -116,7 +116,11 @@ export function MarketMonitor({ assets, news, members, market }: Props) {
                 ["Exchange API", "Operational", Database],
                 [
                   "Market engine",
-                  localTesting ? "Local ticks not running" : "Hourly schedule",
+                  localTesting
+                    ? market.ticks.length
+                      ? "Local tick recorded"
+                      : "Waiting for a local tick"
+                    : "Hourly schedule",
                   Clock3,
                 ],
                 [

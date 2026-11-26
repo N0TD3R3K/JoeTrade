@@ -1,3 +1,4 @@
+import { captureDueEconomySnapshot } from "./lib/economy-snapshot";
 import type { Env } from "./env";
 import { applyCors, corsHeaders, HttpError, json, problem } from "./lib/http";
 import { openApiDocument } from "./openapi";
@@ -90,6 +91,7 @@ export default {
     await recover(env);
     await releaseJobs(env);
     await syncEconomy(env);
+    await captureDueEconomySnapshot(env);
     // Finish a bounded part of the oldest matching queue on each recovery tick.
     const queued = await env.DB.prepare(
       `SELECT b.asset_id FROM orders b JOIN orders s ON s.asset_id=b.asset_id JOIN assets a ON a.id=b.asset_id

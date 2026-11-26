@@ -1,3 +1,4 @@
+import { stockAccountUrl } from "../../shared/economy/links";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { MemberEconomy } from "../../shared/economy/runtime";
 import { api, date, money, parseCents } from "./api";
@@ -48,7 +49,9 @@ export function BankRate() {
 export function BankProducts({
   csrf,
   onChanged,
+  memberId,
 }: {
+  memberId: string;
   csrf: string | null;
   onChanged: () => Promise<void>;
 }) {
@@ -232,7 +235,12 @@ export function BankProducts({
           <p>
             Company checkout, employee agreements and weekly tax statements are
             also available in{" "}
-            <a href="https://stock.joe-univer.se/account">
+            <a
+              href={stockAccountUrl(
+                window.location.hostname,
+                memberId === "demo-bob" ? "bob" : "alice",
+              )}
+            >
               JoeSE Account Overview
             </a>
             .

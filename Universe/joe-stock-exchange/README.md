@@ -1,6 +1,6 @@
 # JOE Stock Exchange
 
-> Current development status (November 26, 2026): Stage 2 services and UI are implemented. See [Stage 2 economy implementation](docs/stage-2/README.md) and the root Stage 2 TXT report. Earlier Stage 1/foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposits remain unavailable. Final owner review is Stage 3.
+> Current development status (November 26, 2026): Stage 3 implementation and local checks are complete. See the [Stage 3 report and test guide](../../STAGE_3_REPORT_AND_TEST_GUIDE.txt), [restart procedure](docs/stage-2/STAGE_3.md) and [economy implementation](docs/stage-2/README.md). Policies stay unconfigured until reviewed approval; deposit funding and Discussion remain unavailable. The three local websites are ready for owner review.
 
 JOESE is the Joe Universe's fictional market. **J$ has no real-world value and
 cannot be purchased, cashed out, or redeemed for goods, services or prizes.**
@@ -28,8 +28,15 @@ Cloudflare provisioning remain necessary before production use.
 
 ## Run with the two test accounts
 
+For the prepared working stores, run `npm run dev:all` from the JoeTrade root.
+It starts the three websites, their APIs, the market engine and a local job runner.
+Use `npm run stop:local` in that root to stop this group. It does not reseed,
+apply migrations or approve policies. Keep existing balances and DRK/TST records.
+
+The manual setup below is for a fresh checkout/database.
+
 Use Node.js 24 or newer. First prepare Joe Banking as described in
-[its README](../joe-banking/README.md), including migration `0002`.
+[its README](../joe-banking/README.md), including all numbered migrations.
 Seed the bank only once on a fresh local database. Keep existing local balances.
 
 From this directory:
@@ -69,7 +76,8 @@ The sample seed has no usable passwords. Demo sessions and the local service
 secret are rejected outside the loopback-only local environment.
 
 The local market remains open for testing. The hourly price engine is not
-started by these commands; production trading hours and scheduled pricing stay
+started by these individual commands; the root `dev:all` runner starts it and
+honors the New York price-tick session. Production trading hours and scheduled pricing stay
 enabled in the production configurations. Local records persist in ignored
 `.wrangler/state/` folders.
 

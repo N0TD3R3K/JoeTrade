@@ -1,7 +1,9 @@
 # Implemented banking API
 
-Foundation release only. The larger [API design](data-model-and-api.md) describes
-future work. Every response is JSON `{ "data": ... }` or
+This foundation reference is supplemented by the implemented
+[economy actions](../../joe-stock-exchange/docs/stage-2/API.md).
+The larger [API design](data-model-and-api.md) also describes future deposit work.
+Every response is JSON `{ "data": ... }` or
 `{ "error": { "code", "message", "request_id" } }`. API responses are never
 cached. Amounts are integer cents in fictional `J$`.
 
@@ -28,19 +30,24 @@ instead of browser cookies or Origin.
 
 | Route | Response |
 | --- | --- |
-| `GET /v1/me/summary` | Posted, held, available, and flexible balances; hold categories; inbox count; feature availability |
+| `GET /v1/me/summary` | Posted, held, available, and flexible balances; active loan principal/interest/liability; hold categories; inbox count; feature availability |
 | `GET /v1/me/activity` | Most recent 100 posted transactions belonging to this customer |
 | `GET /v1/wires` | Most recent 100 wires where this customer is sender or receiver |
 | `GET /v1/me/inbox` | Most recent 100 incoming wires still pending receiver approval |
 | `GET /v1/recipients?query=...` | Exact eligible username/email lookup returning ID, display name, masked email |
-| `GET /v1/rates/current` | Approved range and a null initial rate, awaiting confirmation |
-| `GET /v1/rates/history` | Empty until rate policy is implemented |
+| `GET /v1/rates/current` | Approved range and weekly rate; null until the initial policy is approved |
+| `GET /v1/rates/history` | Approved initial rate and subsequently effective versions |
 | `GET /v1/deposits/catalog` | Preview of the specified fixed-term products with `available: false` |
 
 Recipient lookup is limited to 10 attempts per member per minute. Member wire
 POSTs are limited to 20 per member per minute. Limits are enforced in D1 and do
 not depend on browser controls. Member history does not expose another user's
 email, balance, or unrelated transactions.
+
+Summary fields `loan_principal_cents`, `loan_interest_due_cents` and
+`loan_liability_cents` describe active bank contracts, with liability equal to
+principal plus posted accrued interest. Connected JoeSE uses that liability in
+its portfolio net-position estimate. An unaccepted offer adds no liability.
 
 ## Wires
 

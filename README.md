@@ -21,10 +21,13 @@ and account linking are still required. JOESE now uses Banking for order holds, 
 member share sales, with a founder-confirmed listing launch. It remains an independent
 project in [`joe-stock-exchange`](Universe/joe-stock-exchange/README.md).
 
-This is a local development release. Banking deposits, interest jobs, lending,
-the full banking operations console, production migration and live SSO verification
-remain future work. The exchange console and connected settlement are available locally. No
-production data has been migrated and no new websites have been deployed.
+Stage 3 implementation and local validation are complete. The console now manages
+reviewed banking policy, weekly rates and loan offers; company services, employee
+payments, tax, Posts and company reports are implemented. Cash features require
+an operator-approved policy and, where applicable, an initialized reserve.
+Deposit funding, Discussion, production migration and live SSO verification remain
+separate work. See the [Stage 3 report and test guide](STAGE_3_REPORT_AND_TEST_GUIDE.txt).
+No production data has been migrated and no websites have been deployed.
 
 Start with the [development plan](DEVELOPMENT_PLAN.md) for milestones, open
 decisions, migration requirements, and launch checks.
@@ -75,6 +78,35 @@ disabled until its destination is available.
   member, operator, and internal-service access boundaries.
 
 ## Development
+
+### Continue the prepared local review
+
+The existing local databases have been backed up and migrated through Banking
+`0004` and JOESE `0009`. From this repository root, start all three websites,
+their APIs and the local scheduled-job runner:
+
+```sh
+npm run dev:all
+```
+
+- [JOESE](http://127.0.0.1:4173/account): switch Alice/Bob with **Test member**.
+- [Operations console](http://127.0.0.1:4174/): separate local operator.
+- [Joe Banking](http://127.0.0.1:4180/): switch members in the account menu.
+
+No sign-in is required in this loopback-only test mode. Records persist across
+restarts. Keep the terminal running; `npm run stop:local` stops this preview group.
+The runner reuses an existing group and never migrates, seeds or approves a policy.
+Do not rerun bank seeds against these existing working stores.
+
+Scheduled jobs run every minute during this local preview. Price changes still
+follow the engine's New York afternoon/evening session and do not force a tick.
+In **Console → Joe Bank → Bank policy configuration**, review an initial rate,
+budgets and loan catalog, save a draft and approve the exact version. Reserve
+initialization is a separate once-only action. No sample QA policy was approved
+in the working databases. The [test guide](STAGE_3_REPORT_AND_TEST_GUIDE.txt)
+explains the remaining setup and suggested test flows.
+
+### Set up a fresh checkout
 
 Clone this repository and open its folder in your editor:
 
@@ -154,6 +186,16 @@ Company Posts, scoped My Company reports, company checkout/subscriptions, employ
 payroll, weekly tax/corrections, reserve/rate operations and accepted bank loans are
 implemented. See [Stage 2 features and API](Universe/joe-stock-exchange/docs/stage-2/README.md)
 and [completion report / Stage 3 handoff](STAGE_2_REPORT_AND_STAGE_3_HANDOFF.txt).
-The original working databases remain unchanged; migration rehearsals and UI checks
-use isolated copies. Stage 3 completes final integration/testing and the owner’s
-local review. Discussion and deposit funding remain unavailable.
+During Stage 2 the original working databases remained unchanged; migration
+rehearsals and UI checks used isolated copies. Discussion and deposit funding
+remain unavailable.
+
+### Stage 3 integration and local review
+
+Both working stores are now backed up and migrated without reseeding. Historical
+cost evidence and company capital attribution are reconciled without moving member
+cash or shares. Delivery recovery, job fairness, automatic noon snapshots, checkout
+refresh and loan-liability display are corrected. All 117 automated tests and the
+build checks pass; 11 isolated HTTP scenarios and desktop/mobile browser checks
+also passed. See the [completion report](STAGE_3_REPORT_AND_TEST_GUIDE.txt) and
+[restart procedure](Universe/joe-stock-exchange/docs/stage-2/STAGE_3.md).

@@ -154,7 +154,9 @@ export function BankEconomyDesk() {
       )}
       {!status ? (
         <section className="bank-panel">
-          <h2>Banking connection required</h2>
+          <h2>
+            {error ? "Banking connection required" : "Loading banking reports…"}
+          </h2>
           <p>
             Sign in with a linked banking operator role. Retry when the service
             is available.
@@ -213,7 +215,7 @@ export function BankEconomyDesk() {
               </div>
               <div className="bank-actions">
                 <button
-                  disabled={busy || !status.policy}
+                  disabled={busy}
                   onClick={() =>
                     void perform(
                       () =>

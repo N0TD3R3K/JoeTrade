@@ -26,7 +26,17 @@ export async function session(surface: "member" | "console"): Promise<Session> {
           throw new Error("The exchange identity service is unavailable.");
         let state = ((await response.json()) as { data: Session }).data;
         localTesting = state.localDemo;
-        if (state.localDemo && !state.user) {
+        const requested = new URLSearchParams(window.location.search).get(
+          "member",
+        );
+        const fixture =
+          surface === "member" && ["alice", "bob"].includes(requested ?? "")
+            ? requested
+            : null;
+        if (
+          state.localDemo &&
+          (!state.user || (fixture && state.user.id !== `demo-${fixture}`))
+        ) {
           response = await fetch(`${base()}/sso/demo`, {
             method: "POST",
             credentials: "include",
@@ -34,7 +44,7 @@ export async function session(surface: "member" | "console"): Promise<Session> {
               "content-type": "application/json",
               "x-joese-surface": surface,
             },
-            body: "{}",
+            body: JSON.stringify(fixture ? { member: fixture } : {}),
           });
           if (!response.ok)
             throw new Error("The local test accounts are not ready.");

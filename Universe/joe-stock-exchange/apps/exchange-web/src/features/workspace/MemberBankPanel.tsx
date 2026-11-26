@@ -17,7 +17,11 @@ type Plan = {
   interval_days: number | null;
   merchant_name: string;
 };
-export function MemberBankPanel() {
+export function MemberBankPanel({
+  onChanged,
+}: {
+  onChanged: () => Promise<void>;
+}) {
   const [data, setData] = useState<MemberEconomy | null>(null),
     [plan, setPlan] = useState<Plan | null>(null),
     [error, setError] = useState(""),
@@ -59,7 +63,7 @@ export function MemberBankPanel() {
           : message,
       );
       if (name === "checkout.accept") setPlan(null);
-      await load();
+      await Promise.all([load(), onChanged()]);
     } catch (e) {
       setError((e as Error).message);
     } finally {

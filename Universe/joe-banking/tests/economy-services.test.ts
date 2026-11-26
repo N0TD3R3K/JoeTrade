@@ -133,7 +133,7 @@ describe("Bank-owned economy services", () => {
     category: string,
     amount: number,
     at = start,
-    reference = crypto.randomUUID(),
+    reference: string = crypto.randomUUID(),
   ) {
     db.db
       .prepare(
@@ -631,5 +631,142 @@ describe("Bank-owned economy services", () => {
       cmd(bob, "loan.accept", { id: offer.id, termsHash: offer.termsHash }),
     ).rejects.toMatchObject({ code: "TERMS_CHANGED" });
     expect(balance("demo-bob-transaction")).toBe(1000000);
+  });
+  it("refuses early subscription retry and safely repeats an underfunded past-due retry", async () => {
+    await funded();
+    const plan = await company("subscription", 600000),
+      paid = await checkout(plan);
+    await expect(
+      cmd(bob, "subscription.retry", { id: paid.subscriptionId }),
+    ).rejects.toThrow("past-due");
+    expect(balance("demo-bob-transaction")).toBe(400000);
+    now += 86400;
+    expect(
+      (await cmd(bob, "subscription.renew", { id: paid.subscriptionId })).state,
+    ).toBe("past_due");
+    expect(
+      (await cmd(bob, "subscription.retry", { id: paid.subscriptionId })).state,
+    ).toBe("past_due");
+    expect(
+      (await cmd(bob, "subscription.retry", { id: paid.subscriptionId })).state,
+    ).toBe("past_due");
+    expect(
+      db.db
+        .prepare(
+          "SELECT COUNT(*) AS n FROM economy_outbox WHERE kind='subscription.past_due'",
+        )
+        .get()!.n,
+    ).toBe(1);
+    expect(balance("demo-bob-transaction")).toBe(400000);
+  });
+  it("keeps the consented wall-time anchor across an actual spring DST renewal", async () => {
+    now = wallToSeconds("2026-03-07T02:30");
+    await funded();
+    const plan = await company("subscription", 100),
+      paid = await checkout(plan);
+    let sub = db.db.prepare("SELECT * FROM company_subscriptions").get()!;
+    expect(newYorkWall(Number(sub.next_charge_at))).toBe("2026-03-08T03:00");
+    now = Number(sub.next_charge_at) + 60;
+    await cmd(bob, "subscription.renew", { id: paid.subscriptionId });
+    sub = db.db.prepare("SELECT * FROM company_subscriptions").get()!;
+    expect(newYorkWall(Number(sub.next_charge_at))).toBe("2026-03-09T02:30");
+    expect(balance("demo-bob-transaction")).toBe(999800);
+  });
+  it("settles a cancellation/renewal race once and prevents all later charges", async () => {
+    await funded();
+    const plan = await company("subscription", 100),
+      paid = await checkout(plan);
+    now += 86400;
+    await Promise.allSettled([
+      cmd(bob, "subscription.cancel", { id: paid.subscriptionId }),
+      cmd(bob, "subscription.renew", { id: paid.subscriptionId }),
+    ]);
+    await cmd(bob, "subscription.cancel", { id: paid.subscriptionId });
+    expect(balance("demo-bob-transaction")).toBeGreaterThanOrEqual(999800);
+    now += 86400;
+    await expect(
+      cmd(bob, "subscription.renew", { id: paid.subscriptionId }),
+    ).rejects.toThrow("not active");
+    expect(await reconciliation(db.env())).toEqual({
+      unbalanced_transactions: 0,
+      projection_mismatches: 0,
+      negative_available_accounts: 0,
+    });
+  });
+  it("rotates past five deferred payroll jobs so a sixth eligible company is processed", async () => {
+    await funded();
+    for (let i = 0; i < 6; i++) {
+      const id = `queue-company-${i}`;
+      db.db
+        .prepare(
+          "INSERT INTO economy_companies(id,exchange_asset_id,state,display_name,employee_pool_bps) VALUES(?,?,'active',?,5000)",
+        )
+        .run(id, id, id);
+      db.db
+        .prepare(
+          "INSERT INTO bank_accounts(id,account_kind) VALUES(?,'internal_clearing')",
+        )
+        .run(`company:${id}:operating`);
+      db.db
+        .prepare(
+          "INSERT INTO economy_accounts(account_id,company_id,purpose) VALUES(?,?,'company_operating')",
+        )
+        .run(`company:${id}:operating`, id);
+    }
+    db.db.exec(
+      "INSERT INTO company_employee_agreements(id,company_id,employee_id,version,allocation_bps,terms_hash,accepted_at,state) VALUES('sixth-agreement','queue-company-5','demo-bob',1,10000,'reviewed-fixture',1,'accepted')",
+    );
+    now = wallToSeconds("2026-11-23T12:00");
+    await runEconomyJobs(db.env(), now);
+    expect(
+      db.db.prepare("SELECT COUNT(*) AS n FROM company_payroll_runs").get()!.n,
+    ).toBe(0);
+    await runEconomyJobs(db.env(), now + 300);
+    expect(
+      db.db
+        .prepare(
+          "SELECT state FROM company_payroll_runs WHERE company_id='queue-company-5'",
+        )
+        .get()!.state,
+    ).toBe("posted");
+    expect(
+      db.db
+        .prepare(
+          "SELECT COUNT(*) AS n FROM economy_job_attempts WHERE queue='payroll' AND outcome='deferred'",
+        )
+        .get()!.n,
+    ).toBe(5);
+  });
+  it("blocks stale tax collection after late evidence until an explicit revision", async () => {
+    await funded();
+    event("employee_wage", 100000);
+    event("realized_stock_gain", 60000);
+    const tax = await closedTax();
+    event("realized_stock_gain", -60000, start, "late-loss");
+    await expect(
+      cmd(operator, "tax.collect", { id: tax.id }),
+    ).rejects.toMatchObject({ code: "ASSESSMENT_STALE" });
+    const revision = await cmd(operator, "tax.assess", {
+      customerId: alice.id,
+      week: "2026-11-16",
+      supersedesId: tax.id,
+      evidence: "Late exact disposal evidence",
+    });
+    expect(revision.assessedCents).toBe(2000);
+    expect(
+      (await cmd(operator, "tax.collect", { id: revision.id })).collectedCents,
+    ).toBe(2000);
+  });
+  it("captures read-only noon totals even before any cash policy is approved", async () => {
+    await runEconomyJobs(db.env(), now);
+    expect(
+      db.db.prepare("SELECT state FROM economy_snapshots").get()!.state,
+    ).toBe("provisional");
+    expect(balance("demo-alice-transaction")).toBe(1000000);
+    expect(
+      db.db
+        .prepare("SELECT COUNT(*) AS n FROM bank_reserve_initializations")
+        .get()!.n,
+    ).toBe(0);
   });
 });

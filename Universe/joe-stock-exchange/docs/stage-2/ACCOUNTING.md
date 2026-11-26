@@ -112,6 +112,22 @@ configuration conditions do not block unrelated jobs. Payroll can be retried aft
 funding; past-due renewals require the member. Redistribution stays operator-initiated.
 Exchange’s existing five-minute recovery job also delivers pending income/news.
 
+Stage 3 adds durable cursors for renewals, accruals, expiries, payroll, assessments
+and collections. A deferred business condition advances the cursor so the first
+five blocked items cannot starve later work. Unpaid collections scan all latest
+assessments rather than the console's limited display. Each collection/refund
+rechecks income IDs, unresolved costs and the exchange cutoff; changed evidence
+requires an attributed assessment revision before settlement.
+
+Exchange income imports now prepare an immutable ten-event plan under the market
+mutex. A bank-side `income.batch` command records the batch and optional cutoff
+atomically, then the exchange marks its rows delivered. Unknown outcomes retain
+the prepared operation for recovery. The bank stores compact proof references and
+hashes; the full settlement evidence remains immutable in the exchange outbox.
+Already recorded matching events are accepted on replay. Rate-news receipt and
+market-event creation also hold the mutex so a tick cannot consume a new signal
+halfway through processing listings.
+
 ## Snapshots and recommendations
 
 New York noon is DST-aware. A late capture reports its actual capture time, never a
@@ -119,6 +135,9 @@ fabricated historic noon balance. Bank-only captures are provisional. A reconcil
 capture holds the exchange mutex, compares bank financial checkpoints and member
 identity sets, and validates unchanged bank account balances in the committing D1
 batch. Later reconciliation is an attributed revision of the daily observation.
+The bank can capture a read-only provisional observation without an approved cash
+policy; the exchange schedule attempts reconciliation automatically after noon.
+A reconciled observation for the current date is not recaptured every interval.
 
 Member posted cash includes holds; available and held are separate subsets.
 Company operating cash, reserve, locked capital and fee clearing are separate buckets.

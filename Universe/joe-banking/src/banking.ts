@@ -37,7 +37,15 @@ export async function summary(env: Env, customer: Customer) {
   )
     .bind(customer.id)
     .first<{ count: number }>();
+  const loan = await env.DB.prepare(
+    "SELECT COALESCE(SUM(l.principal_outstanding_cents),0) AS principal,COALESCE(SUM(l.interest_due_cents),0) AS interest FROM bank_loan_contracts l JOIN bank_loan_offers o ON o.id=l.offer_id WHERE o.customer_id=? AND l.state='active'",
+  )
+    .bind(customer.id)
+    .first<{ principal: number; interest: number }>();
   return {
+    loan_principal_cents: loan!.principal,
+    loan_interest_due_cents: loan!.interest,
+    loan_liability_cents: loan!.principal + loan!.interest,
     currency: "J$",
     posted_cents: transaction.posted_cents,
     available_cents: transaction.available_cents,
