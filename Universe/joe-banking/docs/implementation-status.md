@@ -1,5 +1,7 @@
 # Banking implementation status
 
+> Current development status (November 26, 2026): Stage 2 services and UI are implemented. See [Stage 2 implementation](../../joe-stock-exchange/docs/stage-2/README.md) and the root Stage 2 TXT report. Earlier Stage 1/foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposits remain unavailable. Final owner review is Stage 3.
+
 First local foundation, November 24, 2026. The original design documents remain
 the target specification; this file distinguishes working behavior from plans.
 
@@ -84,3 +86,13 @@ signs a body containing `id`, `event`, `timestamp`, and nested `data.app_id` /
 `data.user_id`. Banking checks that signed envelope and deduplicates by app and
 event ID. Confirm the deployed source revision and internal app identifier
 during staging; public documentation alone is not an end-to-end verification.
+
+## Stage 1 economy foundation — November 25, 2026
+
+Shared typed money/rate/calendar/contracts and SQL drafts now exist. The drafts
+are outside migrations and contain no grants, reserve seeds or activated policy.
+The console shows planned economy cards and a calculation-only rate popup.
+The existing portfolio API also supplies posted/held amounts for Overview.
+The new financial services, company Posts and reporting APIs remain unimplemented.
+Read [Stage 1 design and scope](../../joe-stock-exchange/docs/stage-1/README.md)
+and the root Stage 1 TXT report for validation and the Stage 2 handoff.

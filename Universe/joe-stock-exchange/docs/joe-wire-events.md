@@ -1,5 +1,7 @@
 # Joe Wire events
 
+> Current development status (November 26, 2026): Stage 2 services and UI are implemented. See [Stage 2 rate/news delivery](stage-2/ACCOUNTING.md) and the root Stage 2 TXT report. Earlier Stage 1/foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposits remain unavailable. Final owner review is Stage 3.
+
 ## Purpose
 
 The Joe Wire is JOESE's in-product fictional news identity. It lets members
@@ -99,3 +101,14 @@ The member exchange includes a Joe Wire archive showing published bulletins and
 their related official market updates. It must retain corrected and expired
 events, explain when a bulletin was first applied, and preserve the historical
 record even after an asset is retired.
+
+## Staged automatic Banking events
+
+The new design adds the monetary_policy category for a linked successful rate
+operation: cut = bullish, increase = bearish, active stocks only, mild severity,
+one eligible tick as the v1 design default. Source operation, actual effective
+instant and receipt hash are durable linkage, not editorial text. Deduplicate
+before publishing. Scheduled/canceled rate jobs do not secretly affect prices.
+This category/linkage is not implemented in Stage 1; Stage 2 must update both
+validation and engine tests before using it. Company progress Posts are separate
+from Joe Wire and must not automatically become market-moving events.

@@ -1,5 +1,7 @@
 # JOE Stock Exchange
 
+> Current development status (November 26, 2026): Stage 2 services and UI are implemented. See [Stage 2 economy implementation](docs/stage-2/README.md) and the root Stage 2 TXT report. Earlier Stage 1/foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposits remain unavailable. Final owner review is Stage 3.
+
 JOESE is the Joe Universe's fictional market. **J$ has no real-world value and
 cannot be purchased, cashed out, or redeemed for goods, services or prizes.**
 JoeAuth supplies identity, Joe Banking owns liquid J$, and this project owns
@@ -115,3 +117,12 @@ The running API's `GET /v1/openapi.json` is the contract for connected mode.
 lending routes in that older file are disabled in connected mode. Older design
 and JoeAuth adaptation documents describe historical decisions, not production
 verification.
+
+## Stage 1 economy foundation
+
+The member shell now provides Account Overview, Stock Listings, News, Posts,
+Discussion and My Company routes. Existing balance/trading/Inbox actions and
+published news are reused; new Posts, company reports and financial services
+are clearly unavailable until Stage 2. The console has an example-only rate
+calculator. Read [the Stage 1 index](docs/stage-1/README.md) before continuing.
+No draft SQL is loaded by migration commands, and no live funds are initialized.

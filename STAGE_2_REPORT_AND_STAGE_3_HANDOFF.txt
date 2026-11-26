@@ -1,0 +1,311 @@
+JOETRADE — STAGE 2 REPORT AND STAGE 3 HANDOFF
+Completed: November 26, 2026 (America/New_York)
+Repository: /Users/lizexi/Documents/joelib/JoeTrade
+Starting Git revision: 4622a45, with the existing uncommitted Stage 1 work retained.
+Status: STAGE 2 DEVELOPMENT COMPLETE. Final owner review belongs to Stage 3.
+
+1. AUTHORITY AND PRESERVATION
+
+Dev_Note.txt remains the priority owner specification. The clarification is
+EMPLOYEES, not employers. Universe/staged_dev_note.txt and the Stage 1 report
+supply the staged design and dependency order. Discussion details remain deferred.
+No development questions were asked and no live commercial numbers were invented
+as approved owner policy.
+
+These priority sources retain their original Stage 1 hashes:
+Dev_Note.txt:
+33a354ef34bf56a707ccceba9637203ef52ef61b1cfc7bc2af4c0beb832e3d06
+HANDOFF_NEXT_SESSION.txt:
+a3e013c3294fb9d1cb4e5beeb1291f35b7ec7a61d9817a54d40d10aac0587c86
+Universe/staged_dev_note.txt:
+93f8ccfd226bb7bcc583f95e93781fd9354e64f354f78cbfbab658927e26720e
+
+Only JoeTrade was edited. The sibling original Universe was not edited.
+No commit, push, production deployment, DNS operation or credential change occurred.
+Existing .dev.vars credentials were reused without printing their values.
+No demonstration seed was run against the owner's working stores.
+
+All migration rehearsals and browser writes used isolated backups under:
+/private/tmp/joetrade-stage2-20261126/
+The normal project .wrangler/state stores remain unmigrated and financially unchanged.
+Fingerprints of their financial/share tables match the pre-rehearsal baseline.
+DRK, TST, all holdings, balances, orders, wires and holds were preserved.
+
+2. FEATURES IMPLEMENTED
+
+A. Member workspace
+- Six destinations retain the specified order: Account Overview, Stock Listings,
+  News, Posts, Discussion, My Company. Existing stock/crypto trading, private
+  frozen-share Offers, wires/Inbox, listing funding and public Guide remain.
+- Account Overview now loads actual own bank offers/contracts, subscriptions,
+  employee agreements and latest weekly tax statements.
+- A checkout link /account?plan=<ID> displays the server-defined merchant, price,
+  one-time/recurring terms and consent checkbox before any payment.
+- Member actions include loan acceptance/decline/repayment, subscription cancel/
+  explicit retry and employee agreement acceptance/ending.
+- Switching Alice/Bob remounts member-specific financial/company views so the
+  previous member's controls or banking information do not remain on screen.
+- Static Stage 1 preview scripts remain explicitly static and do not connect the
+  new banking/company action panels to actual APIs.
+
+B. Posts and company permissions
+- Actual company-specific publishing APIs and form are implemented.
+- Developer link or a positive settled stock/frozen holding qualifies. A pending
+  buyer's share offer does not qualify. Insert-time checks enforce ownership.
+- Author or authorized operator/moderator may withdraw/delete using the current
+  post version. Former shareholders retain removal rights on their own posts.
+- Withdrawal hides a post from other members. Deletion nulls title/body and keeps
+  an attributed tombstone/action log. Idempotency records store hashes/responses,
+  not an extra copy of deleted post text.
+- Console Joe Bank includes a post moderation queue and reasoned removal controls.
+- Discussion remains an honest planned page; no separate forum was invented.
+
+C. My Company
+- Actual developer/shareholder reports show weekly net and lifetime gross revenue,
+  refunds, employee payments, retained revenue, operating cash, verified locked
+  capital, market capitalization, prior-week stock comparison when evidence exists,
+  and shareholder names/quantities/percentages.
+- Shareholders receive aggregate data only. Billing/customer receipts, employee
+  agreements and service management fields are returned only to Banking managers.
+- Registered developers can initialize company banking metadata. Matched founding
+  journals are attributed without moving or redeeming locked founding capital.
+- Manager forms cover service requests, immutable plans, employee pool/agreements,
+  funded payroll and full linked refunds. Private payment references are scoped.
+- An unavailable company bank record or weekly close is labeled unavailable.
+  Revenue never directly overwrites a stock price.
+
+D. Approved policy and Banking ledger commands
+- New commands bind a stable key to actor and canonical request hash. Stored
+  responses replay after lost replies. Different terms with the same key conflict.
+- A database revision guard serializes economy planning. Command, domain updates,
+  balanced journal postings, audit records and outbox entries commit atomically.
+- Approved policy versions, billing plan terms, accepted offer terms, income events,
+  assessment revisions and audit records have additional immutability protections.
+- Policy editor supports an explicit initial weekly Joe Rate, lending budget,
+  reviewed fixed/variable loan catalog, redistribution budget and opening-grant gate.
+  Draft and approval are separate actions. Existing accepted contracts retain terms.
+- Reserve initialization posts J$100,000 exactly once against explicit issuance.
+  Warning is strictly below J$90,000; no automatic seizure or price change.
+- Eligibility requires an exact linked verified JoeAuth subject and review evidence.
+  Existing J$10,000 grants can be reconciled to their original opening journals.
+  New grants require approved eligibility, enabled policy and an empty new account;
+  uniqueness protects both member and subject. Grants do not drain bank reserve.
+
+E. Company payments, subscriptions and employees
+- Service requests bind the company to a JoeAuth app; an operator approves billing.
+- Immutable server-priced purchase/subscription plans require exact member consent.
+  Cash moves from available member funds to company operating funds once.
+- New York calendar-day recurrence handles DST gaps/repeated hours. Delayed jobs
+  charge one period and skip missed intervals; no automatic catch-up pile.
+- Insufficient funds or inactive/changed terms make a renewal past due. Cancellation
+  stops future renewals. A member must explicitly retry a missed payment.
+- Full refunds link the original settled payment, reverse its recognized revenue
+  and use available company operating cash. An underfunded refund stays pending;
+  one original payment has at most one refund. Posted wages are not clawed back.
+- Employee pool and weights are explicit company configuration. Employees accept
+  immutable agreement terms; accepted weights must total 100% before payroll.
+- A closed revenue week has one funded payroll run, limited by settled net revenue,
+  prior allocations and company cash. Largest-remainder allocation preserves cents.
+  Employee income belongs to its actual posting week, not the older revenue week.
+
+F. Exact gains, weekly tax and redistribution
+- New acquisitions/disposals record exact FIFO basis by owner/asset/holding kind.
+  Buyer fees enter acquisition cost; seller fees reduce realized proceeds.
+- Founder basis is the actual contribution. Partial allocations conserve original
+  basis, and final disposal consumes remaining cents.
+- Existing quantities/sales import as explicit unresolved evidence when exact basis
+  cannot be proven. Rounded average cost or today's quote is never substituted.
+- Operator tools review remaining legacy lots and separately resolve historical
+  sale income with evidence. Unknown affected weeks stay held for review.
+- Income delivery advances its exchange cutoff under the existing market mutex,
+  after settlement recovery. New sale time/proceeds match the actual bank journal.
+- Closed-week tax applies the owner's WHOLE-income brackets. Wages/interest plus
+  positive net realized trading gain are taxable; trading losses do not erase wages.
+  Grants, redistribution, wires, principal, capital and unrealized value are excluded.
+- The owner's arithmetic example is J$1,600 x 2% = J$32. Bracket jumps remain visible.
+- Assessments record policy/evidence and explicit immutable revision chains.
+  Collection uses available cash only, retains unpaid tax, and respects existing holds.
+  Reviewed overpayments can be refunded from reserve without double refunding.
+- Redistribution requires an operator-funded approved budget, received tax/interest,
+  a recorded eligible member set, reserve headroom and retained tax-refund obligations.
+  It is equal and cent-conserving; it does not mint a new allowance.
+
+G. Rates, news, loans and scheduled work
+- Console rate button opens a real date/change/reason/explanation dialog.
+- Joe Rate is weekly 0.300%–2.000%. Changes are signed 0.005–0.200 percentage points,
+  step 0.005, with two operations per New York week. Future slots are reserved;
+  pending operations can be canceled, releasing their slots.
+- Execution revalidates policy, expected rate version, sequence and actual-week quota.
+  It records actual execution time and fails stale sequences rather than backdating.
+- Applied changes and the durable event commit together. Exchange stores one receipt
+  and one linked monetary_policy Joe Wire article. Cuts give a mild bullish model
+  signal; increases a mild bearish one, for one eligible stock tick, excluding crypto.
+  The original market caps still apply. Scheduling/cancellation produces no applied news.
+  Internal notes remain private. News exposes effective time and operation reference.
+- Approved catalog loan offers move no cash or interest until exact member acceptance.
+  Acceptance requires initialized reserve, current terms, available reserve and budget.
+  Variable starting offers must be refreshed if the index changes before acceptance.
+- Disbursement is reserve-funded and records a principal receivable/obligation pair.
+  Repayment pays interest first, then principal. Fixed terms remain fixed; variable
+  accrual splits at actual rate boundaries with exact fractional-cent carry.
+  Due time follows the accepted term; no unapproved penalty or forced sale was added.
+- Banking's five-minute job handles bounded due rates, renewals, loan accrual/expiry,
+  closed-week funded payroll, tax assessments/available collection and noon captures.
+  Exchange's existing recovery job also synchronizes income and bank events.
+  Local Wrangler does not automatically invoke cron; Stage 3 must test its handlers.
+
+H. Noon dashboard, recommendations and service delivery
+- Dashboard separates member posted/available/held cash, company operating cash,
+  reserve, locked capital and fee clearing. Holds are not added twice.
+- Noon observations show asset and portfolio averages separately, including the
+  assets-versus-J$10,000 percentage. Missing evidence or no members gives unavailable.
+- Bank-only captures are provisional. Shared captures compare bank financial/member
+  checkpoints while the exchange is locked, then validate unchanged bank balances
+  in the committing batch. Late capture times are honest; revisions are attributed.
+- Operator-only rate recommendations explain seven-day variable-loan collectibility
+  assumptions. Missing obligations/data gives insufficient data; nothing auto-applies.
+- Approved merchant apps can pull only their own durable entitlement results with
+  strict JoeAuth app tokens. Ordered results use JoeAuth subject and service-specific
+  HMAC signatures, with separate idempotent acknowledgment from exchange receipts.
+  The master signing secret is never sent to merchants or members.
+- Banking and exchange live OpenAPI references and public member Guide are updated.
+  The bank website Interest Rate and Loans pages now use real rate/loan/subscription
+  APIs. Deposit funding and deposit interest remain unavailable.
+
+3. FILE MAP
+
+Shared units, calendar, allocation and DTOs:
+  Universe/shared/economy/runtime.ts and existing shared foundation files.
+Banking modules:
+  Universe/joe-banking/src/economy/core.ts, treasury.ts, commerce.ts,
+  circulation.ts, routes.ts, services.ts, openapi.ts.
+Bank migration:
+  Universe/joe-banking/database/migrations/0003_economy.sql.
+Exchange migration:
+  Universe/joe-stock-exchange/database/migrations/0008_company_economy.sql.
+Exchange services:
+  workers/exchange-api/src/routes/company-economy.ts;
+  workers/exchange-api/src/lib/cost-basis.ts and economy-delivery.ts.
+Connected trading, market news and scheduled engine integrate these services.
+Member UI:
+  apps/exchange-web/src/features/workspace/CompanyPages.tsx, MemberBankPanel.tsx;
+  WorkspacePages/App integration and responsive styles.
+Console UI:
+  apps/operations-console/src/features/joe-bank/BankEconomyDesk.tsx,
+  bank-economy.css; apps/shared/EconomyDialog.tsx and economy-client.ts.
+Bank website:
+  Universe/joe-banking/web/EconomyProducts.tsx and App integration.
+Canonical current docs:
+  Universe/joe-stock-exchange/docs/stage-2/README.md, API.md,
+  ACCOUNTING.md and STAGE_3.md. Relevant existing docs/READMEs point there.
+
+4. VALIDATION AND FIXES
+
+Automated tests: 107 passed total.
+  Banking: 65 passing tests across 6 files.
+  Exchange: 42 passing tests across 4 files.
+The total includes existing tests; Stage 2 added substantive financial, permission,
+recovery, migration and signed-delivery coverage rather than replacing older checks.
+
+Type checks passed for Banking and every exchange workspace. All three frontends
+built successfully. Banking Worker, exchange API and market engine deployment
+DRY RUNS passed. No actual deployment occurred. git diff --check passed.
+
+Important covered behavior: policy/role gating; once-only reserve and grant evidence;
+consent/server pricing; holds; lost-response/duplicate payment retries; concurrent
+checkout rollback; renewal/cancel/past-due states; linked refund accounting; exact
+employee allocations; tax J$32/brackets/losses/partial collection/corrections/refunds;
+funded redistribution with conserved cash; quota/cancellation and scheduled rate
+application; fixed/variable loan acceptance/accrual/repayment; DST recurrence;
+scoped company reports; ownership changes/post removal; exact frozen-share gains;
+one monetary-policy event and one eligible tick; forged/cross-service receipt denial.
+
+Final local D1 rehearsal used fresh read-only backups of the existing working data.
+Both full final numbered migrations succeeded through Wrangler's local emulator.
+Before/after fingerprints matched ALL rows/values in the following baseline tables:
+- Bank: 7 account-balance rows, 9 ledger transactions, 20 ledger lines,
+  2 exchange holds and 2 fund holds.
+- Exchange: 14 assets, 17 holdings, 14 orders, 1 trade, 2 share offers,
+  2 listing proposals.
+Both foreign-key checks were clean; bank projection mismatches were zero.
+No reserve, grant or approved policy was inserted by migration.
+The copied exchange imported 5 unresolved legacy lots and 2 unresolved legacy sales.
+These counts describe existing evidence needing review, not a reset or new trade.
+
+Rehearsal found a nullable-basis constraint that rejected unknown legacy costs.
+The new migration was fixed and regression-tested, then the final rehearsal passed.
+Browser checks found an inherited console grid style and stale views after switching
+members. The console class was isolated; member-specific views are keyed by identity.
+Those fixes were checked again in the local preview.
+
+Browser checks used actual local API servers backed ONLY by the isolated migrated
+copies, not static sample data and not the owner's working stores. Alice/Bob and
+separate operator identities were used. Checked company/shareholder scoping, real
+company banking initialization with J$5,000 capital attribution but no cash movement,
+company post publishing, account switching/removal controls, policy draft/review/
+approval, scheduling 1.000% to 0.995% at November 30 noon NY, cancellation, focus/
+Escape behavior, console margins, and 390px phone company/console/dialog layouts.
+The phone checks showed no page overflow; the rate dialog fit at 356px.
+The UI QA policy, TST post and company metadata exist ONLY in the isolated QA copy.
+No browser test disbursed a loan, initialized reserve or changed original balances.
+Bank member frontend behavior was type-checked/built; its complete browser cash-flow
+review is still a Stage 3 task, as are full combined real-working-store flows.
+
+Saved preview images:
+/Users/lizexi/.codex/visualizations/2026/11/24/01a20fbb-0194-7123-a1c6-4c40e8906a3a/stage2-bank-console.jpg
+/Users/lizexi/.codex/visualizations/2026/11/24/01a20fbb-0194-7123-a1c6-4c40e8906a3a/stage2-company-report.jpg
+Rehearsal evidence (temporary, may later be cleaned):
+/private/tmp/joetrade-stage2-20261126/baseline.json
+/private/tmp/joetrade-stage2-20261126/migration-verification.json
+
+5. STAGE 3 START HERE
+
+1) Read this report, Dev_Note, the consolidated staged note and stage-2 docs.
+   Keep Discussion deferred and employee revenue recipients unchanged.
+2) Back up the normal working stores, then apply the new numbered migrations
+   before running the new code against those stores. Do NOT rerun demo seeds.
+   Use the existing bank db:migrate:local and exchange db:migrate:test scripts.
+3) Reconcile legacy cost lots/sale income, stable identities/grants and any capital
+   attribution with actual evidence. Do not use rounded averages or issue duplicate
+   balances to fill missing reports.
+4) Review actual operating policy/catalog/budgets explicitly. The isolated QA 1.000%
+   rate and loan example are NOT the owner's approved policy and must not be copied
+   automatically to production or the working data.
+5) Finish any integration/bug fixes and perform the staged plan's full financial,
+   recovery/concurrency and browser scenarios: rates, loans, billing/renewals/refunds,
+   employees, taxes/redistribution, snapshot reconciliation, permissions and old flows.
+   Exercise more than one bounded job batch, delayed events and service outages.
+6) Real ChatJoePT/service integration requires that separate app to verify/deduplicate
+   and acknowledge its own signed receipts using JoeAuth subject. Provision approved
+   app identity and its service-specific key securely; never share the master secret.
+7) Live JoeAuth provisioning/staging, production resources/secrets, production migration,
+   Cloudflare/DNS, deployment, monitoring and broader release review remain outstanding.
+   Deposit funding/term contracts/interest posting remain disabled. Revenue price
+   manipulation and a separate Discussion forum were not added.
+8) Run the real local bank API, exchange API, member site, console and optional bank
+   frontend. Verify Alice/Bob and separate operator, desktop/mobile and the public
+   Guide. Leave real local previews running for the owner's Stage 3 review.
+
+6. SHUTDOWN AND RESTART
+
+The five temporary QA processes were stopped after validation. Ports 4173, 4174,
+4180, 8787 and 8788 have no remaining listeners from this task. Preview overrides
+were reset. No site was deployed. Do not treat the temporary QA copy as working data.
+
+After backups and normal-store migration in Stage 3:
+Bank directory: /Users/lizexi/Documents/joelib/JoeTrade/Universe/joe-banking
+  npm run dev:api
+Exchange directory: /Users/lizexi/Documents/joelib/JoeTrade/Universe/joe-stock-exchange
+  npm run dev:api:local
+  npm run dev:exchange:test
+  npm run dev:console:test
+Optional bank member frontend, bank directory:
+  npm run dev:test
+
+Member site: http://127.0.0.1:4173/
+Guide:       http://127.0.0.1:4173/guide
+Console:     http://127.0.0.1:4174/
+Bank site:   http://127.0.0.1:4180/
+
+Stage 2 stops here with its code, focused validation and handoff recorded.
+Stage 3 performs final integration, testing, fixes and the owner's live local review.

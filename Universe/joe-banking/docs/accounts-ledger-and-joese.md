@@ -109,3 +109,7 @@ Closing a member account first resolves or freezes pending wires, holds,
 deposits, loans, and JOESE activity. Historical ledger and contract records are
 retained.
 
+
+## Stage 1 development update — November 25, 2026
+
+Stage 1 separates future company operating cash, bank-owned reserve and locked capital. Existing aggregated joese-capital needs evidence-based attribution, not redemption or a second capital posting. See [ledger/service contracts](../../joe-stock-exchange/docs/stage-1/SERVICE_CONTRACTS.md). Schema drafts are outside startup migrations.

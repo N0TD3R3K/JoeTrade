@@ -1,5 +1,7 @@
 # Data model and API
 
+> Current development status (November 26, 2026): Stage 2 services and UI are implemented. See [Stage 2 API reference](../../joe-stock-exchange/docs/stage-2/API.md) and the root Stage 2 TXT report. Earlier Stage 1/foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposits remain unavailable. Final owner review is Stage 3.
+
 ## 1. Data-model principles
 
 - Use opaque string IDs; never use email as a financial primary key.
@@ -240,3 +242,7 @@ lock.
 Errors must not expose another member's existence, balance, email, contract, or
 internal ledger account.
 
+
+## Stage 1 development update — November 25, 2026
+
+The new shared economy DTOs are in Universe/shared/economy. Draft schemas and proposed (not live) routes are inventoried in [Stage 1 service contracts](../../joe-stock-exchange/docs/stage-1/SERVICE_CONTRACTS.md). The existing implemented API remains authoritative until Stage 2 handlers exist.

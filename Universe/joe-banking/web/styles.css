@@ -1971,3 +1971,79 @@ small,
     visibility: visible;
   }
 }
+.banking-products {
+  padding: 30px;
+}
+.bank-product {
+  padding: 22px;
+  border: 1px solid #d5dfe6;
+  border-radius: 12px;
+  margin: 20px 0;
+  background: #f8fbfc;
+}
+.bank-product h3 {
+  margin: 0 0 12px;
+}
+.bank-product p,
+.banking-products > p {
+  line-height: 1.7;
+  color: #526475;
+}
+.product-line {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 20px 0;
+  border-bottom: 1px solid #dae2e8;
+}
+.product-consent {
+  display: flex;
+  gap: 12px;
+  align-items: start;
+  line-height: 1.6;
+  margin: 18px 0;
+}
+.product-consent input {
+  width: 19px;
+  height: 19px;
+  flex: none;
+  margin-top: 3px;
+}
+.product-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.product-repayment {
+  display: flex;
+  align-items: end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.product-repayment label {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+}
+.product-repayment input {
+  padding: 12px;
+  border: 1px solid #aabcc9;
+  border-radius: 7px;
+  font-size: 16px;
+  min-width: 0;
+}
+@media (max-width: 600px) {
+  .banking-products {
+    padding: 20px;
+  }
+  .bank-product {
+    padding: 16px;
+  }
+  .product-repayment {
+    display: grid;
+  }
+  .product-repayment input {
+    width: 100%;
+  }
+}

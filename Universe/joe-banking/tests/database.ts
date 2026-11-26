@@ -34,10 +34,12 @@ class Statement {
 
 export class TestD1 {
   db = new DatabaseSync(":memory:");
-  constructor() {
+  constructor(includeEconomy = true) {
     const migrations = new URL("../database/migrations/", import.meta.url);
     for (const file of readdirSync(migrations)
-      .filter((f) => f.endsWith(".sql"))
+      .filter(
+        (f) => f.endsWith(".sql") && (includeEconomy || !f.startsWith("0003")),
+      )
       .sort())
       this.db.exec(readFileSync(new URL(file, migrations), "utf8"));
     this.db.exec(

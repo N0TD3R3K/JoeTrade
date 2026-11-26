@@ -1,3 +1,4 @@
+import { acquisition, legacyLots, saleBasis } from "../lib/cost-basis";
 import {
   feeForGross,
   grossForTrade,
@@ -217,6 +218,32 @@ export async function matchConnected(e: Env, asset: string, maxFills = 2) {
           bankOperation,
         }),
       ];
+      effects.push(
+        ...(await legacyLots(e, buyer.id, asset, holdingKind(m.asset_type)))
+          .effects,
+        acquisition(
+          buyer.id,
+          asset,
+          holdingKind(m.asset_type),
+          qty,
+          debit,
+          `${trade}:buyer`,
+        ),
+      );
+      if (seller)
+        effects.push(
+          ...(await saleBasis(
+            e,
+            seller.id,
+            String(seller.bank_customer_id),
+            asset,
+            holdingKind(m.asset_type),
+            qty,
+            proceeds,
+            trade,
+            bankOperation,
+          )),
+        );
       if (!bleft) {
         effects.push(
           s(
@@ -563,6 +590,14 @@ export async function handleConnected(
               price,
               price,
             ),
+            acquisition(
+              user.id,
+              asset,
+              "shareholding",
+              Number(p.shares),
+              Number(p.contribution_cents),
+              `${id}:founder`,
+            ),
             holdingCredit(
               user.id,
               asset,
@@ -850,102 +885,133 @@ export async function handleConnected(
     const user = await requireUser(r, e);
     member(user);
     return json(
-      await execute(e, user.id, key(r), { route: u.pathname }, async () => {
-        const o = await e.DB.prepare(
-          "SELECT o.*,a.active FROM share_offers o JOIN assets a ON a.id=o.asset_id WHERE o.id=? AND o.status='pending'",
-        )
-          .bind(offer[1])
-          .first<Row>();
-        if (
-          !o ||
-          (offer[2] === "cancel" ? o.seller_id : o.buyer_id) !== user.id
-        )
-          throw new HttpError(
-            404,
-            "OFFER_UNAVAILABLE",
-            "This pending offer is unavailable.",
-          );
-        const qty = Number(o.quantity),
-          gross = Number(o.asking_price_cents),
-          fee = feeForGross(gross),
-          accepted = offer[2] === "accept";
-        if (accepted && !o.active)
-          throw new HttpError(
-            409,
-            "LISTING_INACTIVE",
-            "Delisted shares cannot be purchased.",
-          );
-        const seller = await account(e, String(o.seller_id));
-        const effects: Statement[] = accepted
-          ? [
-              s(
-                "UPDATE holdings SET quantity=quantity-?,reserved_quantity=reserved_quantity-? WHERE user_id=? AND asset_id=? AND holding_kind='shareholding'",
-                qty,
-                qty,
-                seller.id,
-                String(o.asset_id),
-              ),
-              holdingCredit(
+      await execute(
+        e,
+        user.id,
+        key(r),
+        { route: u.pathname },
+        async (bankOperation) => {
+          const o = await e.DB.prepare(
+            "SELECT o.*,a.active FROM share_offers o JOIN assets a ON a.id=o.asset_id WHERE o.id=? AND o.status='pending'",
+          )
+            .bind(offer[1])
+            .first<Row>();
+          if (
+            !o ||
+            (offer[2] === "cancel" ? o.seller_id : o.buyer_id) !== user.id
+          )
+            throw new HttpError(
+              404,
+              "OFFER_UNAVAILABLE",
+              "This pending offer is unavailable.",
+            );
+          const qty = Number(o.quantity),
+            gross = Number(o.asking_price_cents),
+            fee = feeForGross(gross),
+            accepted = offer[2] === "accept";
+          if (accepted && !o.active)
+            throw new HttpError(
+              409,
+              "LISTING_INACTIVE",
+              "Delisted shares cannot be purchased.",
+            );
+          const seller = await account(e, String(o.seller_id));
+          const effects: Statement[] = accepted
+            ? [
+                s(
+                  "UPDATE holdings SET quantity=quantity-?,reserved_quantity=reserved_quantity-? WHERE user_id=? AND asset_id=? AND holding_kind='shareholding'",
+                  qty,
+                  qty,
+                  seller.id,
+                  String(o.asset_id),
+                ),
+                holdingCredit(
+                  user.id,
+                  String(o.asset_id),
+                  "shareholding",
+                  qty,
+                  Math.round(gross / qty),
+                  true,
+                ),
+              ]
+            : [
+                s(
+                  "UPDATE holdings SET frozen_quantity=frozen_quantity+?,reserved_quantity=reserved_quantity-? WHERE user_id=? AND asset_id=? AND holding_kind='shareholding'",
+                  qty,
+                  qty,
+                  seller.id,
+                  String(o.asset_id),
+                ),
+              ];
+          if (accepted)
+            effects.push(
+              ...(
+                await legacyLots(e, user.id, String(o.asset_id), "shareholding")
+              ).effects,
+              acquisition(
                 user.id,
                 String(o.asset_id),
                 "shareholding",
                 qty,
-                Math.round(gross / qty),
-                true,
+                gross + fee,
+                `offer:${o.id}:buyer`,
               ),
-            ]
-          : [
-              s(
-                "UPDATE holdings SET frozen_quantity=frozen_quantity+?,reserved_quantity=reserved_quantity-? WHERE user_id=? AND asset_id=? AND holding_kind='shareholding'",
-                qty,
-                qty,
+              ...(await saleBasis(
+                e,
                 seller.id,
+                String(seller.bank_customer_id),
                 String(o.asset_id),
-              ),
-            ];
-        effects.push(
-          s(
-            "UPDATE share_offers SET status=?,resolved_at=CURRENT_TIMESTAMP WHERE id=?",
-            accepted
-              ? "accepted"
-              : offer[2] === "decline"
-                ? "declined"
-                : "cancelled",
-            String(o.id),
-          ),
-          audit(user.id, `share_offer.${offer[2]}`, String(o.id), {
-            quantity: qty,
-            gross,
-          }),
-        );
-        return {
-          bank: accepted
-            ? {
-                action: "payment",
-                customer_id: user.bankCustomerId,
-                amount_cents: gross + fee,
-                credits: [
-                  {
-                    customer_id: seller.bank_customer_id,
-                    amount_cents: gross - fee,
-                  },
-                  ...(fee > 0
-                    ? [{ customer_id: null, amount_cents: fee * 2 }]
-                    : []),
-                ],
-              }
-            : { action: "noop" },
-          statements: effects,
-          response: {
-            id: o.id,
-            status: accepted
-              ? "accepted"
-              : offer[2] === "decline"
-                ? "declined"
-                : "cancelled",
-          },
-        };
-      }),
+                "shareholding",
+                qty,
+                gross - fee,
+                `offer:${o.id}`,
+                bankOperation,
+              )),
+            );
+          effects.push(
+            s(
+              "UPDATE share_offers SET status=?,resolved_at=CURRENT_TIMESTAMP WHERE id=?",
+              accepted
+                ? "accepted"
+                : offer[2] === "decline"
+                  ? "declined"
+                  : "cancelled",
+              String(o.id),
+            ),
+            audit(user.id, `share_offer.${offer[2]}`, String(o.id), {
+              quantity: qty,
+              gross,
+            }),
+          );
+          return {
+            bank: accepted
+              ? {
+                  action: "payment",
+                  customer_id: user.bankCustomerId,
+                  amount_cents: gross + fee,
+                  credits: [
+                    {
+                      customer_id: seller.bank_customer_id,
+                      amount_cents: gross - fee,
+                    },
+                    ...(fee > 0
+                      ? [{ customer_id: null, amount_cents: fee * 2 }]
+                      : []),
+                  ],
+                }
+              : { action: "noop" },
+            statements: effects,
+            response: {
+              id: o.id,
+              status: accepted
+                ? "accepted"
+                : offer[2] === "decline"
+                  ? "declined"
+                  : "cancelled",
+            },
+          };
+        },
+      ),
     );
   }
   if (u.pathname === "/v1/transfers" && r.method === "POST") {

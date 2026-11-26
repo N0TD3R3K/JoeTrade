@@ -468,6 +468,12 @@ export async function handleOperations(
       "infrastructure incident",
       "Joekemon event",
     ];
+    if (body.category === "monetary_policy")
+      throw new HttpError(
+        403,
+        "BANK_EVENT_REQUIRED",
+        "Monetary-policy bulletins are created by applied Joe Banking rate operations.",
+      );
     const affectedTickers = [
       ...new Set(
         (body.affectedTickers ?? [])

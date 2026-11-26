@@ -139,3 +139,21 @@ JoeTrade is licensed under the [MIT License](LICENSE), copyright 2026 Derek Li.
 Imported third-party material retains its applicable license and notices.
 When importing CC0 material from Joelib, document its source and existing CC0
 status rather than implying that its original permissions have changed.
+
+## Staged economy development
+
+The owner plan is [staged_dev_note.txt](Universe/staged_dev_note.txt), based on
+Dev_Note with priority over the older handoff. Stage 1 designs and foundations
+are indexed [here](Universe/joe-stock-exchange/docs/stage-1/README.md).
+They prepare the new member routes and company economy without enabling new
+cash operations. Follow the [Stage 1 completion report](STAGE_1_REPORT_AND_STAGE_2_HANDOFF.txt) before starting Stage 2.
+
+### Stage 2 economy development
+
+Company Posts, scoped My Company reports, company checkout/subscriptions, employee
+payroll, weekly tax/corrections, reserve/rate operations and accepted bank loans are
+implemented. See [Stage 2 features and API](Universe/joe-stock-exchange/docs/stage-2/README.md)
+and [completion report / Stage 3 handoff](STAGE_2_REPORT_AND_STAGE_3_HANDOFF.txt).
+The original working databases remain unchanged; migration rehearsals and UI checks
+use isolated copies. Stage 3 completes final integration/testing and the owner’s
+local review. Discussion and deposit funding remain unavailable.

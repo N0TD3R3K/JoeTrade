@@ -10,6 +10,7 @@ import {
 } from "./http";
 import { createWire, recipient, resolveWire, summary, wires } from "./banking";
 import { demoEnabled } from "./auth";
+import { handleEconomyService } from "./economy/routes";
 const keys = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 async function authorize(r: Request, e: Env) {
   if (r.headers.has("origin"))
@@ -86,6 +87,8 @@ export async function handleExchange(
   const u = new URL(r.url);
   if (!u.pathname.startsWith("/internal/joese/")) return null;
   await authorize(r, e);
+  if (u.pathname.startsWith("/internal/joese/economy/"))
+    return handleEconomyService(r, e);
   const m =
     /^\/internal\/joese\/members\/([^/]+)\/(summary|inbox|recipient)$/.exec(
       u.pathname,

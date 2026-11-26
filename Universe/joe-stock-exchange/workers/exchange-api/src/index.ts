@@ -14,6 +14,9 @@ import { handleCentralAuth } from "./lib/central-auth";
 import { handleConnected, matchConnected } from "./routes/connected";
 import { recover, releaseJobs } from "./lib/financial-operations";
 
+import { handleCompanyEconomy } from "./routes/company-economy";
+import { syncEconomy } from "./lib/economy-delivery";
+
 async function route(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
 
@@ -39,6 +42,8 @@ async function route(request: Request, env: Env): Promise<Response> {
   if (env.BANKING_MODE === "connected") {
     const auth = await handleCentralAuth(request, url, env);
     if (auth) return auth;
+    const economy = await handleCompanyEconomy(request, url, env);
+    if (economy) return economy;
     const financial = await handleConnected(request, url, env);
     if (financial) return financial;
   }
@@ -84,6 +89,7 @@ export default {
     if (env.BANKING_MODE !== "connected") return;
     await recover(env);
     await releaseJobs(env);
+    await syncEconomy(env);
     // Finish a bounded part of the oldest matching queue on each recovery tick.
     const queued = await env.DB.prepare(
       `SELECT b.asset_id FROM orders b JOIN orders s ON s.asset_id=b.asset_id JOIN assets a ON a.id=b.asset_id

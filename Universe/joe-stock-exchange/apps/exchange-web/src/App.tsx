@@ -1,3 +1,4 @@
+import { CompanyPosts, MyCompany } from "./features/workspace/CompanyPages";
 import { feeForGross } from "@joese/market-rules";
 import type {
   Holding,
@@ -43,6 +44,14 @@ import { AssetRail } from "./features/market/AssetRail";
 import { MarketWorkspace } from "./features/market/MarketWorkspace";
 import { PortfolioRail } from "./features/portfolio/PortfolioRail";
 import { SettingsPage } from "./features/settings/SettingsPage";
+import { useMemberRoute } from "./features/workspace/useMemberRoute";
+import { MemberNavigation } from "./features/workspace/MemberNavigation";
+import {
+  AccountOverview,
+  MemberNews,
+  PlannedMemberPage,
+} from "./features/workspace/WorkspacePages";
+import "./features/workspace/workspace.css";
 
 import { ListingLaunch } from "../../shared/ListingLaunch";
 import { CentralSignIn } from "../../shared/CentralSignIn";
@@ -56,17 +65,18 @@ type Modal =
   "transaction" | "inbox" | "share-offer" | "joe-bank" | "listing" | null;
 
 export function App() {
+  const { page, location, navigate } = useMemberRoute();
+  const [navOpen, setNavOpen] = useState(false);
   const [mobilePanel, setMobilePanel] = useState<
     "listings" | "portfolio" | null
   >(null);
   const [testMode, setTestMode] = useState(false);
   const [market, setMarket] = useState<MarketSnapshot | null>(null);
+  const [marketError, setMarketError] = useState<string | null>(null);
   const [portfolio, setPortfolio] = useState<PortfolioSnapshot | null>(null);
   const [selectedTicker, setSelectedTicker] = useState("JAI");
   const [rightOpen, setRightOpen] = useState(true);
-  const [page, setPage] = useState<"exchange" | "settings">(
-    window.location.pathname.endsWith("/settings") ? "settings" : "exchange",
-  );
+
   const [modal, setModal] = useState<Modal>(null);
   const [selectedHolding, setSelectedHolding] = useState<Holding | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,29 +86,37 @@ export function App() {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const [marketResult, portfolioResult] = await Promise.all([
+      const [marketResult, portfolioResult] = await Promise.allSettled([
         loadMarket(),
         loadPortfolio(),
       ]);
-      setMarket(marketResult);
-      setPortfolio(portfolioResult);
-      setTestMode(localTesting);
-    } catch (error) {
-      setPortfolio(null);
-      setAuthMessage(
-        error instanceof Error ? error.message : "Sign in to continue.",
-      );
-      if (!market) {
-        try {
-          setMarket(await loadMarket());
-        } catch {
-          setMarket(null);
-        }
+      if (marketResult.status === "fulfilled") {
+        setMarket(marketResult.value);
+        setMarketError(null);
+      } else {
+        setMarket(null);
+        setMarketError(
+          marketResult.reason instanceof Error
+            ? marketResult.reason.message
+            : "Market data is unavailable.",
+        );
+      }
+      if (portfolioResult.status === "fulfilled") {
+        setPortfolio(portfolioResult.value);
+        setTestMode(localTesting);
+        setAuthMessage(null);
+      } else {
+        setPortfolio(null);
+        setAuthMessage(
+          portfolioResult.reason instanceof Error
+            ? portfolioResult.reason.message
+            : "Sign in to continue.",
+        );
       }
     } finally {
       setLoading(false);
     }
-  }, [market]);
+  }, []);
 
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get("token");
@@ -133,6 +151,15 @@ export function App() {
     [market, selectedTicker],
   );
 
+  useEffect(() => {
+    setMobilePanel(null);
+    setNavOpen(false);
+    const ticker = new URLSearchParams(location.split("?")[1] ?? "").get(
+      "ticker",
+    );
+    if (ticker) setSelectedTicker(ticker.toUpperCase());
+  }, [location]);
+
   const notify = (message: string) => {
     setToast(message);
     window.setTimeout(() => setToast(null), 2600);
@@ -156,8 +183,7 @@ export function App() {
       <SettingsPage
         portfolio={portfolio}
         onBack={() => {
-          setPage("exchange");
-          window.history.pushState({}, "", "/");
+          navigate("account");
         }}
         onSave={async (username, preferences) => {
           await updateSettings(username, preferences);
@@ -173,14 +199,8 @@ export function App() {
       />
     );
   }
-  if (!market || !selectedAsset)
-    return (
-      <div className="loading-screen">
-        <span>Market data is unavailable.</span>
-      </div>
-    );
-
   const handleComment = async (body: string) => {
+    if (!selectedAsset) return;
     await postComment(selectedAsset.ticker, body);
     const comment: MarketComment = {
       id: crypto.randomUUID(),
@@ -199,7 +219,7 @@ export function App() {
 
   return (
     <div
-      className={`exchange-app ${rightOpen ? "" : "portfolio-collapsed"} ${mobilePanel ? `mobile-${mobilePanel}` : ""}`}
+      className={`exchange-app has-member-navigation ${demoMode ? "sample-preview" : ""} member-page-${page} ${rightOpen ? "" : "portfolio-collapsed"} ${mobilePanel ? `mobile-${mobilePanel}` : ""}`}
       style={
         {
           "--growth": portfolio.summary.preferences.growthColor,
@@ -207,13 +227,18 @@ export function App() {
         } as React.CSSProperties
       }
     >
+      <MemberNavigation
+        page={page}
+        open={navOpen}
+        onClose={() => setNavOpen(false)}
+        onNavigate={navigate}
+      />
       <header className="exchange-header">
         <button
           className="mobile-menu icon-button"
-          aria-label="Open listings"
-          onClick={() =>
-            setMobilePanel(mobilePanel === "listings" ? null : "listings")
-          }
+          aria-label="Open navigation"
+          aria-expanded={navOpen}
+          onClick={() => setNavOpen(true)}
         >
           <Menu size={19} />
         </button>
@@ -225,19 +250,25 @@ export function App() {
           </div>
         </div>
         <div className="market-clock">
-          <span className={`status-dot ${market.marketStatus}`}></span>
-          <strong>
-            {market.marketStatus === "open"
-              ? "Market open"
-              : market.marketStatus}
-          </strong>
-          <span>
-            <Clock3 size={14} /> Next tick{" "}
-            {new Date(market.nextTickAt).toLocaleTimeString([], {
-              hour: "numeric",
-              minute: "2-digit",
-            })}
-          </span>
+          {market ? (
+            <>
+              <span className={`status-dot ${market.marketStatus}`}></span>
+              <strong>
+                {market.marketStatus === "open"
+                  ? "Market open"
+                  : market.marketStatus}
+              </strong>
+              <span>
+                <Clock3 size={14} /> Next tick{" "}
+                {new Date(market.nextTickAt).toLocaleTimeString([], {
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+              </span>
+            </>
+          ) : (
+            <strong>Market data unavailable</strong>
+          )}
         </div>
         <div className="header-actions">
           {testMode && (
@@ -269,8 +300,7 @@ export function App() {
           <button
             aria-label="Open settings"
             onClick={() => {
-              setPage("settings");
-              window.history.pushState({}, "", "/settings");
+              navigate("settings");
             }}
           >
             <Settings size={18} />
@@ -279,14 +309,18 @@ export function App() {
             className="user-chip"
             aria-label="Open portfolio"
             onClick={() => {
-              setRightOpen(true);
-              setMobilePanel(mobilePanel === "portfolio" ? null : "portfolio");
+              navigate("account");
             }}
           >
             {portfolio.summary.username.slice(0, 2).toUpperCase()}
           </button>
         </div>
       </header>
+      {demoMode && (
+        <div className="workspace-sample-banner" role="status">
+          Visual preview · sample data · no Banking connection
+        </div>
+      )}
       {mobilePanel && (
         <button
           className="exchange-panel-scrim"
@@ -294,72 +328,162 @@ export function App() {
           onClick={() => setMobilePanel(null)}
         />
       )}
-      <div className="exchange-grid">
-        <AssetRail
-          assets={market.assets}
-          selectedTicker={selectedAsset.ticker}
-          onSelect={(ticker) => {
-            setSelectedTicker(ticker);
-            setMobilePanel(null);
+      {page === "account" && (
+        <AccountOverview
+          portfolio={portfolio}
+          onTransaction={() => setModal("transaction")}
+          onInbox={() => setModal("inbox")}
+          onOffer={(holding) => {
+            setSelectedHolding(holding);
+            setModal("share-offer");
           }}
-          onAddListing={() => {
-            setModal("listing");
-            setMobilePanel(null);
-          }}
+          onSettings={() => navigate("settings")}
+          onJoeBank={() => setModal("joe-bank")}
         />
-        <MarketWorkspace
-          asset={selectedAsset}
-          points={market.priceHistory[selectedAsset.ticker] ?? []}
-          news={market.news}
-          comments={market.comments}
-          preferences={portfolio.summary.preferences}
-          marketStatus={market.marketStatus}
-          onComment={handleComment}
-          onOrder={async (side, quantity) => {
-            const order = await createOrder({
-              ticker: selectedAsset.ticker,
-              side,
-              quantity,
-            });
-            await refresh();
-            const message =
-              order.status === "filled"
-                ? `Order filled for ${formatQuantity(quantity)} ${selectedAsset.ticker}`
-                : `${side === "buy" ? "Buy" : "Sell"} order opened for ${formatQuantity(quantity)} ${selectedAsset.ticker}`;
-            notify(message);
-            return message;
-          }}
-        />
-        {rightOpen ? (
-          <PortfolioRail
-            portfolio={portfolio}
-            onCollapse={() => {
-              setRightOpen(false);
-              setMobilePanel(null);
-            }}
-            onTransaction={() => setModal("transaction")}
-            onInbox={() => setModal("inbox")}
-            onSettings={() => {
-              setPage("settings");
-              window.history.pushState({}, "", "/settings");
-            }}
-            onJoeBank={() => setModal("joe-bank")}
-            onSellShares={(holding) => {
-              setSelectedHolding(holding);
-              setModal("share-offer");
-            }}
-          />
+      )}
+      {page === "news" && market && <MemberNews news={market.news} />}
+      {page === "posts" &&
+        (demoMode ? (
+          <section className="workspace-page">
+            <h1>Posts</h1>
+            <p>
+              Static design preview. Company publishing requires the connected
+              local services.
+            </p>
+          </section>
         ) : (
-          <button
-            className="portfolio-reveal"
-            onClick={() => setRightOpen(true)}
-            title="Show portfolio"
-          >
-            <ChevronLeft size={18} />
-            <span>Portfolio</span>
-          </button>
-        )}
-      </div>
+          <CompanyPosts key={portfolio.summary.id} />
+        ))}
+      {page === "company" &&
+        (demoMode ? (
+          <section className="workspace-page">
+            <h1>My Company</h1>
+            <p>
+              Static design preview. Revenue and ownership reports require the
+              connected local services.
+            </p>
+          </section>
+        ) : (
+          <MyCompany key={portfolio.summary.id} />
+        ))}
+      {page === "discussion" && (
+        <PlannedMemberPage
+          kind="discussion"
+          portfolio={portfolio}
+          onBrowse={() => navigate("market")}
+        />
+      )}
+      {page === "not-found" && (
+        <section className="workspace-page">
+          <h1>Page not found</h1>
+          <a href="/account">Return to Account Overview</a>
+        </section>
+      )}
+      {((page === "news" && !market) ||
+        (page === "market" && (!market || !selectedAsset))) && (
+        <section className="workspace-page">
+          <div className="workspace-state" role={market ? undefined : "alert"}>
+            <h1>
+              {market
+                ? "No active listings"
+                : page === "news"
+                  ? "News unavailable"
+                  : "Listings unavailable"}
+            </h1>
+            <p>
+              {market
+                ? "No listings are currently available. Your account and Inbox remain accessible."
+                : (marketError ??
+                  "Market data could not be loaded. Your available Banking balance is shown separately in Account Overview.")}
+            </p>
+            <button className="workspace-retry" onClick={() => void refresh()}>
+              Retry market data
+            </button>
+          </div>
+        </section>
+      )}
+      {page === "market" && market && selectedAsset && (
+        <>
+          <div className="market-browsebar">
+            <button onClick={() => setMobilePanel("listings")}>
+              Browse listings
+            </button>
+            <button
+              onClick={() => {
+                setRightOpen(true);
+                setMobilePanel("portfolio");
+              }}
+            >
+              View portfolio
+            </button>
+          </div>
+          <div className="exchange-grid">
+            <AssetRail
+              assets={market.assets}
+              selectedTicker={selectedAsset.ticker}
+              onSelect={(ticker) => {
+                setSelectedTicker(ticker);
+                setMobilePanel(null);
+              }}
+              onAddListing={() => {
+                setModal("listing");
+                setMobilePanel(null);
+              }}
+            />
+            <MarketWorkspace
+              asset={selectedAsset}
+              points={market.priceHistory[selectedAsset.ticker] ?? []}
+              news={market.news}
+              comments={market.comments}
+              preferences={portfolio.summary.preferences}
+              marketStatus={market.marketStatus}
+              onComment={handleComment}
+              onOrder={async (side, quantity) => {
+                const order = await createOrder({
+                  ticker: selectedAsset.ticker,
+                  side,
+                  quantity,
+                });
+                await refresh();
+                const message =
+                  order.status === "filled"
+                    ? `Order filled for ${formatQuantity(quantity)} ${selectedAsset.ticker}`
+                    : `${side === "buy" ? "Buy" : "Sell"} order opened for ${formatQuantity(quantity)} ${selectedAsset.ticker}`;
+                notify(message);
+                return message;
+              }}
+            />
+            {rightOpen ? (
+              <PortfolioRail
+                portfolio={portfolio}
+                onCollapse={() => {
+                  setRightOpen(false);
+                  setMobilePanel(null);
+                }}
+                onTransaction={() => setModal("transaction")}
+                onInbox={() => setModal("inbox")}
+                onSettings={() => {
+                  navigate("settings");
+                }}
+                onJoeBank={() => setModal("joe-bank")}
+                onSellShares={(holding) => {
+                  setSelectedHolding(holding);
+                  setModal("share-offer");
+                }}
+              />
+            ) : (
+              <button
+                className="portfolio-reveal"
+                onClick={() => setRightOpen(true)}
+                title="Show portfolio"
+              >
+                <ChevronLeft size={18} />
+                <span>Portfolio</span>
+              </button>
+            )}
+          </div>
+        </>
+      )}
       {modal === "listing" && (
         <ListingLaunch
           surface="member"

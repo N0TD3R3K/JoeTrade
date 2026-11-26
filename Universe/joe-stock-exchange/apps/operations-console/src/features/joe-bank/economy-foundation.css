@@ -1,0 +1,166 @@
+.bank-economy-foundation {
+  display: grid;
+  gap: 26px;
+}
+.bank-economy-foundation > .connected-bank-card {
+  max-width: none;
+}
+.economy-foundation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.economy-foundation-panel {
+  padding: 28px;
+}
+.economy-foundation-panel h2 {
+  font-size: 23px;
+  line-height: 1.4;
+  margin: 16px 0;
+}
+.economy-foundation-panel p {
+  color: #acbbcf;
+  font-size: 16px;
+  line-height: 1.8;
+}
+.economy-planned {
+  display: inline-block;
+  padding: 5px 10px;
+  font-size: 14px;
+  border: 1px solid #55472e;
+  border-radius: 5px;
+  color: #e8c985;
+  background: #252015;
+}
+.economy-foundation-panel button,
+.economy-preview-dialog form > button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 44px;
+  padding: 11px 17px;
+  border-radius: 8px;
+  background: #edc46e;
+  color: #17130b;
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 10px;
+}
+.economy-foundation-panel button:disabled {
+  background: #252d37;
+  color: #94a1b3;
+  cursor: not-allowed;
+}
+.economy-foundation-panel dl {
+  margin: 22px 0;
+  display: grid;
+  gap: 16px;
+}
+.economy-foundation-panel dl > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid #2c3542;
+  padding-bottom: 12px;
+  font-size: 14px;
+}
+.economy-foundation-panel dt {
+  color: #99a9bd;
+}
+.economy-foundation-panel dd {
+  margin: 0;
+}
+.economy-preview-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  background: #000c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.economy-preview-dialog {
+  max-height: 92vh;
+  overflow-y: auto;
+  width: min(620px, 100%);
+  padding: 28px;
+  border: 1px solid #3b4657;
+  border-radius: 14px;
+  background: #111822;
+}
+.economy-preview-dialog header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+.economy-preview-dialog h2 {
+  margin: 10px 0;
+  font-size: 25px;
+}
+.economy-preview-dialog header button {
+  border: 1px solid #344153;
+  border-radius: 7px;
+  background: #1a2431;
+  padding: 9px;
+}
+.economy-preview-dialog p {
+  color: #b2bfd0;
+  font-size: 16px;
+  line-height: 1.8;
+}
+.economy-preview-dialog label {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  font-size: 15px;
+  color: #c3cfde;
+}
+.economy-preview-dialog input {
+  width: 100%;
+  padding: 12px;
+  min-height: 46px;
+  font-size: 16px;
+  color: #f1f4f9;
+  background: #0b111a;
+  border: 1px solid #43516a;
+  border-radius: 8px;
+}
+.economy-preview-dialog .economy-preview-note {
+  font-size: 14px;
+}
+.economy-preview-dialog .economy-preview-error {
+  padding: 15px;
+  background: #371b21;
+  border: 1px solid #793e4d;
+  color: #ffc1cd;
+  border-radius: 8px;
+}
+.economy-preview-dialog .economy-preview-result {
+  padding: 15px;
+  background: #17291e;
+  border: 1px solid #396447;
+  color: #c4e3cb;
+  border-radius: 8px;
+}
+.economy-preview-dialog button:focus-visible,
+.economy-preview-dialog input:focus-visible {
+  outline: 2px solid #edc46e;
+  outline-offset: 3px;
+}
+@media (max-width: 1000px) {
+  .economy-foundation-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 520px) {
+  .economy-foundation-panel,
+  .economy-preview-dialog {
+    padding: 20px;
+  }
+  .economy-preview-backdrop {
+    padding: 12px;
+  }
+}

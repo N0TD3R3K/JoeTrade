@@ -1,0 +1,266 @@
+JOETRADE — STAGE 1 REPORT AND STAGE 2 HANDOFF
+Completion date: November 25, 2026 (America/New_York)
+Repository: /Users/lizexi/Documents/joelib/JoeTrade
+Starting Git revision: 4622a45
+Status: STAGE 1 COMPLETE. Stage 2 implementation has not been started.
+
+1. AUTHORITY, SCOPE AND DATA PRESERVATION
+
+Dev_Note.txt was prioritized over HANDOFF_NEXT_SESSION.txt, with the owner's
+clarification that the revenue recipients are EMPLOYEES. Stage 1 follows
+Universe/staged_dev_note.txt and the instruction to develop without questions.
+
+All three input documents remain unchanged from the start of this stage:
+Dev_Note.txt SHA-256:
+33a354ef34bf56a707ccceba9637203ef52ef61b1cfc7bc2af4c0beb832e3d06
+HANDOFF_NEXT_SESSION.txt SHA-256:
+a3e013c3294fb9d1cb4e5beeb1291f35b7ec7a61d9817a54d40d10aac0587c86
+Universe/staged_dev_note.txt SHA-256:
+93f8ccfd226bb7bcc583f95e93781fd9354e64f354f78cbfbab658927e26720e
+
+The preexisting modified HANDOFF file and untracked Dev_Note/staged note were
+preserved; their existing differences from Git are not Stage 1 edits.
+Only JoeTrade was edited. The original sibling Universe folder was not edited.
+No local/remote migration or seed was run. No actual bank funds, opening grants,
+reserves, holds, owner-created DRK/TST data or private shares were changed.
+No deployment, DNS operation, commit, push or credential change was performed.
+
+2. WHAT WAS DELIVERED
+
+A. Design and Markdown documentation
+- A central Stage 1 index, versioned design decisions, UI/state plan and proposed
+  service/ledger/recovery contracts were written under:
+  Universe/joe-stock-exchange/docs/stage-1/
+- Added banking circulation/company-billing design, and updated the relevant
+  banking architecture, ledger, data/API, interest, loans, UX, security and
+  implementation-status documents.
+- Updated exchange market/news/security/integration documentation. The old
+  bankruptcy/APR lending description is no longer the new Banking specification.
+- Updated project READMEs, DEVELOPMENT_PLAN.md and the public member guide for
+  the navigation and the distinction between disposable and held cash.
+- New proposed APIs are explicitly labeled proposed, not added to live OpenAPI
+  as working operations.
+
+B. Shared pure economy foundation
+Files: Universe/shared/economy/policy.ts, contracts.ts, index.ts.
+Bank entry point: Universe/joe-banking/src/economy-foundation.ts.
+Exchange entry point: @joese/contracts re-exports the shared module.
+
+Includes integer-cent, canonical-UTC and weekly-rate/change units; exact rate
+validation, flat whole-income tax preview, New York date/Monday-week calendar
+keys, reserve-warning and percentage-reference helpers. These functions have
+no persistence, scheduling, approval, debit or credit side effects.
+
+Typed contracts cover rate operations/recommendations, checkout consent,
+employee agreements, income events, tax assessments, company reports, economy
+snapshots, loan offers, company posts, command bodies and delivery envelopes.
+STAGE_ONE_CAPABILITIES states all new services are unavailable. It is a UI/status
+contract only, NOT a permission or server security boundary.
+
+C. Member navigation and read-only page foundation
+Files: apps/exchange-web/src/features/workspace/ in the exchange project.
+App integration retains the original financial modals and trading components.
+
+Routes:
+- / and /account: Account Overview with existing transactions/Inbox/private
+  Offer actions, Banking link, disposable/ordinary/frozen values and holdings.
+- /market: original stock and crypto listings, search, chart/profile/order
+  controls, + Add Listing and trading portfolio. Supports ?ticker=... on entry.
+- /news: published Joe Wire articles from the existing market snapshot.
+- /posts: explicitly unavailable Stage 2 company-publishing state.
+- /discussion: explicitly deferred discussion design state.
+- /company: own current stock/shareholding positions, with future company
+  revenue/shareholder reports explicitly unavailable rather than fake zeros.
+- /guide: preserved public handbook, independent of Banking/auth loading.
+- /settings: existing preferences, with return to Account Overview.
+
+Real anchors, direct entry, browser back/forward, mobile global navigation and
+separate listing/portfolio drawers are supported. Market loading is separate
+from portfolio loading: a market-data failure need not erase a valid Banking
+portfolio, and listings/news have explicit unavailable/retry or empty states.
+No exchange-local balance is substituted for Banking on failure.
+
+The existing portfolio API now also returns postedBalanceCents and
+heldBalanceCents in connected mode. It reads the same bank summary already used
+for available cash. They are optional for legacy/static fixtures. Held money is
+not silently displayed as zero when unavailable. The net-position estimate
+includes posted rather than only disposable cash when Banking supplies it.
+
+D. Console Joe Bank foundation
+New component: apps/operations-console/src/features/joe-bank/BankEconomyFoundation.tsx
+and its economy-foundation.css.
+
+Includes clearly unavailable snapshot, loan and income/tax/distribution cards.
+The initial J$100,000 reserve is labeled PLANNED / NOT INITIALIZED.
+Preview rate adjustment opens an example-only popup. The user enters an example
+weekly rate, signed percentage-point change and proposed New York date/time.
+Calculate example validates numeric rate limits and shows the hypothetical result.
+It DOES NOT load/set the actual Joe Rate, persist the date, convert timezones,
+schedule/cancel an operation, issue a loan, post cash or publish news.
+The proposed date input persists across calculations; Escape closes the popup
+and returns focus. The keyboard focus remains within the open popup.
+
+E. Additive schema DRAFTS (not active migrations)
+Bank: Universe/joe-banking/database/drafts/stage1_economy.sql
+Exchange: Universe/joe-stock-exchange/database/drafts/stage1_company_economy.sql
+
+The bank draft covers policy versions, treasury/company account metadata,
+capital-attribution evidence, once-only grants/reserve init, service/plan/consent/
+subscription/commerce records, employees/payroll, income/tax/distribution,
+rates/week slots, loan records, noon snapshots, outbox and audit records.
+The exchange draft covers company manager/moderator roles, posts/removal logs,
+exact cost lots/disposals, receipt deduplication, rate/news linkage and read-only
+company revenue projections.
+
+Draft tests apply them only to NEW IN-MEMORY databases built from actual existing
+migrations. No normal startup migration command loads database/drafts.
+They contain NO fund seeds and NO approved policy. Draft posting guards also
+protect company/reserve accounts from negative cash and locked capital from debits.
+
+These are NOT production-ready schema promotions. Stage 2 must complete/review
+atomic domain transitions, policy/account immutability, terms/version snapshots,
+refund controls, allocation/basis sums, loan accounting, period locks and
+source-specific authorization before promoting new numbered migrations.
+
+3. DESIGN DEFAULTS RECORDED FOR STAGE 2
+
+The complete matrix is docs/stage-1/DECISIONS.md. Key selections:
+- Employee pool/weights are explicit accepted company agreements, not an invented
+  global payroll percentage. Funds must come from settled operating revenue.
+- Weekly periods start Monday midnight New York; daily report is New York noon.
+  Store UTC instants, calendar keys and actual capture/effective timestamps.
+- Opening member grants use separately authorized issuance, not the initial bank
+  reserve. Loan funding is reserve-funded, with a real receivable/history.
+- J$90,000 is the strict reserve-danger boundary; no automatic rate/trade change.
+- Tax uses the owner's whole-income brackets, not marginal brackets. Corrected
+  example: J$1,600 at 2% = J$32. Trading gain is net realized gain, not sale gross.
+- FIFO exact basis, buyer fees in basis and seller fees out of proceeds. Unknown
+  legacy basis holds the affected assessment for reconciliation, not trading.
+- Trading losses offset that week's trading gains, not wages/interest; no v1
+  carryforward. Posted wages/deposit interest are income; wires, principal,
+  capital, grants, redistribution and unrealized changes are not taxable wages.
+- Partial tax collection uses only available transaction funds; keep unpaid tax
+  separately. No forced sale, overdraft, existing-hold consumption or tax interest.
+- Company payments require explicit member consent to immutable plan terms;
+  cancellation stops future renewals. Missed charges do not pile up automatically.
+- Full refunds need available company operating cash and a linked original charge;
+  no automatic wage clawback. Recurrence/DST and refund rules are documented.
+- Redistribution is equally allocated within an approved funded budget, obligations
+  and headroom above the reserve warning boundary. No fixed allowance was added.
+- The rate recommendation model needs explainable complete cash-flow projections;
+  no unsupported low-reserve-equals-rate-hike rule and no automatic application.
+- Effective rate changes create one linked mild, one-tick monetary_policy event
+  affecting active stocks, not crypto. This is a design default that still needs
+  engine/validation implementation; no stock-price overwrite or guaranteed return.
+- Company Posts are REQUIRED Stage 2 work, including author/operator withdrawal
+  and deletion. Only detailed Discussion remains deferred.
+
+No questions were asked during development. Unspecified commercial amounts are
+required versioned configuration, not silently approved live terms: initial Joe
+Rate, loan catalog/limits/terms/rates/lending budget, service prices/intervals,
+company employee pool/weights and redistribution budget. Until configured and
+authorized, the relevant future handlers must refuse activation.
+
+4. VALIDATION COMPLETED
+
+Bank: 44 tests passed (37 existing + 7 foundation tests).
+Exchange: 36 tests passed (34 existing + 2 foundation tests).
+Total: 80 passing tests. No new financial feature is claimed to work from these.
+
+Checks passed:
+- Banking TypeScript check.
+- All exchange workspace TypeScript checks.
+- Banking frontend build and Worker deployment DRY RUN.
+- Exchange member/console builds and API/market-engine Worker deployment DRY RUNS.
+- git diff --check.
+
+Focused tests cover exact tax thresholds/rounding/J$32 example, signed rate steps
+and bounds, New York week rollover/DST noon, reserve boundary/zero denominator,
+new capabilities remaining unavailable, drafts preserving existing balances and
+market data, company overdraft/capital-debit protection, bounded weekly rate slots,
+outbox uniqueness, post tombstone constraints and held/post/available API fields.
+
+Browser checks used clearly labeled STATIC SAMPLE DATA on temporary ports 4273
+and 4274, WITHOUT either actual Banking or exchange API running. Checked desktop
+and phone layouts, navigation/history/direct page entry, planned Posts/Discussion/
+company states, ordinary/crypto listing access, existing transaction and frozen-
+share Offer access, public Guide, valid/invalid example rates, retained proposed
+date, mobile dialog width, Escape/focus restoration and absence of page overflow.
+No actual transfer, purchase, loan, grant, tax or rate operation was submitted.
+
+One date-retention issue in the example popup was found and fixed. Final rate
+checks retained 2026-11-30T12:00 and showed 0.995% for 1.000% minus 0.005 points;
+-0.201 was rejected. Later TypeScript checks also caught a nullable market-status
+header after loading states were separated; that was fixed and final checks passed.
+
+Preview images:
+/Users/lizexi/.codex/visualizations/2026/11/24/01a20fbb-0194-7123-a1c6-4c40e8906a3a/stage1-account-overview.jpg
+/Users/lizexi/.codex/visualizations/2026/11/24/01a20fbb-0194-7123-a1c6-4c40e8906a3a/stage1-bank-foundation.jpg
+
+5. STAGE 2 START HERE — DEPENDENCY ORDER
+
+1) Read Dev_Note, the consolidated staged plan, this report, then the Stage 1
+   decisions/UI/contracts documents. Preserve Discussion's deferral.
+2) Implement Banking policy/entitlement validation and a reviewed versioned
+   configuration/catalog. No client flag may grant bank or company permissions.
+3) Rehearse/promote reviewed additive schema drafts. Keep old migrations intact.
+   Reconcile existing opening grants, per-company founding capital and legacy
+   cost lots using evidence; never issue duplicate grants or redeem capital.
+4) Implement company roles/read APIs and Posts publishing/removal/moderation
+   against actual server ownership. Scope shareholder versus manager responses.
+5) Implement company operating accounts, service/plan setup, member consent,
+   purchases/recurring lifecycle/refunds and idempotent entitlement delivery.
+6) Implement accepted employee agreements, funded payroll allocations and income
+   events. Preserve exact total cents and source/period references.
+7) Implement FIFO acquisition/disposal evidence, weekly assessment revisions,
+   available-funds tax collection, unpaid tax, funded redistribution and reserve
+   reconciliation. Unknown evidence must remain visible, not invented.
+8) Implement the common-cutoff New York noon snapshots and explainable reserve
+   cash-flow recommendations; recommendations never apply themselves.
+9) Implement rate scheduling/quota/version/cancel transitions and accrued-interest
+   boundaries, then durable one-event publication and monetary_policy validation.
+10) Implement approved reserve-funded loan offers/acceptance/disbursement,
+    principal/interest evidence and repayment; preserve accepted legacy terms.
+11) Replace unavailable UI states with real scoped report/actions only when the
+    corresponding APIs actually work. Wire complete My Company statistics and
+    rate/loan/tax/company controls; update the member guide and live OpenAPI.
+12) Add meaningful integration/recovery/concurrency tests alongside features.
+    Keep the final full browser/real-account review and bug fixing in Stage 3.
+
+6. REMAINING LIMITS AND NEXT-STAGE RISKS
+
+- New financial services, Posts write APIs and company aggregate reports are
+  NOT implemented. Discussion is intentionally deferred.
+- Proposed service contracts are typed/documented, not actual new HTTP endpoints.
+- Draft constraints do not replace server authorization or complete accounting
+  transitions; never promote blindly or initialize funds just to populate cards.
+- Legacy cost-basis evidence and aggregated capital need careful reconciliation.
+- The new read-only bank summary fields were integration-tested in memory; Stage 3
+  must still verify the complete live local Alice/Bob flow after Stage 2 services.
+- Approved policy configuration and real JoeAuth app/member/service provisioning
+  remain required before production. No production readiness claim is made.
+- The shared Universe/shared/economy source must be present in a full repository
+  checkout when type-checking/building either project. No new dependencies were added.
+
+7. RESTART AND DELIVERY STATE
+
+Temporary static design previews were stopped and their tabs closed after QA.
+The actual local APIs and owner-data previews were not restarted for this stage.
+To inspect STATIC designs only, no APIs or database setup is needed:
+  npm --prefix Universe/joe-stock-exchange/apps/exchange-web run dev:stage1-preview
+  npm --prefix Universe/joe-stock-exchange/apps/operations-console run dev:stage1-preview
+These use ports 4273/4274 and visibly label sample data. Do not use them as real
+financial integration tests or deploy with VITE_DEMO_MODE=true.
+
+For Stage 2/3 real local development, use the existing ignored local credentials
+and preserved state, never seed again merely to restart:
+- In Universe/joe-banking: npm run dev:api (8788).
+- In Universe/joe-stock-exchange: npm run dev:api:local (8787).
+- Same exchange directory: npm run dev:exchange:test (4173).
+- Same exchange directory: npm run dev:console:test (4174).
+Use Alice and Bob for member checks and the separate local operator for staff.
+The bank frontend (4180) is separate and not required for the exchange preview.
+
+Stage 1 stops here. Stage 2 should implement services and features from this
+foundation; Stage 3 will finish coding, run end-to-end tests, fix bugs and leave
+the real local website running for the owner's review.

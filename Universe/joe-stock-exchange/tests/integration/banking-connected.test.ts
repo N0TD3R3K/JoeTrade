@@ -1,3 +1,9 @@
+import {
+  syncEconomy,
+  receiveEconomyEvent,
+} from "../../workers/exchange-api/src/lib/economy-delivery";
+import { newsImpactForAsset } from "../../workers/market-engine/src/news-impact";
+import { newYorkWall } from "../../../shared/economy/runtime";
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync, readdirSync } from "node:fs";
 import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
@@ -76,7 +82,11 @@ describe("JoeTrade connected economy", () => {
       vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
         if (offline) throw new Error("offline");
         const response = await bankWorker.fetch(new Request(input, init), be);
-        if (lostResponse && String(input).endsWith("/operations")) {
+        if (
+          lostResponse &&
+          (String(input).endsWith("/operations") ||
+            String(input).endsWith("/economy/commands"))
+        ) {
           lostResponse = false;
           throw new Error("response lost after bank commit");
         }
@@ -320,6 +330,12 @@ describe("JoeTrade connected economy", () => {
     });
     expect(order.data.status).toBe("open");
     expect(balance("demo-alice")).toBe(999799);
+    const portfolio = await call(alice, "/me/portfolio");
+    expect(portfolio.data.summary).toMatchObject({
+      disposableBalanceCents: 999799,
+      postedBalanceCents: 1000000,
+      heldBalanceCents: 201,
+    });
     const key = crypto.randomUUID();
     await call(alice, `/orders/${order.data.id}/cancel`, {}, key);
     await call(alice, `/orders/${order.data.id}/cancel`, {}, key);
@@ -663,5 +679,381 @@ describe("JoeTrade connected economy", () => {
       db.db.prepare("SELECT operation_id FROM financial_mutex").get()
         ?.operation_id,
     ).toBe("held-test");
+  });
+  async function policyV2() {
+    const draft = await call(operator, "/console/economy/commands", {
+      action: "policy.draft",
+      input: {
+        rules: {
+          designVersion: "economy-v2",
+          initialRatePpm: 10000,
+          lendingBudgetCents: 100000,
+          redistributionBudgetCents: 0,
+          openingGrantsEnabled: false,
+          loans: [
+            {
+              id: "loan",
+              title: "Accepted test terms",
+              minimumCents: 100,
+              maximumCents: 100000,
+              termWeeks: 4,
+              weeklyRatePpm: 10000,
+              variable: false,
+              spreadPpm: 0,
+            },
+          ],
+        },
+      },
+    });
+    expect(draft.status, JSON.stringify(draft)).toBe(200);
+    expect(
+      (
+        await call(operator, "/console/economy/commands", {
+          action: "policy.approve",
+          input: { id: draft.data.id },
+        })
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await call(operator, "/console/economy/commands", {
+          action: "reserve.initialize",
+          input: {},
+        })
+      ).status,
+    ).toBe(200);
+    return draft.data;
+  }
+  it("publishes company-specific posts, rechecks settled ownership and preserves author removal after selling", async () => {
+    const launched = await launch(),
+      asset = launched.listing.id;
+    const denied = await call(bob, "/posts", {
+      companyId: asset,
+      title: "No ownership",
+      body: "Should not publish.",
+    });
+    expect(denied.status).toBe(403);
+    const pending = await call(alice, "/share-offers", {
+      buyer: "bob",
+      ticker: "ABC",
+      quantity: 1000,
+      askingPriceCents: 600000,
+    });
+    expect(
+      (
+        await call(bob, "/posts", {
+          companyId: asset,
+          title: "Pending is not owned",
+          body: "Still forbidden.",
+        })
+      ).status,
+    ).toBe(403);
+    const published = await call(alice, "/posts", {
+      companyId: asset,
+      title: "Company progress",
+      body: "A real developer update.",
+    });
+    expect(published.status, JSON.stringify(published)).toBe(200);
+    expect(
+      (await call(bob, `/posts/${published.data.id}/delete`, { version: 1 }))
+        .status,
+    ).toBe(403);
+    expect(
+      (await call(bob, `/share-offers/${pending.data.id}/accept`, {})).status,
+    ).toBe(200);
+    expect(
+      (
+        await call(bob, "/posts", {
+          companyId: asset,
+          title: "Shareholder update",
+          body: "Now a settled shareholder.",
+        })
+      ).status,
+    ).toBe(200);
+    db.db
+      .prepare("UPDATE assets SET developer_user_id='demo-bob' WHERE id=?")
+      .run(asset);
+    expect(
+      (
+        await call(alice, "/posts", {
+          companyId: asset,
+          title: "Former owner",
+          body: "Cannot post.",
+        })
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await call(alice, `/posts/${published.data.id}/withdraw`, {
+          version: 1,
+        })
+      ).status,
+    ).toBe(200);
+    expect(
+      (await call(alice, `/posts/${published.data.id}/delete`, { version: 2 }))
+        .status,
+    ).toBe(200);
+    expect(
+      db.db
+        .prepare("SELECT title,body,state FROM company_posts WHERE id=?")
+        .get(published.data.id),
+    ).toMatchObject({ title: null, body: null, state: "deleted" });
+    expect(
+      JSON.stringify(db.db.prepare("SELECT * FROM company_commands").all()),
+    ).not.toContain("A real developer update.");
+  });
+  it("supports operator moderation and scopes company revenue/payment data to managers", async () => {
+    await policyV2();
+    const launched = await launch(),
+      asset = launched.listing.id;
+    expect(
+      (await call(alice, "/companies/register", { companyId: asset })).status,
+    ).toBe(200);
+    const mine = await call(alice, "/companies");
+    expect(mine.data[0].bank.lockedCapitalCents).toBe(500000);
+    const service = await call(alice, "/economy/commands", {
+      action: "service.request",
+      input: {
+        companyId: asset,
+        appId: "merchant-app",
+        name: "Member service",
+      },
+    });
+    expect(service.status).toBe(200);
+    expect(
+      (
+        await call(operator, "/console/economy/commands", {
+          action: "service.approve",
+          input: { id: service.data.id },
+        })
+      ).status,
+    ).toBe(200);
+    const plan = await call(alice, "/economy/commands", {
+      action: "plan.create",
+      input: {
+        serviceId: service.data.id,
+        title: "Service access",
+        terms: "One fictional J$ purchase.",
+        kind: "purchase",
+        amountCents: 10000,
+      },
+    });
+    expect(plan.status).toBe(200);
+    const checkout = await call(
+      bob,
+      "/economy/commands",
+      {
+        action: "checkout.accept",
+        input: {
+          planId: plan.data.id,
+          termsHash: plan.data.termsHash,
+          consent: true,
+        },
+      },
+      "single-checkout-reference",
+    );
+    expect(checkout.status).toBe(200);
+    lostResponse = true;
+    const retry = await call(
+      bob,
+      "/economy/commands",
+      {
+        action: "checkout.accept",
+        input: {
+          planId: plan.data.id,
+          termsHash: plan.data.termsHash,
+          consent: true,
+        },
+      },
+      "single-checkout-reference",
+    );
+    expect(retry.status).toBe(503);
+    expect(
+      (
+        await call(
+          bob,
+          "/economy/commands",
+          {
+            action: "checkout.accept",
+            input: {
+              planId: plan.data.id,
+              termsHash: plan.data.termsHash,
+              consent: true,
+            },
+          },
+          "single-checkout-reference",
+        )
+      ).status,
+    ).toBe(200);
+    expect(balance("demo-bob")).toBe(990000);
+    const offer = await call(alice, "/share-offers", {
+      buyer: "bob",
+      ticker: "ABC",
+      quantity: 1,
+      askingPriceCents: 100,
+    });
+    await call(bob, `/share-offers/${offer.data.id}/accept`, {});
+    const holder = await call(bob, "/companies");
+    expect(holder.data[0].bank.weeklyRevenueCents).toBe(10000);
+    expect(holder.data[0].bank.payments).toBeUndefined();
+    expect(holder.data[0].bank.services).toBeUndefined();
+    const post = await call(bob, "/posts", {
+      companyId: asset,
+      title: "Shareholder progress",
+      body: "Can be moderated by a console operator.",
+    });
+    expect(
+      (
+        await call(operator, `/console/posts/${post.data.id}/delete`, {
+          version: 1,
+          reason: "Test removal",
+        })
+      ).status,
+    ).toBe(200);
+  });
+  it("records exact founding and frozen-share gain evidence once across settlement retries", async () => {
+    await launch();
+    const offer = await call(alice, "/share-offers", {
+        buyer: "bob",
+        ticker: "ABC",
+        quantity: 100,
+        askingPriceCents: 60000,
+      }),
+      key = crypto.randomUUID();
+    await call(bob, `/share-offers/${offer.data.id}/accept`, {}, key);
+    await call(bob, `/share-offers/${offer.data.id}/accept`, {}, key);
+    const disposal = db.db
+      .prepare(
+        "SELECT allocated_basis_cents,net_proceeds_cents,realized_gain_cents FROM trade_basis_disposals",
+      )
+      .get();
+    expect(disposal).toMatchObject({
+      allocated_basis_cents: 50000,
+      net_proceeds_cents: 59850,
+      realized_gain_cents: 9850,
+    });
+    await syncEconomy(env);
+    await syncEconomy(env);
+    expect(
+      bankDB.db
+        .prepare(
+          "SELECT amount_cents FROM economy_income_events WHERE category='realized_frozen_share_gain'",
+        )
+        .get()!.amount_cents,
+    ).toBe(9850);
+    expect(
+      db.db
+        .prepare(
+          "SELECT total_basis_cents FROM trade_cost_lots WHERE user_id='demo-bob'",
+        )
+        .get()!.total_basis_cents,
+    ).toBe(60150);
+  });
+  it("publishes one bounded monetary-policy bulletin after rate application, then consumes it for one eligible tick", async () => {
+    const policy = await policyV2(),
+      now = Math.floor(Date.now() / 1000),
+      change = await call(operator, "/console/economy/commands", {
+        action: "rate.schedule",
+        input: {
+          policyVersion: policy.version,
+          effectiveLocal: newYorkWall(now),
+          deltaPpm: -50,
+          explanation: "Approved in-universe rate change.",
+        },
+      });
+    expect(change.status, JSON.stringify(change)).toBe(200);
+    await syncEconomy(env);
+    await syncEconomy(env);
+    expect(
+      db.db
+        .prepare(
+          "SELECT COUNT(*) AS n FROM news_events WHERE category='monetary_policy'",
+        )
+        .get()!.n,
+    ).toBe(1);
+    const event = bankDB.db
+      .prepare("SELECT * FROM economy_outbox WHERE kind='rate.applied'")
+      .get() as any;
+    await expect(
+      receiveEconomyEvent(env, { ...event, payload_hash: "changed" }),
+    ).rejects.toMatchObject({ code: "RECEIPT_HASH_CONFLICT" });
+    const link = db.db
+      .prepare("SELECT news_event_id FROM rate_market_event_links")
+      .get()!;
+    const first = new Date(Date.now() + 86400000),
+      impact = await newsImpactForAsset(env.DB, "JAI", first),
+      cryptoImpact = await newsImpactForAsset(env.DB, "JBC", first);
+    expect(impact.events.some((x) => x.id === link.news_event_id)).toBe(true);
+    expect(cryptoImpact.events.some((x) => x.id === link.news_event_id)).toBe(
+      false,
+    );
+    await runScheduledTick(
+      { DB: env.DB, BANKING_MODE: "connected", INTERNAL_API_KEY: "unused" },
+      first,
+      true,
+    );
+    expect(
+      (
+        await newsImpactForAsset(
+          env.DB,
+          "JAI",
+          new Date(first.getTime() + 3600000),
+        )
+      ).events.some((x) => x.id === link.news_event_id),
+    ).toBe(false);
+  });
+  it("prevents members from invoking operator or trusted income commands and keeps the bank loan reserve-funded", async () => {
+    await policyV2();
+    expect(
+      (
+        await call(alice, "/economy/commands", {
+          action: "reserve.initialize",
+          input: {},
+        })
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await call(alice, "/economy/commands", {
+          action: "income.record",
+          input: {},
+        })
+      ).status,
+    ).toBe(403);
+    const offered = await call(operator, "/console/economy/commands", {
+      action: "loan.offer",
+      input: {
+        customerId: "demo-alice",
+        productId: "loan",
+        principalCents: 10000,
+        expiresAt: Math.floor(Date.now() / 1000) + 86400,
+      },
+    });
+    expect(offered.status).toBe(200);
+    expect(balance("demo-alice")).toBe(1000000);
+    expect(
+      (
+        await call(bob, "/economy/commands", {
+          action: "loan.accept",
+          input: { id: offered.data.id, termsHash: offered.data.termsHash },
+        })
+      ).status,
+    ).toBe(409);
+    expect(
+      (
+        await call(alice, "/economy/commands", {
+          action: "loan.accept",
+          input: { id: offered.data.id, termsHash: offered.data.termsHash },
+        })
+      ).status,
+    ).toBe(200);
+    expect(balance("demo-alice")).toBe(1010000);
+    expect(
+      bankDB.db
+        .prepare(
+          "SELECT posted_cents FROM bank_accounts WHERE id='economy-reserve'",
+        )
+        .get()!.posted_cents,
+    ).toBe(9990000);
   });
 });

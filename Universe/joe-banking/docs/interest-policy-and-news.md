@@ -1,5 +1,7 @@
 # Interest policy and news
 
+> Current development status (November 26, 2026): Stage 2 services and UI are implemented. See [implemented rate operations](../../joe-stock-exchange/docs/stage-2/ACCOUNTING.md) and the root Stage 2 TXT report. Earlier Stage 1/foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposits remain unavailable. Final owner review is Stage 3.
+
 ## 1. The variable Joe Rate
 
 Joe Banking publishes one variable base rate, the **Joe Rate**, quoted as a
@@ -105,17 +107,21 @@ pay or charge the same interest twice.
 
 ## 6. News relationship
 
-News can explain or motivate a rate adjustment, but news text does not directly
-write a rate. A rate-policy actor still submits a bounded adjustment through the
-console, and members see the resulting rate bulletin.
+The owner's staged design requires each successful effective rate operation to
+create one visible linked structured Joe Wire event automatically. A cut has a
+bullish direction; an increase has a bearish direction. This is simulation
+pressure, not a guarantee that every stock moves in that direction.
 
-A banking rate event may be published to the shared Joe Universe news feed.
-JOESE must not secretly read the bank rate and alter stock prices. If the same
-event affects markets, it must enter JOESE through a separately published,
-structured Joe Wire event and remain subject to JOESE caps and audit rules.
+Bank rate application and event-outbox creation must be atomic, with deduplicated
+receipt/publication in JoeSE. Pending/canceled/failed changes produce no market
+impact. Publish at actual execution, not twice at scheduling and execution.
+The proposed first event is monetary_policy, mild, one tick, affecting active
+stocks and excluding crypto. These are design defaults, not a live engine change.
 
-This separation prevents one console action from invisibly changing both loan
-interest and stock prices.
+Market prices remain governed by existing ticks, news inputs and hourly/daily
+caps; the Banking API never writes a stock price. The console Stage 1 popup is
+only an example calculator. Scheduling, cancellation, history, policy permissions
+and cross-service publication are Stage 2 work. See [the staged rate decisions](../../joe-stock-exchange/docs/stage-1/DECISIONS.md).
 
 ## 7. Operational safety
 
@@ -128,3 +134,10 @@ interest and stock prices.
 - Monitoring alerts on a missed posting, unbalanced transaction, out-of-range
   rate, third weekly adjustment attempt, or reconciliation difference.
 
+
+## Stage 1 schedule and policy status
+
+Use explicit New York date/time and canonical UTC instants, Monday calendar
+weeks and reserved future quota slots with execution-time revalidation. Late
+jobs use actual effective time. An unconfigured initial rate is not 0% or an
+approved 1.000%. No scheduled rate operation is enabled by Stage 1.

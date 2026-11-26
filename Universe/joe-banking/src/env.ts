@@ -10,6 +10,7 @@ export interface Env {
   JOEAUTH_CLIENT_SECRET?: string;
   JOEAUTH_WEBHOOK_SECRET?: string;
   SESSION_SECRET?: string;
+  ECONOMY_DELIVERY_SECRET?: string;
   JOESE_LOCAL_SERVICE_SECRET?: string;
   JOESE_CLIENT_ID?: string;
   JOESE_APP_ID?: string;

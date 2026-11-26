@@ -1,3 +1,4 @@
+import { BankProducts, BankRate } from "./EconomyProducts";
 import {
   useCallback,
   useEffect,
@@ -674,43 +675,7 @@ export default function App() {
                   />
                 </section>
               )}
-              {page === "Interest Rate" && (
-                <>
-                  <section className="rate-hero panel">
-                    <div>
-                      <span className="eyebrow">VARIABLE JOE RATE</span>
-                      <h2>Good things take a little planning.</h2>
-                      <p>
-                        The initial Joe Rate is awaiting confirmation. No
-                        interest is being accrued by this first release.
-                      </p>
-                      <span className="status-pill">Rate not set</span>
-                    </div>
-                    <div className="rate-range">
-                      <TrendingUp size={26} />
-                      <strong>
-                        0.300–2.000<span>% per week</span>
-                      </strong>
-                      <span>Approved variable-rate range</span>
-                    </div>
-                  </section>
-                  <div className="info-grid">
-                    <InfoCard icon={Clock3} title="A considered pace">
-                      At most two adjustments per New York calendar week. Each
-                      change must be between 0.005 and 0.200 percentage points.
-                    </InfoCard>
-                    <InfoCard icon={LockKeyhole} title="Fixed means fixed">
-                      Fixed-term deposits keep the weekly rate in their accepted
-                      contract, even when the variable Joe Rate changes.
-                    </InfoCard>
-                    <InfoCard icon={ActivityIcon} title="A visible history">
-                      Future changes will show their effective time,
-                      explanation, and an audit record. Rates will never change
-                      retroactively.
-                    </InfoCard>
-                  </div>
-                </>
-              )}
+              {page === "Interest Rate" && <BankRate />}
               {page === "Deposits" && (
                 <>
                   <div className="info-banner">
@@ -759,29 +724,11 @@ export default function App() {
                 </>
               )}
               {page === "Loans" && (
-                <section className="panel coming-soon">
-                  <div className="icon-tile">
-                    <Landmark size={28} />
-                  </div>
-                  <span className="eyebrow">A FUTURE CHAPTER</span>
-                  <h2>Thoughtful lending starts with clear terms.</h2>
-                  <p>
-                    Loan products, eligibility, repayment schedules, and rates
-                    are still being defined. Applications and disbursements are
-                    not available in this release.
-                  </p>
-                  <div className="loan-principles">
-                    <span>
-                      <Check size={16} /> Terms before acceptance
-                    </span>
-                    <span>
-                      <Check size={16} /> A permanent transaction history
-                    </span>
-                    <span>
-                      <Check size={16} /> Fictional J$, always
-                    </span>
-                  </div>
-                </section>
+                <BankProducts
+                  key={member.id}
+                  csrf={auth?.csrf_token ?? null}
+                  onChanged={load}
+                />
               )}
             </>
           )}

@@ -184,3 +184,7 @@ purchases. The product documentation and UI must agree before launch.
 - A tested rollback restores the prior release without replaying financial
   postings.
 
+
+## Stage 1 development update — November 25, 2026
+
+Stage 1 requires separate Banking policy/loan/reserve/tax entitlements, member billing consent, manager/employee separation and evidence-based migration of grants, capital and cost lots. No new financial API is enabled. Follow [the staged contracts and migration plan](../../joe-stock-exchange/docs/stage-1/SERVICE_CONTRACTS.md); global JoeAuth or exchange staff status does not grant these rights.

@@ -1,5 +1,7 @@
 # Joe Banking
 
+> Current development status (November 26, 2026): Stage 2 services and UI are implemented. See [Stage 2 economy implementation](../joe-stock-exchange/docs/stage-2/README.md) and the root Stage 2 TXT report. Earlier Stage 1/foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposits remain unavailable. Final owner review is Stage 3.
+
 Joe Banking is the fictional banking layer of the Joe Universe. It manages a
 member's liquid Joellars (J$), person-to-person wires, savings deposits, term
 deposits, and loans. It is being built around JoeAuth as its identity provider
@@ -169,3 +171,11 @@ local members bypass live SSO only in the isolated local configuration.
    readiness gates documented in `docs/joeauth-adaptation.md`.
 6. Banking operator and administrator assignments, backup ownership, and the
    beta migration date.
+
+## Stage 1 circulation design
+
+Shared economy contracts, exact unit/calendar/tax-preview helpers and additive
+schema drafts are available. They do not implement or enable subscriptions,
+employee pay, taxes, redistribution, rate scheduling or bank loans. See
+[circulation and company billing](docs/circulation-and-company-billing.md) and
+[the Stage 1 design](../joe-stock-exchange/docs/stage-1/README.md).

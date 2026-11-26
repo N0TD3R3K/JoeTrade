@@ -120,3 +120,7 @@ New York. Rate-change limits use that calendar week. Interest is quoted weekly,
 accrued proportionally over time, and posted on a documented weekly boundary or
 at contract maturity.
 
+
+## Stage 1 development update — November 25, 2026
+
+The staged owner plan adds company subscriptions, employee wages, whole-income weekly tax, redistribution and a New York noon economy dashboard. Banking remains the sole cash ledger. See [circulation and company billing](circulation-and-company-billing.md); these new services are not enabled in Stage 1.

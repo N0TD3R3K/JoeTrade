@@ -121,77 +121,7 @@ duration, treatment of crypto and announcement-versus-effective-time behavior.
 Do not invent a fixed stock-price return from the rate delta. A bullish event
 can coexist with other inputs that produce an overall market decline.
 
-2. CONSOLE: JOE BANK — LOAN CREATION
-
-Owner requests the ability to create loans in this section.
-Read Universe/joe-banking/docs/deposits-and-loans.md and the banking ledger,
-permission and migration documents before designing the form/API.
-
-Implement bank-owned loan offers/contracts, not a duplicate exchange wallet.
-Preserve explicit member acceptance of the exact offer before disbursement.
-Creating an operator offer alone must not credit J$ or start interest.
-A useful offer form includes member, fictional principal, purpose, rate kind,
-weekly rate, term, payment schedule and expiry, with validation and an audit log.
-Acceptance posts a balanced bank transaction and creates the liability once.
-Repayment uses available bank funds with defined interest/principal allocation.
-Retain separate banking permissions, CSRF/origin checks, stable operation keys
-and member isolation.
-
-Loan policy still needs concrete decisions: principal limits, terms, fixed-rate
-catalog, minimum payments, first due date, grace periods, unpaid interest,
-multiple active loans and whether loan proceeds can fund JoeSE purchases.
-The existing docs do not approve production penalty or fixed-loan terms.
-Flag these decisions early next session; progress on independent UI/API work
-without silently inventing financial terms. Preserve accepted legacy contracts
-until a reviewed migration policy exists.
-
-3. JOESE MEMBER WEBSITE — NEW LEFT NAVIGATION
-
-Replace the current overall arrangement with a left navigation containing the
-following sections, in this order. Retain responsive/mobile navigation, the
-shared JoeAuth identity, live Banking balance, Inbox and the public member guide.
-
-A. Account Overview
-- Show disposable balance, ordinary asset value and frozen asset value clearly.
-- Show company shareholdings and other holdings.
-- Include the transaction button, Inbox button and link to the banking website.
-- Preserve existing New transaction / Receive / Decline and private share-offer
-  flows; do not lose the ability to sell an exact quantity of frozen shares.
-
-B. Stock Listings
-- Contain all stock listings, the listing sidebar and the asset/trading view.
-- Preserve search, company details, charts, orders, + Add Listing and funding.
-- Existing crypto listings/trading must stay reachable; the owner has not asked
-  for their removal. Decide whether they remain a Crypto group inside this page
-  or get a later separate destination.
-
-C. News
-- Show published Joe Wire articles from the console.
-- Include the new interest-rate-change events, with direction, effective time
-  and a link to the corresponding rate operation/bulletin.
-- Exclude internal notes, drafts and canceled unpublished events from the
-  member feed. Do not duplicate a rate event across retries.
-
-D. Posts (new feature; details deferred)
-- Developers and shareholders may post updates/progress about their own company.
-- A member with no company ownership or shares cannot post here.
-- Future permission checks must be server-side and specific to the company,
-  using the real developer link or current holdings, not a typed company name.
-- Clarify which share types qualify and how ownership changes affect existing
-  posts/edits. Moderation, attachments, editing and other details are not decided.
-- For the navigation restructuring, provide a clearly labeled planned state;
-  do not invent the deferred posting system or show a working-looking fake form.
-
-E. Discussion (new feature; details deferred)
-- All members may post their opinions.
-- Detailed posting, threading, moderation and editing behavior remains to be
-  specified. Provide the navigation/planned state while those details are deferred.
-
-Other sections/features remain to be implemented later. Keep Guide accessible
-in the redesigned navigation. Prefer shareable routes with sensible back/forward
-behavior; preserve /guide as a public route independent of account/API loading.
-Avoid inactive decorative buttons or placeholder controls that appear functional.
-
+[moved to Dev_Note.txt]
 4. SUGGESTED NEXT-SESSION ORDER AND CHECKS
 
 1) Read this handoff, current component READMEs and the referenced bank policies.

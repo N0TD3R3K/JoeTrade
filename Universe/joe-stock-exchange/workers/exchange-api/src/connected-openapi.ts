@@ -89,6 +89,167 @@ export const connectedOpenApi = {
     },
   },
   paths: {
+    "/companies": {
+      get: op(
+        "Own company reports with scoped aggregate revenue and shareholder display names",
+      ),
+    },
+    "/companies/register": {
+      post: op(
+        "Developer initializes company operating account and attributes proven locked capital without moving funds",
+        true,
+        body({ companyId: { type: "string" } }, ["companyId"]),
+      ),
+    },
+    "/posts": {
+      get: op("Published company updates and own removed posts"),
+      post: op(
+        "Developer or settled shareholder publishes a company-specific update",
+        true,
+        body(
+          {
+            companyId: { type: "string" },
+            title: { type: "string", maxLength: 180 },
+            body: { type: "string", maxLength: 10000 },
+          },
+          ["companyId", "title", "body"],
+        ),
+      ),
+    },
+    "/posts/{id}/{action}": {
+      post: op(
+        "Author or scoped moderator withdraws/deletes a post using its current version",
+        true,
+        body({ version: { type: "integer", minimum: 1 } }, ["version"]),
+      ),
+    },
+    "/economy/me": {
+      get: op(
+        "Own loan offers/contracts, subscriptions, employee agreements and latest weekly tax statements",
+      ),
+    },
+    "/economy/plans/{id}": {
+      get: op("Immutable server-defined payment terms for member consent"),
+    },
+    "/economy/commands": {
+      post: op(
+        "Member or company manager command; Banking enforces the exact terms and company role",
+        true,
+        body(
+          {
+            action: {
+              type: "string",
+              enum: [
+                "checkout.accept",
+                "subscription.cancel",
+                "subscription.retry",
+                "loan.accept",
+                "loan.decline",
+                "loan.repay",
+                "employee.accept",
+                "employee.end",
+                "service.request",
+                "plan.create",
+                "company.pool",
+                "employee.invite",
+                "payroll.run",
+                "payment.refund",
+              ],
+            },
+            input: {
+              type: "object",
+              description:
+                "Action-specific fields documented in the Stage 2 economy API reference.",
+            },
+          },
+          ["action", "input"],
+        ),
+      ),
+    },
+    "/console/economy": {
+      get: op(
+        "Linked banking operators: treasury, policies, rates, loan/tax/reconciliation queues",
+      ),
+    },
+    "/console/economy/commands": {
+      post: op(
+        "Operator policy, reserve, grants, rates, loan offer, tax and redistribution command",
+        true,
+        body(
+          {
+            action: {
+              type: "string",
+              enum: [
+                "policy.draft",
+                "policy.approve",
+                "reserve.initialize",
+                "member.eligibility",
+                "grant.reconcile",
+                "grant.issue",
+                "service.approve",
+                "service.suspend",
+                "rate.schedule",
+                "rate.cancel",
+                "loan.offer",
+                "loan.withdraw",
+                "tax.assess",
+                "tax.collect",
+                "tax.refund",
+                "income.resolve",
+                "redistribution.run",
+              ],
+            },
+            input: { type: "object" },
+          },
+          ["action", "input"],
+        ),
+      ),
+    },
+    "/console/economy/snapshot": {
+      post: op(
+        "Capture due noon snapshot or audited revision under the market mutex and bank checkpoint guard",
+        true,
+        body({ revise: { type: "boolean" } }, []),
+      ),
+    },
+    "/console/economy/sync": {
+      post: op("Retry durable income and bank-event delivery", true),
+    },
+    "/console/economy/cost-lots": {
+      get: op("Operator review queue for unresolved legacy acquisition costs"),
+    },
+    "/console/economy/cost-lots/{id}/verify": {
+      post: op(
+        "Operator verifies remaining exact cost basis with attributed evidence",
+        true,
+        body(
+          {
+            expectedRemainingUnits: { type: "integer" },
+            originalBasisCents: { type: "integer", minimum: 0 },
+            remainingBasisCents: { type: "integer", minimum: 0 },
+            evidence: { type: "string" },
+          },
+          [
+            "expectedRemainingUnits",
+            "originalBasisCents",
+            "remainingBasisCents",
+            "evidence",
+          ],
+        ),
+      ),
+    },
+    "/console/posts": { get: op("Operator company-post moderation queue") },
+    "/console/posts/{id}/{action}": {
+      post: op(
+        "Operator withdraws/deletes a post with a moderation reason and version",
+        true,
+        body({ version: { type: "integer" }, reason: { type: "string" } }, [
+          "version",
+          "reason",
+        ]),
+      ),
+    },
+
     "/sso/session": { get: op("Current product session and CSRF token") },
     "/sso/{surface}/login": {
       get: {
@@ -234,7 +395,9 @@ for (const [path, value] of Object.entries(connectedOpenApi.paths)) {
             type: "string",
             enum: path.includes("listing-proposals")
               ? ["approve", "decline"]
-              : ["accept", "decline", "cancel"],
+              : path.includes("posts")
+                ? ["withdraw", "delete"]
+                : ["accept", "decline", "cancel"],
           }
         : { type: "string" },
   }));

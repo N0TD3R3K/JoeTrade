@@ -1,5 +1,7 @@
 # Member and console experience
 
+> Current development status (November 26, 2026): Stage 2 services and UI are implemented. See [Stage 2 member/console features](../../joe-stock-exchange/docs/stage-2/README.md) and the root Stage 2 TXT report. Earlier Stage 1/foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposits remain unavailable. Final owner review is Stage 3.
+
 ## 1. Visual direction
 
 The banking site is primarily white, calm, and information-dense without
@@ -158,3 +160,7 @@ stale holds, failed outbox events, and append-only operator activity.
   horizontal guessing.
 - Reduced-motion preferences disable decorative balance and chart animation.
 
+
+## Stage 1 development update — November 25, 2026
+
+The console Joe Bank section now has foundation cards and a calculation-only rate popup. It cannot save a rate, post cash, create a loan or schedule a job. The complete planned dashboard/forms and member routes are in [UI_PLAN](../../joe-stock-exchange/docs/stage-1/UI_PLAN.md).

@@ -55,6 +55,14 @@ function mapNews(row: Record<string, unknown>): NewsEvent {
     publishedAt: String(row.published_at ?? row.publish_at ?? row.created_at),
     authorName: String(row.author_name ?? "The Joe Wire"),
     status: row.status as NewsEvent["status"],
+    ...(row.bank_operation_id
+      ? {
+          sourceOperationId: String(row.bank_operation_id),
+          effectiveAt: new Date(
+            Number(row.actual_effective_at) * 1000,
+          ).toISOString(),
+        }
+      : {}),
   };
 }
 
@@ -78,8 +86,8 @@ async function listAssets(env: Env): Promise<Asset[]> {
 
 async function listNews(env: Env, ticker?: string): Promise<NewsEvent[]> {
   const result = await env.DB.prepare(
-    `SELECT n.*, COALESCE(u.username, 'The Joe Wire') AS author_name
-       FROM news_events n LEFT JOIN users u ON u.id = n.author_id
+    `SELECT n.*, l.bank_operation_id,l.actual_effective_at, COALESCE(u.username, 'The Joe Wire') AS author_name
+       FROM news_events n LEFT JOIN users u ON u.id = n.author_id LEFT JOIN rate_market_event_links l ON l.news_event_id=n.id
       WHERE n.status = 'published'
       ORDER BY n.published_at DESC LIMIT 50`,
   ).all<Record<string, unknown>>();

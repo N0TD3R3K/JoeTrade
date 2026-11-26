@@ -1,0 +1,76 @@
+This is a prioritized TXT file, explaining core mechanisms for the next fix of Joe Trade. 
+
+1 - JoeSE new side bar arrangment:
+    A. Account Overview
+    - Show disposable balance, ordinary asset value and frozen asset value clearly.
+    - Show company shareholdings and other holdings.
+    - Include the transaction button, Inbox button and link to the banking website.
+    - Preserve existing New transaction / Receive / Decline and private share-offer
+    flows; do not lose the ability to sell an exact quantity of frozen shares.
+
+    B. Stock Listings
+    - Contain all stock listings, the listing sidebar and the asset/trading view.
+    - Preserve search, company details, charts, orders, + Add Listing and funding.
+    - Existing crypto listings/trading must stay reachable; the owner has not asked
+    for their removal. Decide whether they remain a Crypto group inside this page
+    or get a later separate destination.
+
+    C. News
+    - Show published Joe Wire articles from the console.
+    - Include the new interest-rate-change events, with direction, effective time
+    and a link to the corresponding rate operation/bulletin.
+    - Exclude internal notes, drafts and canceled unpublished events from the
+    member feed. Do not duplicate a rate event across retries.
+
+    D. Posts (new feature)
+    - Developers and shareholders may post updates/progress about their own company.
+    - A member with no company ownership or shares cannot post here.
+    - Future permission checks must be server-side and specific to the company,
+    using the real developer link or current holdings, not a typed company name.
+    - After posting, a post can be withdrawn or deleted by the author or the console 
+    operator, in case of mistakes or inappropriate content.
+
+    E. Discussion (new feature; details deferred)
+    - All members may post their opinions.
+    - Detailed posting, threading, moderation and editing behavior remains to be
+    specified. Provide the navigation/planned state while those details are deferred.
+
+    F. My Company (new feature)
+    - If a member own a company, they can see the statistics and income for the company.
+    As described in section 3, subscriptions and purchases can increase the revenue of a 
+    company. The statistics will include every essential data describing the current 
+    weekly revenue, total revenue, weekly stock changes and the shareholding status
+    of every shareholder, company value, and etc.
+
+2 - Joe Banking update:
+    Joe Banking will own an amount of money, controlling the total money supply and 
+    money in the market. Updating each day at 12pm, the console will show the statistics
+    of total money in the market, total asset in the market, average asset value of all
+    players (should be floating around J$10,000, include change shown in percentage), tax
+    revenue, bank reserved money, and all essential statistics used to control the money 
+    circulation. 
+
+3 - Money Circulation:
+    Joe Trading uses a strict system for protecting a stable money supply. As a member
+    joins the Joe Trading system, they receive J$10,000 as the starting disposable balance.
+    A member can trade normally using existing functions. Here are new features:
+        - Subscription and Spending Activities API: A company can launch services that allow
+        subcribing. For example, ChatJoePT can direct users to a subscription link and allow
+        subscription in ChatJoePT, creating income for the company ChatJoePT. A part of the 
+        revenue is given to employers at the company, the rest of the revenue is contributed 
+        to the company asset value or the stock price. 
+        - Taxes: According to weekly income, a member will be taken away a portion of income into 
+        the Joe Bank. Income is calculated in weekly income instead of monthly income. 
+        In the range of J$0 to J$500, no tax is collected. In the range of J$500 to J$2,000, 2% tax
+        is collected. In the range of J$2,000 to J$3,500, 3% tax is collected. In the range of 
+        J$3,500 to J$5,000, 5% tax is collected. Any income above J$5,000 has 10% tax collected.
+        Suppose a member gains J$1,000 throughout the week as income, and J$600 as
+        stock exchange gain. The income is calculated as J$1000+600 = J$1,600 in
+        total, corresponding to the category of J$500 to J$2,000, 2% is collected and
+        transferred into the bank reserves, which is J$1,600 * 2% = J$80. 
+        - Money supply stability and inequality control: There should be an additional mechanism to 
+        redistribute the collected tax, and interest gained by the bank. The bank should start with 
+        a reserve value of J$100,000, the total reserve value should be no lower than 90% of that 
+        starting point, or it will be marked as dangerous. The system will calculate a recommended 
+        interest rate change according to the remaining reserve amount. Final changes remain at the
+        operator.

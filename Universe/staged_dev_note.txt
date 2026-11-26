@@ -1,0 +1,485 @@
+JOETRADE — STAGED DEVELOPMENT NOTE
+Prepared November 25, 2026. Status: consolidated design and delivery plan.
+
+PURPOSE AND PRIORITY
+This file is the single working plan integrating:
+  1. ../Dev_Note.txt — the owner's priority requirements.
+  2. ../HANDOFF_NEXT_SESSION.txt — supporting requirements and restart context.
+Both source files currently live in the JoeTrade root, not inside Universe.
+They remain unchanged for provenance. Use this consolidated file for subsequent
+stages; do not treat the older handoff as a competing plan.
+
+The owner clarified that "employers" in Dev_Note means EMPLOYEES. Employee
+revenue payments are therefore required. Founders/owners do not automatically
+receive that employee allocation merely because they hold shares.
+
+This session consolidates the TXT files and finalizes the design boundaries.
+It does not begin the staged application work, edit Markdown documentation,
+start previews, migrate databases or run feature tests. The three stages below
+are future execution stages, with explicit deliverables and completion gates.
+Design defaults below are identified separately from unresolved policy choices.
+
+A. CURRENT SYSTEM TO PRESERVE
+
+Workspace: /Users/lizexi/Documents/joelib/JoeTrade
+Applications: Universe/joe-banking and Universe/joe-stock-exchange.
+Do not edit the original sibling /Users/lizexi/Documents/joelib/Universe project.
+
+JoeAuth supplies stable identity; product memberships and permissions remain
+separate. Banking owns all posted/available J$, holds, wires and ledger entries.
+JoeSE owns listings, holdings, orders, trades, market ticks and news.
+All J$ remains fictional and nonredeemable for real money or external currency.
+The proposed subscriptions concern in-universe services, not real-money billing.
+
+Already implemented locally:
+- Shared bank/exchange Alice and Bob accounts; a separate local staff fixture.
+- Bank-backed order holds, partial settlement, release and shared member wires.
+- Immutable balanced journal postings, idempotent operations and recovery
+  between the bank and exchange databases.
+- Single-founder launch proposals with staff review and explicit founder funding.
+  Minimum capital J$5,000; the founder receives the specified frozen shares.
+- Exact-quantity private frozen-share sales to named members. Both sides pay
+  0.25% with integer-cent rounding; no bank redemption of company shares.
+- Ordinary stocks use whole shares; crypto uses up to two decimal places.
+- The /guide public member handbook and header Guide link; the unused JoeSE
+  header bell was removed. Inbox remains functional.
+- Responsive console navigation, larger fonts and a corrected Banking card.
+
+Not implemented yet: the new economy dashboard, bank-owned loans and interest
+engine, rate operations, subscriptions/company revenue, wages, income taxes,
+redistribution, Posts, My Company and the new member navigation.
+The connected Joe Bank console currently shows information only; legacy
+exchange-local loan writes are disabled. Do not reactivate that old wallet.
+
+Production JoeAuth provisioning, reviewed legacy account linking and actual
+Cloudflare deployment remain separate work. Preserve joe-univer.se hostnames:
+stock.joe-univer.se, stock-console.joe-univer.se, stock-api.joe-univer.se,
+bank.joe-univer.se and the existing auth.joe-univer.se issuer.
+
+Preserve existing migrations and local records, including DRK / Derek Company,
+TST, all test balances, holdings and transfers. Do not reset or reseed the bank
+for a restart. Never commit .dev.vars, local state, credentials or generated files.
+
+B. OWNER REQUIREMENTS AND ESSENTIAL DESIGN RECONCILIATION
+
+B1. MEMBER NAVIGATION — SIX SECTIONS, IN THIS ORDER
+
+1) Account Overview
+   Show disposable balance, ordinary asset value, frozen asset value, company
+   shareholdings and other holdings. Include New transaction, Inbox, private
+   share Offer actions and a Banking website link. Preserve Receive/Decline and
+   exact share quantities. Keep /guide accessible from the new navigation.
+
+2) Stock Listings
+   Retain all companies, listing sidebar/search, profiles, charts, order ticket,
+   + Add Listing, approval/funding flows and holdings access. Design default:
+   keep Equities and Crypto groups inside this section, so existing crypto
+   trading remains reachable without adding an unrequested seventh nav item.
+
+3) News
+   Publish console-created Joe Wire articles and linked effective rate-change
+   events. Show direction and effective time; exclude internal notes, drafts and
+   canceled unpublished events. Deduplicate linked news across retries.
+
+4) Posts
+   This is NOW an implementation requirement, superseding the handoff's earlier
+   placeholder-only plan. Developers and shareholders can publish information
+   and progress about their own company. A member with neither company ownership
+   nor shares cannot publish company posts.
+   Minimal design: company selector limited by server authorization, title/body,
+   published date and author, then Publish, Withdraw and Delete controls.
+   Design default: the real developer link or a positive settled holding in that
+   company qualifies a member. Stock and frozen shareholdings qualify; pending
+   offers alone do not grant the buyer permission. Confirm this share-type default
+   in Stage 1 before implementation.
+   The author or an authorized console operator can withdraw/delete a post.
+   Withdrawal hides it from members. Deletion removes its public content through
+   a defined soft-delete/tombstone flow, while preserving moderation attribution.
+   Do not erase financial records or silently alter another author's text.
+   A former shareholder can still withdraw/delete their own old posts, but
+   publishing new company posts requires current eligibility. Recheck at submission.
+   Attachments, rich editing, likes and other unrequested social features remain
+   outside the minimal first version.
+
+5) Discussion
+   All members may post opinions in the eventual feature. The owner still defers
+   detailed posting/threading/moderation/editing behavior. Include a clearly
+   labeled planned destination in this delivery; do not invent a working-looking
+   form or broaden it into a full forum without a later design decision.
+
+6) My Company
+   Provide company statistics and income to members who own a company or shares.
+   Design default: show a selector of companies linked to the member as developer
+   or positive settled shareholder. Nonowners see an explanatory empty state.
+   Show current weekly revenue, lifetime revenue, weekly stock change, company
+   value and a shareholder table with quantity and percentage for each holder.
+   Use member display names, not private emails or bank/session details.
+   Shareholder access to aggregate revenue does not authorize managing employees,
+   billing plans or other owners' assets. Company management requires an explicit
+   developer/manager permission.
+   Keep sensitive customer/payment details restricted to authorized managers.
+   Define company value and weekly comparisons consistently with B3 below.
+
+Use shareable member routes, browser back/forward and mobile navigation. Keep
+Account Overview actions usable while browsing listings/news. Preserve /guide
+as a public route that does not depend on a bank API session.
+
+B2. BANK RESERVE AND DAILY ECONOMY DASHBOARD
+
+Owner's requirements:
+- The bank starts with its own reserve of J$100,000, recorded exactly once.
+- A reserve below 90% of that original amount is marked dangerous.
+  Threshold: J$90,000. Exactly J$90,000 is not below the threshold.
+- At 12 pm each day, publish an economy snapshot for the console's Joe Bank
+  section: total money in the market, total assets, average member asset value
+  and percentage change, tax revenue, bank reserves and other essential metrics.
+- Target average member value around J$10,000; use this as a monitoring target.
+- Recommend an interest-rate change using reserve conditions; final authority
+  remains with the operator. Never automatically apply a recommendation.
+
+Design defaults and definitions:
+- "12 pm" means NOON America/New_York, not midnight. Store timestamps in UTC.
+  Use a New York date key for a once-only daily snapshot, including DST changes.
+  Delayed snapshots show actual capture time and any stale/incomplete status;
+  do not fabricate a historic noon value from later balances.
+- Separate member posted cash, member available cash, active holds, company
+  spendable cash, bank-owned reserves, locked founding capital and fee clearing.
+  A hold is part of posted money, not additional money to add a second time.
+- Total member asset value = reference-valued ordinary holdings plus frozen
+  shareholdings. Show average asset value over eligible members and percentage
+  difference from J$10,000: (average - 10,000) / 10,000 x 100.
+- Also show average total member portfolio value INCLUDING posted cash/holds,
+  with a separate label. The existing disposable-only net-position card cannot
+  be reused as a complete wealth statistic because held cash would disappear.
+  Do not silently replace the owner's asset-value metric with this second metric.
+- Exclude bank/issuer/operator/system accounts from the member denominator.
+  Return an empty/not-applicable average when there are no eligible members.
+- Show week-to-date taxes, loan interest actually received, deposit interest paid,
+  employee payments, redistribution, opening grants, refunds and reserve ratio.
+- Reconcile totals across service snapshots at a declared common cutoff or mark
+  the result provisional. Do not present independently captured totals as exact.
+- Keep bank-owned reserve funds separate from member deposits, company money,
+  founding capital and trading fee balances. None is freely spendable by the bank
+  merely because Banking stores the ledger account.
+- The J$90,000 condition is a warning, not an unapproved automatic seizure,
+  forced liquidation, rate change or trading suspension. Spending-floor rules
+  and redistribution budgets still need a precise policy.
+- No automatic stock-price manipulation to force averages back to J$10,000.
+
+B3. COMPANY SUBSCRIPTIONS, PURCHASES AND EMPLOYEE INCOME
+
+Preserve the owner's model: a company can launch subscription/purchase services
+through an API. ChatJoePT can link a member to a subscription checkout, generating
+company revenue. Part goes to EMPLOYEES; the remainder stays with the company
+and contributes to its economic value.
+
+Essential fit with the existing trade system:
+- All cash must be real posted J$ within Banking, never a second exchange balance.
+  Create company operating/revenue accounts separate from locked founding capital.
+- A paid purchase debits the member and credits the company once. Employee wages
+  subsequently debit company cash and credit the designated employees once.
+  Retained cash is the remainder; do not credit it again as newly created money.
+- Revenue can increase company book assets through retained cash. Stock price
+  remains an output of the existing market engine. Any new revenue/fundamental
+  input must be bounded, attributed and documented; never directly write prices
+  or add the same revenue simultaneously as cash and a second fictitious asset.
+- Distinguish company book value from market capitalization (reference share
+  price x actual outstanding shares). Do not add company treasury assets again
+  to a system-wide total already valuing that company through its shares.
+- A stock trade between members pays the seller, not company revenue. Founding
+  capital and loan proceeds are funding, not sales revenue. Share sales do not
+  mint money, and taxes/transfers/wages normally move existing money.
+- Existing member wires stay receiver-approved. Purchases/subscriptions are a
+  separate buyer-authorized payment flow; a merchant link alone cannot debit J$.
+
+Minimal payment and subscription design:
+- Approved JoeAuth service/app identity linked to the correct company; server-
+  determined merchant account, plan, price and allowed service permissions.
+- Member checkout shows merchant, amount, one-time/recurring terms and consent.
+  Recurring billing needs explicit authorization, interval, next charge, and a
+  cancel action that stops future charges. Price changes require defined consent.
+- Durable purchase/renewal identifiers, sufficient-available-funds checks, balanced
+  postings and signed/deduplicated delivery of payment/entitlement results.
+- Grant the in-universe entitlement only after payment is durably recorded.
+  Retries, declined charges and outages cannot grant duplicate access or debit twice.
+- Agree refund, missed-renewal and employee-payment timing before enabling billing.
+  Refunds must link to original payments and correct revenue/tax history explicitly.
+- Managers configure employees and the approved payout rule. Never let an employee
+  choose their own percentage or let payouts exceed settled company funds.
+- Revenue reporting is weekly and lifetime, with gross receipts, refunds, employee
+  payouts and retained amount separately visible.
+
+Still to confirm: employee payout percentage, split among employees, eligibility,
+manual versus scheduled payout, employment acceptance, subscription intervals,
+refund rules and revenue-to-market signal. These are not supplied by Dev_Note;
+do not invent them as approved policy.
+
+B4. WEEKLY INCOME TAX — PRESERVE THE OWNER'S BRACKET MODEL
+
+The owner's example applies the selected bracket rate to the WHOLE weekly taxable
+income. Keep that model; do not quietly replace it with progressive marginal tax.
+Make the threshold jumps visible in the design preview.
+
+Weekly taxable income I (J$)       Rate applied to the whole I
+0 <= I <= 500                     0%
+500 < I <= 2,000                   2%
+2,000 < I <= 3,500                 3%
+3,500 < I <= 5,000                 5%
+I > 5,000                         10%
+
+Essential arithmetic correction:
+J$1,000 income + J$600 stock exchange GAIN = J$1,600 taxable income.
+J$1,600 x 2% = J$32, not the J$80 written in the source example.
+Keep the stated rates; correcting the multiplication does not change tax policy.
+
+Essential accounting fit:
+- Use a New York calendar week, proposed Monday 00:00 through the following
+  Monday 00:00, as a half-open interval; explicitly confirm this week convention.
+- Tax income and realized trading GAINS, not the full proceeds of every sale or
+  an unrealized increase in the displayed portfolio price. A J$600 sale is not
+  necessarily a J$600 gain. Define sale income using proceeds, allocated cost
+  basis and fees before finalizing the taxable basis.
+- Preserve exact cost-basis records for purchases, founder contributions and
+  private share transfers. The current rounded average-per-share display is
+  insufficient by itself for exact tax calculations; plan durable basis/lot data
+  and a reviewed transition for existing holdings without inventing past profit.
+- Exclude transfers of principal between members/own accounts, starting grants,
+  loans and capital contributions from taxable earned income by default. Record
+  the category of every payment to avoid mistaking a loan or wire for wages.
+- Finalize whether deposit interest, grants, redistribution and dividends count,
+  whether trading losses offset gains or wages, fee deductions, refund handling,
+  and whether frozen-share gains use the same basis rule. These remain policy
+  questions, not assumptions hidden in a scheduled debit.
+- Assess tax once per member/week with an immutable calculation and source links.
+  Collection is a balanced member-to-bank-reserve transfer with independent
+  idempotency; never tax the same wage/trade twice on retry.
+- Handle insufficient disposable funds explicitly. Do not spend existing wire/
+  order holds, make available balances negative, liquidate frozen shares, or debit
+  a different member. Choose withholding, an assessed unpaid balance, or another
+  explicit policy in Stage 1 before automatic collection is activated.
+- Reconcile assessments, payments, refunds and unpaid tax separately. Tax receipts
+  must reach the bank-owned reserve, not the exchange's ordinary fee account.
+
+B5. MONEY SUPPLY, REDISTRIBUTION AND RATE RECOMMENDATIONS
+
+Owner requirements:
+- Eligible new members receive J$10,000 disposable balance exactly once.
+- Redistribute some collected taxes and bank interest income to support money
+  circulation and reduce inequality.
+- Start the bank reserve at J$100,000; warn below J$90,000.
+- Recommend rate changes from reserve conditions; the operator makes the change.
+
+Reconcile with the current system:
+- Register the opening grant once per verified, eligible identity linked through
+  JoeAuth and Banking. Linking an old account, switching apps or signing in again
+  must not create a second J$10,000. Enrollment/proof-based migration is still work.
+- Specify whether opening grants debit the J$100,000 reserve or use separately
+  authorized issuance. Funding ten full grants from that reserve would exhaust
+  it; do not silently choose a funding source that defeats the owner's threshold.
+- Company sales/wages circulate existing J$; they do not replenish system-wide
+  spendable money locked by new founding contributions. Redistribution returns
+  bank-owned funds to members. Publish sources, payments and remaining budgets.
+- Treat only collected loan interest as bank interest income; principal repayments
+  are not income. Accrued but unreceived interest is not cash available to distribute.
+  Deposit interest paid to members is a bank outflow, not bank revenue.
+- Keep a defined redistribution budget and eligibility rule; determine cadence,
+  equal versus targeted allocation, treatment of new/inactive members and the
+  reserve warning/spending policy before implementing payouts.
+- No daily allowances, contribution bounties or other earlier brainstorm ideas
+  are automatically approved by this note. The chosen owner mechanism is company
+  income, employee payments, taxation and redistribution.
+- Show an explainable recommendation using reserve ratio, trend, interest received
+  and interest expense. Reserve ratio alone cannot prove that raising a shared
+  deposit/loan rate will improve reserves: it changes both income and obligations.
+  Do not hard-code "low reserve = raise the rate" without a defined model.
+- Recommend a bounded signed step only after a rule is approved; otherwise show
+  "insufficient policy/data". Operator approval remains mandatory and follows B6.
+
+B6. JOE BANK CONSOLE — RATE OPERATIONS AND LOANS FROM THE HANDOFF
+
+Keep the compatible handoff requirements even though Dev_Note emphasizes the
+new economy controls. Include dashboard, reserves/tax/redistribution views,
+rate adjustment/history/scheduled operations and loan creation under Joe Bank.
+
+Rates:
+- Button opens a modal with operation date AND time, New York timezone, signed
+  change, current/proposed rate, reason, member explanation and internal note.
+- Minimum absolute adjustment 0.005 percentage points; maximum 0.200; step 0.005.
+  Nonzero positive and negative changes are allowed.
+- Weekly rate bounds 0.300%–2.000%; at most two successful effective adjustments
+  in one New York calendar week. Initial rate is unconfirmed; 1.000% is a proposal.
+- Exact units: weekly_rate_ppm; step 50 ppm, maximum movement 2,000 ppm;
+  rate bounds 3,000–20,000 ppm. All amounts use integer cents.
+- Future operations are pending and cancellable. Applied/canceled/failed states,
+  policy versions, server-side permissions and audit trail are required.
+- Atomically resolve cancel-versus-execute races; validate pending sequences and
+  execution-time bounds/quota. Reserve pending weekly slots as a design default,
+  releasing them on cancellation/failure, while effective operations count once.
+- Never backdate rates. Delayed jobs record their actual effective time. Fixed
+  contracts keep accepted rates; variable accrual splits at each effective change.
+- Applying a rate operation durably creates one linked structured Joe Wire event.
+  Cuts create bullish pressure; increases create bearish pressure. These are
+  simulation directions, not guaranteed price moves. Existing market caps and
+  news/tick rules still apply; no direct overwrite of stock prices.
+- Market impact occurs at successful effective execution, not at both scheduling
+  and execution. Cancellation creates no impact. Use retry-safe cross-service
+  delivery and retain event attribution and member-visible rate history.
+- Decide event severity/duration/affected stocks before implementation; do not
+  silently extend the effect to crypto or set a fixed guaranteed return.
+- Banking rate-policy permission is explicit; exchange/global JoeAuth operator
+  status alone does not grant it. Fixed-point interest accrues by approved
+  contract rules and posts weekly without duplicate posting on catch-up.
+
+Loans:
+- Keep bank-owned offers/contracts and repayments inside Joe Banking's ledger.
+  The Joe Bank console may prepare an offer for an eligible linked member.
+- Offer fields: member, principal, purpose, variable/fixed kind, weekly rate,
+  term, payment schedule and expiry. Member acceptance of the exact offer is
+  required before disbursement or interest; creating an offer alone moves no J$.
+- Acceptance posts a balanced transaction and loan receivable exactly once.
+  Retain repayment/accrual/history, permission checks and retry protection.
+- Principal limits, permitted terms, fixed-rate catalog, minimum payments,
+  first due date, grace periods, unpaid interest, concurrent loans and whether
+  proceeds may fund JoeSE purchases remain unapproved. Do not invent penalties
+  or revive legacy annual-rate lending. Decide whether loan disbursement uses
+  reserve-funded transfers or separately authorized issuance; both its reserve
+  effect and money-supply effect must be visible. Preserve any accepted legacy
+  contracts until a separate migration decision.
+
+C. THREE DELIVERY STAGES
+
+STAGE 1 — FINALIZE DESIGN, PLAN UI, UPDATE MARKDOWN, START FOUNDATION CODE
+
+1. Read this file and the current mechanism documents listed below. Resolve
+   policy questions without reversing Dev_Note's owner choices.
+2. Produce UI layouts and field/state plans for all six member destinations:
+   Account Overview, Stock Listings, News, Posts, Discussion and My Company.
+   Plan the Joe Bank dashboard, noon snapshot status, reserve warning, rate
+   popup/schedule/cancel list, loan offers, tax and redistribution panels.
+3. Finalize exact metric definitions, weekly boundaries, company management and
+   employee roles, tax basis/cost allocation, reserve/grant funding, subscription
+   consent/cancellation, payout shares and recommendation/event rules.
+   Keep any unanswered policy explicitly blocked from live financial execution;
+   independent UI and foundation work can proceed.
+4. Update affected Markdown docs: banking product/architecture, account/ledger
+   integration, income/rates/deposits/loans, security/data model, exchange market
+   rules, news, permissions and implementation/deployment status. Add dedicated
+   circulation/tax/company-billing designs as needed. Keep planned and implemented
+   behavior labeled separately and remove superseded handoff-only deferrals.
+5. Write the first foundation code: shared amount/rate/time/category types,
+   navigation/routes and non-deceptive empty/loading/error states, plus additive
+   migration/schema drafts and service contracts for company accounts, payments,
+   employees/wages, tax periods, snapshots, redistribution and scheduled rates.
+   Plan missing per-company capital attribution for existing aggregated capital
+   records without moving or redeeming the locked funds.
+6. Define durable operation IDs, ownership checks, accounting entries and recovery
+   contracts before adding automated debits. Preserve all existing behavior.
+
+Stage 1 exit: UI/state plan and updated docs agree; decisions are recorded;
+foundation code is reviewable and compatible; no unapproved financial policy is
+silently enabled. Existing migrations are not rewritten or remote-applied.
+
+STAGE 2 — MOST CODING AND FEATURE DEVELOPMENT
+
+1. Complete member navigation and page integration while preserving trading,
+   private share sales, wires, Inbox, funding, crypto and Guide.
+2. Implement company operating accounts and approved service registration,
+   purchase checkout, subscription consent/renewals/cancellation and delivery.
+3. Implement employee configuration/payouts and retained revenue accounting.
+   Integrate My Company revenue, shareholders, values and weekly comparisons.
+4. Implement eligible company Posts, author withdrawal/deletion and console
+   moderation. Keep Discussion visibly planned until its details are approved.
+5. Implement exact once-only enrollment grant logic under the selected funding
+   policy; preserve existing identities and balances without duplicate grants.
+6. Implement weekly income classification, exact gain/cost-basis handling, tax
+   assessments/collection/refunds and approved redistribution controls.
+7. Implement bank reserve accounting and the daily New York noon dashboard;
+   add the explainable, operator-only rate recommendation preview.
+8. Implement rate modal, permissions, scheduled execution/cancellation, accrual
+   boundaries and durable publication of linked Joe Wire events.
+9. Implement bank loan offers/acceptance, disbursement, repayment and accrual
+   under approved terms. Keep all cash operations bank-owned and auditable.
+10. Add focused tests alongside substantive financial and authorization code.
+    Wire UI to real APIs and handle pending/retry/error states honestly.
+
+Stage 2 exit: approved features work end-to-end in development; unresolved rules
+remain explicitly unavailable; journals and cross-service recovery reconcile.
+No placeholder action pretends to move money or publish content successfully.
+
+STAGE 3 — FINISH CODING, TEST, FIX BUGS, RUN LOCALLY FOR OWNER REVIEW
+
+1. Finish integrations, migrations, recovery workers, failure handling and any
+   remaining approved UI work. Review access scopes and exposed fields.
+2. Run relevant type checks, builds and behavior/integration tests. Verify:
+   - One opening member grant and one bank reserve initialization, including retries.
+   - Balanced payments/wages/refunds and no duplicate cash or company revenue.
+   - Signed service access, member consent, plan changes, failed renewals,
+     cancellation races and entitlement retries after either service is unavailable.
+   - Tax boundaries 500/2,000/3,500/5,000, correct J$32 example, bracket jumps,
+     realized gains/cost basis/fees, insufficient cash, holds, refunds and retries.
+   - No double counting cash, holds, shares, capital, revenue or interest income.
+   - Noon/DST snapshots, empty member sets, stale data and J$90,000 warning boundary.
+   - Redistribution budgets/eligibility, reserve reconciliation and operator control.
+   - Rate step/bounds/third-weekly-change rejection, stale versions, future sequences,
+     cancel/execute races, delayed execution, fixed contracts and one linked event.
+   - No loan cash before acceptance; exact accrual/repayment and authorization.
+   - Company-specific Posts permissions, ownership changes and author/operator
+     withdrawal/deletion; no exposure of private shareholder/customer information.
+   - My Company visibility and statistics, all six nav items, direct routes,
+     browser history, Guide, mobile layout and preserved member financial actions.
+3. Fix discovered bugs and rerun the affected checks until they pass. Update
+   implementation status and the member guide to describe actual features only.
+4. Run the local bank API, exchange API, member site and console with the existing
+   Alice/Bob accounts and separate staff fixture. Do not reset owner-created data.
+5. Browser-check desktop/mobile flows and leave the local sites running for the
+   owner to test. Provide URLs, brief changes and any explicit remaining limits.
+   Production deployment/DNS changes are not part of this stage unless requested.
+
+Stage 3 exit: intended approved features pass the relevant checks and local
+browser review; the owner has working local previews for their own testing.
+
+D. SOURCE DOCUMENTS AND RESTART REFERENCE
+
+Priority sources: ../Dev_Note.txt; ../HANDOFF_NEXT_SESSION.txt.
+Mechanism references:
+  joe-stock-exchange/docs/connected-economy.md
+  joe-stock-exchange/docs/market-rules.md
+  joe-stock-exchange/docs/joe-wire-events.md
+  joe-banking/docs/interest-policy-and-news.md
+  joe-banking/docs/deposits-and-loans.md
+  joe-banking/docs/accounts-ledger-and-joese.md
+  joe-banking/docs/data-model-and-api.md
+  joe-banking/docs/implementation-status.md
+
+Latest recorded checks: 37 bank tests and 34 exchange tests passed during the
+connected-economy implementation; the subsequent Guide/spacing work passed both
+frontend builds and desktop/mobile checks. New planned features are not yet tested.
+
+The prior session stopped the previews and both APIs. Restart only when needed
+for a development stage; creating this note does not start them.
+Terminal 1: cd /Users/lizexi/Documents/joelib/JoeTrade/Universe/joe-banking
+            npm run dev:api
+Terminal 2: cd /Users/lizexi/Documents/joelib/JoeTrade/Universe/joe-stock-exchange
+            npm run dev:api:local
+Terminal 3: same exchange directory; npm run dev:exchange:test
+Terminal 4: same exchange directory; npm run dev:console:test
+Local member site: http://127.0.0.1:4173/
+Local Guide:       http://127.0.0.1:4173/guide
+Local console:     http://127.0.0.1:4174/
+Bank API port 8788; exchange API port 8787.
+Credentials already live in ignored .dev.vars; do not print them.
+
+ESSENTIAL CHANGES FROM THE SOURCES, FOR REVIEW
+- Dev_Note wins over HANDOFF. My Company and actual Posts/deletion are included;
+  only Discussion's detailed implementation remains deferred.
+- "Employers" corrected to employees following the owner's explicit reply.
+- Tax example corrected from J$80 to J$32 without changing bracket rates or
+  silently switching to marginal taxation.
+- Threshold endpoints, noon timezone, reserve warning, cash/asset definitions,
+  once-only grants and gain-versus-sale accounting made explicit.
+- Revenue retained as company-owned cash recorded by Banking; prices still
+  follow the market engine. Founder capital remains locked and cannot be redeemed through wages.
+- Ambiguous numerical policies remain listed for Stage 1 decisions rather than
+  being filled with unapproved amounts, rates, formulae or automatic money creation.
+- Prior brainstorming allowances/bounties were not added as owner requirements.
+- This note sets the stages; it does not claim any new feature is implemented.

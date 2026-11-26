@@ -1,5 +1,7 @@
 # Connected economy implementation
 
+> Current development status (November 26, 2026): Stage 2 services and UI are implemented. See [Stage 2 service and recovery reference](stage-2/ACCOUNTING.md) and the root Stage 2 TXT report. Earlier Stage 1/foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposits remain unavailable. Final owner review is Stage 3.
+
 Local implementation, November 24, 2026. Product requirements include
 [Joelib issue 16](https://github.com/N0TD3R3K/Joelib/issues/16) and the banking
 design documents. Everything described here concerns fictional J$.
@@ -106,3 +108,7 @@ edge proxies and lifecycle callbacks, and measure request/CPU/database usage.
 The old loan contracts require a separate migration decision. Banking deposits,
 interest, lending, a full bank staff console and universe-wide logout UI remain
 future work.
+
+## Stage 1 development update — November 25, 2026
+
+The member shell now has six shareable routes and reuses the existing read-only balance/news and financial actions. Posts, Discussion and company reports have honest planned states. Read [Stage 1 status and design](stage-1/README.md) before implementing new circulation services; existing trade/settlement rules remain intact.

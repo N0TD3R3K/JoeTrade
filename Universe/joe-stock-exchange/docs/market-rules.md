@@ -1,5 +1,7 @@
 # JOESE market rules
 
+> Current development status (November 26, 2026): Stage 2 services and UI are implemented. See [Stage 2 accounting/rate rules](stage-2/ACCOUNTING.md) and the root Stage 2 TXT report. Earlier Stage 1/foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposits remain unavailable. Final owner review is Stage 3.
+
 ## 1. Scope and terminology
 
 JOESE is a closed fictional simulation. Its unit of account is the **Joellar**,
@@ -38,39 +40,20 @@ in [assets-and-tickers.md](assets-and-tickers.md).
   accepts it in a matched trade. JOESE is not an automatic redemption counterparty.
 - A completed trade does not by itself change the displayed official quote.
 
-### Joe Bank bankruptcy borrowing
+### Banking and future circulation
 
-Joe Bank is the only permitted lending route in Version 1. A member who has
-been formally classified as bankrupt may request an internal J$ loan from Joe
-Bank. The loan creates a recorded J$ liability and may provide disposable
-balance; it is not real-world credit or a way to deposit or withdraw money.
+Connected mode disables the imported exchange-local bankruptcy/APR lending
+routes and daily loan-interest job. Do not use those historical terms for new
+Banking loans. New bank-owned lending is a staged weekly-rate design requiring
+an approved catalog and member acceptance before reserve-funded disbursement.
+No new loan products are enabled in Stage 1.
 
-Bankruptcy is an explicit operator classification with a required reason and
-audit record. It is never inferred solely from disposable balance, portfolio
-value, or a short-lived market move. Once classified, a member may submit one
-open application at a time, up to the configured Joe Bank limit.
-
-An operator may decline the application or offer a variable annual percentage
-rate. The member sees the amount, rate, variable-rate disclosure, and decision
-note and must accept those terms before any J$ is credited. An offered rate can
-be revised only through another audited action; accepting and revising the same
-version cannot both succeed.
-
-For an active loan, the 10:00 PM New York close adds one day of interest using
-the outstanding liability and variable APR then in effect:
-
-```text
-daily interest = round(outstanding liability × APR / 365)
-```
-
-The interest is capitalized into the outstanding simulated liability and is
-recorded once per loan and market date. A member may make a partial or full
-repayment from disposable J$ at any time. Version 1 has no automatic payment,
-real-world collection, or automatic default action. Disbursement, rate changes,
-interest, repayments, and classification changes are all preserved in the
-ledger or audit history. The production defaults are a J$10,000 application
-limit, an 8.00% suggested APR, and a 50.00% maximum APR; operators can change
-those deployment settings without changing code.
+The owner also requests company service revenue, employee pay, weekly income
+tax and redistribution. Those are separate Banking postings, not hidden edits
+to a member wallet or stock price. See [the Stage 1 decisions](stage-1/DECISIONS.md)
+for exact tax/valuation rules and [contracts](stage-1/SERVICE_CONTRACTS.md) for
+planned APIs. New enrollment grants must be issued only once by Banking after
+reviewed identity provisioning; signing into JoeSE never creates a second grant.
 
 ## 3. Market schedule and locks
 

@@ -47,7 +47,7 @@ export async function summary(env: Env, customer: Customer) {
       rows.results.find((row) => row.account_kind === "flexible_deposit")
         ?.posted_cents ?? 0,
     inbox_count: inbox?.count ?? 0,
-    features: { wires: true, deposits: false, loans: false, joese: true },
+    features: { wires: true, deposits: false, loans: true, joese: true },
   };
 }
 

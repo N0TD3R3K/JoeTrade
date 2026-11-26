@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
     "deploy": "node ../../scripts/check-production-env.mjs && npm run build && wrangler deploy --config wrangler.jsonc",
-    "dev:test": "VITE_IDENTITY_MODE=joeauth VITE_DEMO_MODE=false vite --host 127.0.0.1 --port 4173 --strictPort"
+    "dev:test": "VITE_IDENTITY_MODE=joeauth VITE_DEMO_MODE=false vite --host 127.0.0.1 --port 4173 --strictPort",
+    "dev:stage1-preview": "VITE_IDENTITY_MODE=joeauth VITE_DEMO_MODE=true vite --host 127.0.0.1 --port 4273 --strictPort"
   },
   "dependencies": {
     "@joese/contracts": "*",

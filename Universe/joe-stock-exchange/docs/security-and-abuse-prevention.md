@@ -1,5 +1,7 @@
 # JOESE security and abuse prevention
 
+> Current development status (November 26, 2026): Stage 2 services and UI are implemented. See [Stage 2 scoped APIs](stage-2/API.md) and the root Stage 2 TXT report. Earlier Stage 1/foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposits remain unavailable. Final owner review is Stage 3.
+
 ## Trust boundaries
 
 - Member and console browsers are untrusted clients.
@@ -42,3 +44,7 @@
 - Run account-isolation, duplicate-submit, balance-race, privilege-escalation,
   CORS, and market-tick replay tests in staging.
 
+
+## Stage 1 development update — November 25, 2026
+
+Company post publishing and management remain unavailable in Stage 1. Stage 2 must check actual developer/settled shareholder status per company, permit author/scoped-operator withdrawal or deletion, and separate aggregate shareholder reports from manager-only customer/employee data. See [Stage 1 decisions](stage-1/DECISIONS.md).

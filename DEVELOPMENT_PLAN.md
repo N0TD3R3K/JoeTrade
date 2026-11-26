@@ -318,3 +318,20 @@ working-tree snapshot, not an asserted exact upstream release.
 - [Cloudflare Workers Custom Domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)
 - [JoeAuth MIT license](https://github.com/Histar4522/JoeAuth/blob/master/LICENSE)
 - [CC0 permissions](https://creativecommons.org/publicdomain/zero/1.0/)
+
+## Stage 1 delivery — November 25, 2026
+
+The owner-authorized Stage 1 follows [staged_dev_note.txt](Universe/staged_dev_note.txt)
+and prioritizes Dev_Note. Design decisions, UI plans and proposed contracts are
+recorded in [the Stage 1 index](Universe/joe-stock-exchange/docs/stage-1/README.md).
+Navigation/read-only foundations, exact preview helpers and isolated schema drafts
+are implemented; new financial writes and company publishing remain Stage 2.
+Stage 3 retains the final end-to-end testing and owner local-review milestone.
+
+## Stage 2 implementation — November 26, 2026
+
+The economy feature code and UI are implemented with versioned approval, actual
+Banking ledger transitions and recovery tests. Read the [Stage 2 report and Stage 3
+handoff](STAGE_2_REPORT_AND_STAGE_3_HANDOFF.txt) and [Stage 3 procedure](Universe/joe-stock-exchange/docs/stage-2/STAGE_3.md).
+The source Dev_Note and consolidated staged note retain priority. Working data,
+production settings and domains have not been changed by the Stage 2 QA copy.

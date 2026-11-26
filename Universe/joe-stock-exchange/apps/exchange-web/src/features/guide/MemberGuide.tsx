@@ -7,6 +7,7 @@ const chapters = [
   ["balances", "3. Disposable Balance, Assets and Frozen Assets explained"],
   ["transactions", "4. Transactions and Asset Transactions"],
   ["going-public", "5. Going Public, how to do joint ventures"],
+  ["company-income", "6. Company updates, services, income and bank offers"],
 ] as const;
 
 function Chapter({ index, children }: { index: number; children: ReactNode }) {
@@ -65,7 +66,9 @@ export function MemberGuide() {
             <p>
               <strong>A fictional economy, shared by members.</strong> J$ and
               all JoeSE assets have no real-world value. You cannot buy J$ with
-              real money or redeem it for money, goods, services or prizes.
+              real money or redeem it for external money, goods, services or
+              prizes. Company checkout concerns fictional in-universe access
+              only.
             </p>
           </div>
         </div>
@@ -97,8 +100,9 @@ export function MemberGuide() {
                 second balance or automatically grant operator access.
               </p>
               <p>
-                On a small screen, use the menu to open listings and your
-                initials to open your portfolio. The <strong>Inbox</strong>{" "}
+                Use the left navigation for Account Overview, Stock Listings and
+                News. On a small screen, open navigation with the menu; your
+                initials return to Account Overview. The <strong>Inbox</strong>{" "}
                 holds incoming transactions and share offers;{" "}
                 <strong>Guide</strong> brings you back here.
               </p>
@@ -114,9 +118,9 @@ export function MemberGuide() {
               <h3>Place a stock order</h3>
               <ol className="guide-steps">
                 <li>
-                  Open <strong>Equities</strong> in the listings panel and
-                  select a company. Read its profile, price chart and Joe Wire
-                  news.
+                  Open <strong>Stock Listings</strong>, then{" "}
+                  <strong>Equities</strong> in the listings panel and select a
+                  company. Read its profile, price chart and Joe Wire news.
                 </li>
                 <li>
                   In the <strong>Order ticket</strong>, choose{" "}
@@ -188,8 +192,9 @@ export function MemberGuide() {
               </p>
               <ol className="guide-steps">
                 <li>
-                  Select a listing in <strong>Crypto</strong> and read its
-                  profile and price history.
+                  In <strong>Stock Listings</strong>, select a listing in{" "}
+                  <strong>Crypto</strong> and read its profile and price
+                  history.
                 </li>
                 <li>
                   Choose <strong>Buy</strong> or <strong>Sell</strong> in the
@@ -295,11 +300,12 @@ export function MemberGuide() {
                 </p>
               </div>
               <p>
-                The simulated net position combines available J$, asset values
-                and frozen values, minus any displayed borrowing. It is a
-                portfolio estimate, not a cash balance or a promise that every
-                asset can be sold. Banking deposit and loan products are still
-                being developed.
+                The simulated net position combines posted transaction J$
+                (including held funds when available), asset values and frozen
+                values, minus any displayed borrowing. It is a portfolio
+                estimate, not a cash balance or a promise that every asset can
+                be sold. Banking deposit and loan products are still being
+                developed.
               </p>
             </Chapter>
 
@@ -492,6 +498,104 @@ export function MemberGuide() {
                 Project duties and website permissions are agreed separately.
                 Holding shares does not automatically grant a console role,
                 project access or a guaranteed payment.
+              </p>
+            </Chapter>
+            <Chapter index={5}>
+              <h3>Posts and My Company</h3>
+              <p>
+                Open Posts to read company updates. A developer or member with
+                settled ordinary or frozen shares can select that company and
+                publish a title and update. A pending share offer does not grant
+                publishing permission. You can withdraw your own post, or delete
+                its title and body, even after selling your shares. Console
+                operators can moderate posts.
+              </p>
+              <p>
+                My Company lists your developed companies and settled company
+                interests. Reports show weekly and lifetime revenue, refunds,
+                employee payments, operating cash, verified locked founding
+                capital, share market value and shareholder quantities. An
+                unavailable earlier weekly close stays unavailable. Owning
+                shares gives access to aggregate reports, while service, receipt
+                and employee management belong to the registered company
+                manager.
+              </p>
+              <h3>Company services and employee payments</h3>
+              <p>
+                A developer initializes company banking without moving founding
+                capital. The manager requests approval for the service’s JoeAuth
+                app, then creates a server-priced purchase or subscription plan.
+                A service checkout link opens Account Overview with the exact
+                company, price, payment terms and recurring interval. Read those
+                terms and check the consent box to authorize a payment. A link
+                alone cannot debit J$.
+              </p>
+              <p>
+                Manage subscriptions in Account Overview or Joe Banking’s Loans
+                section. Cancel future charges there. An insufficient-funds
+                renewal becomes past due and needs your explicit retry; missed
+                charges are not stacked automatically. Full refunds come from
+                company operating cash and may remain pending if that company
+                lacks funds.
+              </p>
+              <p>
+                Managers configure the share of net service revenue assigned to
+                employees and invite employees with exact allocation weights. An
+                employee accepts the displayed pool and allocation in Account
+                Overview. A funded closed-week payroll moves company operating
+                cash to employees; stock ownership alone does not automatically
+                earn an employee payment. Founding capital remains locked.
+                Revenue does not directly rewrite share prices.
+              </p>
+              <h3>Weekly income tax and redistribution</h3>
+              <p>
+                A New York week runs Monday midnight through the following
+                Monday. Tax applies to posted wages and deposit interest, plus
+                net realized trading gains after costs and fees. Trading losses
+                offset that week’s gains, not wages. Transfers, loan principal,
+                opening grants, redistribution and unrealized share values are
+                excluded.
+              </p>
+              <p>
+                The selected rate applies to the whole taxable income: up to
+                J$500 is 0%; over J$500 to J$2,000 is 2%; over J$2,000 to
+                J$3,500 is 3%; over J$3,500 to J$5,000 is 5%; above J$5,000 is
+                10%. These brackets have jumps at their thresholds. J$1,000
+                wages plus J$600 realized gain gives J$1,600 income and J$32
+                tax.
+              </p>
+              <p>
+                Your weekly statements appear in Account Overview. Unknown
+                historical costs hold an assessment for evidence review.
+                Collection uses available cash and leaves unpaid tax on the
+                statement; it does not spend held funds or force a sale.
+                Reviewed corrections can refund excess tax. Redistribution needs
+                an approved, actually funded bank budget and eligible members;
+                it is not a guaranteed allowance.
+              </p>
+              <h3>Bank offers and rate news</h3>
+              <p>
+                An operator may offer a loan from the approved bank catalog.
+                Read its principal, term, fixed or variable weekly rate and
+                expiry in Account Overview or Joe Banking’s Loans page. Cash and
+                interest begin only after you explicitly accept the exact terms.
+                Repayments pay accrued interest first, then principal. A
+                variable offer may need refreshing if the starting rate changes
+                before acceptance. There are no automatic late fees or forced
+                sales in this version.
+              </p>
+              <p>
+                Applied Joe Rate changes appear in News with their actual
+                effective time and operation reference. A cut adds a mild
+                bullish model signal; an increase adds a mild bearish one.
+                Prices still follow the bounded market engine, so a bulletin
+                does not guarantee a return. Scheduled or canceled operations do
+                not appear as applied news.
+              </p>
+              <p>
+                Discussion is a planned destination. Its separate posting and
+                moderation details are still being designed; listing-specific
+                comments remain available in Stock Listings.
               </p>
             </Chapter>
             <footer className="guide-footer">

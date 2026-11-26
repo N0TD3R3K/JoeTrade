@@ -31,8 +31,14 @@ import {
   textField,
 } from "./http";
 
+import { handleEconomyMember, runEconomyJobs } from "./economy/routes";
+
+import { handleMerchant } from "./economy/services";
+import { bankingEconomyOpenApi } from "./economy/openapi";
 async function route(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
+  const merchant = await handleMerchant(request, env);
+  if (merchant) return merchant;
   const exchange = await handleExchange(request, env);
   if (exchange) return exchange;
   if (!url.pathname.startsWith("/v1/")) return env.ASSETS.fetch(request);
@@ -54,9 +60,14 @@ async function route(request: Request, env: Env): Promise<Response> {
       "Use the Joe Banking website for this action.",
     );
   }
+  if (url.pathname === "/v1/openapi.json" && request.method === "GET")
+    return json({
+      ...bankingEconomyOpenApi,
+      servers: [{ url: env.APP_ORIGIN + "/v1" }],
+    });
   if (url.pathname === "/v1/health" && request.method === "GET") {
     await env.DB.prepare("SELECT 1").first();
-    return json({ service: "joe-banking", status: "ok", stage: "foundation" });
+    return json({ service: "joe-banking", status: "ok", stage: "economy-v2" });
   }
   if (url.pathname === "/v1/auth/session" && request.method === "GET") {
     const session = await getSession(request, env);
@@ -117,6 +128,8 @@ async function route(request: Request, env: Env): Promise<Response> {
     return logout(await requireSession(request, env), env);
 
   const session = await requireSession(request, env, request.method === "POST");
+  const economy = await handleEconomyMember(request, env, session.customer);
+  if (economy) return economy;
   if (
     url.pathname === "/v1/console/reconciliation" &&
     request.method === "GET"
@@ -155,13 +168,19 @@ async function route(request: Request, env: Env): Promise<Response> {
       );
     }
     if (url.pathname === "/v1/rates/current")
-      return json({
-        weekly_rate_ppm: null,
-        status: "awaiting_initial_rate",
-        minimum_ppm: 3000,
-        maximum_ppm: 20000,
-      });
-    if (url.pathname === "/v1/rates/history") return json([]);
+      return json(
+        await env.DB.prepare(
+          "SELECT rate_ppm AS weekly_rate_ppm, rate_version AS version FROM economy_runtime WHERE singleton=1",
+        ).first(),
+      );
+    if (url.pathname === "/v1/rates/history")
+      return json(
+        (
+          await env.DB.prepare(
+            "SELECT version,operation_id,rate_ppm,effective_at FROM economy_rate_history ORDER BY version DESC LIMIT 100",
+          ).all()
+        ).results,
+      );
     if (url.pathname === "/v1/deposits/catalog")
       return json({
         available: false,
@@ -211,6 +230,9 @@ async function route(request: Request, env: Env): Promise<Response> {
 }
 
 export default {
+  async scheduled(_event: ScheduledController, env: Env): Promise<void> {
+    await runEconomyJobs(env);
+  },
   async fetch(request: Request, env: Env): Promise<Response> {
     const requestId = crypto.randomUUID();
     let response: Response;

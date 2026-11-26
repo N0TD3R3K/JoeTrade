@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 interface Props {
+  variant?: "rail" | "overview";
   portfolio: PortfolioSnapshot;
   onCollapse: () => void;
   onTransaction: () => void;
@@ -75,6 +76,7 @@ function HoldingTable({
 }
 
 export function PortfolioRail({
+  variant = "rail",
   portfolio,
   onCollapse,
   onTransaction,
@@ -105,27 +107,34 @@ export function PortfolioRail({
       tone: "gold",
     },
     {
-      label: "Joe Bank",
-      value: summary.borrowedCents,
+      label: variant === "overview" ? "Held J$" : "Joe Bank",
+      value:
+        variant === "overview"
+          ? summary.heldBalanceCents
+          : summary.borrowedCents,
       icon: Landmark,
       tone: "red",
-      action: onJoeBank,
+      action: variant === "overview" ? undefined : onJoeBank,
     },
   ];
   return (
-    <aside className="portfolio-rail">
+    <aside
+      className={`portfolio-rail ${variant === "overview" ? "portfolio-overview" : ""}`}
+    >
       <div className="portfolio-topline">
         <div>
           <span>MY PORTFOLIO</span>
           <strong>{summary.username}</strong>
         </div>
-        <button
-          className="icon-button"
-          onClick={onCollapse}
-          title="Hide portfolio"
-        >
-          <ChevronRight size={18} />
-        </button>
+        {variant !== "overview" && (
+          <button
+            className="icon-button"
+            onClick={onCollapse}
+            title="Hide portfolio"
+          >
+            <ChevronRight size={18} />
+          </button>
+        )}
       </div>
       <div className="portfolio-actions">
         <button className="transaction-button" onClick={onTransaction}>
@@ -154,9 +163,11 @@ export function PortfolioRail({
                 <Icon size={16} />
               </div>
               <strong>
-                {formatJoellars(value, {
-                  compact: summary.preferences.compactNumbers,
-                })}
+                {value === undefined
+                  ? "Not available"
+                  : formatJoellars(value, {
+                      compact: summary.preferences.compactNumbers,
+                    })}
               </strong>
             </>
           );
@@ -178,10 +189,15 @@ export function PortfolioRail({
         })}
       </div>
       <div className="portfolio-total">
-        <span>Simulated net position</span>
+        <span>
+          Simulated net position
+          {summary.postedBalanceCents !== undefined
+            ? " · including held J$"
+            : ""}
+        </span>
         <strong>
           {formatJoellars(
-            summary.disposableBalanceCents +
+            (summary.postedBalanceCents ?? summary.disposableBalanceCents) +
               summary.frozenAssetValueCents +
               summary.assetValueCents -
               summary.borrowedCents,

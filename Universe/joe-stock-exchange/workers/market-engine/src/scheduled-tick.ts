@@ -205,6 +205,11 @@ export async function runScheduledTick(
     }
     tickStatements.push(
       env.DB.prepare(
+        "UPDATE rate_market_event_links SET consumed_tick_id=? WHERE consumed_tick_id IS NULL AND news_event_id IN (SELECT id FROM news_events WHERE status='published' AND published_at<=?)",
+      ).bind(tickId, scheduledAt.toISOString()),
+    );
+    tickStatements.push(
+      env.DB.prepare(
         "UPDATE market_ticks SET status = 'complete', explanation_json = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'running'",
       ).bind(
         JSON.stringify({ tickKey, marketHour, assets: explanations }),

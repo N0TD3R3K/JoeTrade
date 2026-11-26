@@ -37,6 +37,8 @@ export interface PricePoint {
 }
 
 export interface NewsEvent {
+  sourceOperationId?: string;
+  effectiveAt?: string;
   id: string;
   headline: string;
   article: string;
@@ -73,6 +75,8 @@ export interface UserSummary {
   frozenAssetValueCents: number;
   assetValueCents: number;
   borrowedCents: number;
+  postedBalanceCents?: number;
+  heldBalanceCents?: number;
   preferences: UserPreferences;
 }
 
@@ -132,8 +136,15 @@ export interface PortfolioSnapshot {
 }
 
 export type FinancialStatus = "normal" | "bankrupt";
-export type LoanStatus = "pending" | "active" | "repaid" | "defaulted" | "declined";
-export type LoanStage = "awaiting_review" | "offered" | "active" | "repaid" | "defaulted" | "declined";
+export type LoanStatus =
+  "pending" | "active" | "repaid" | "defaulted" | "declined";
+export type LoanStage =
+  | "awaiting_review"
+  | "offered"
+  | "active"
+  | "repaid"
+  | "defaulted"
+  | "declined";
 
 export interface JoeBankLoan {
   id: string;
@@ -183,3 +194,5 @@ export interface ApiSuccess<T> {
 
 export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 
+// Shared foundation used by both Banking and JoeSE; no runtime money movement.
+export * from "../../../../shared/economy";

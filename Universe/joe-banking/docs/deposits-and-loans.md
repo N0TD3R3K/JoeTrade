@@ -1,5 +1,7 @@
 # Deposits and loans
 
+> Current development status (November 26, 2026): Stage 2 services and UI are implemented. See [implemented loan accounting](../../joe-stock-exchange/docs/stage-2/ACCOUNTING.md) and the root Stage 2 TXT report. Earlier Stage 1/foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposits remain unavailable. Final owner review is Stage 3.
+
 ## 1. Meaning of a deposit
 
 A Joe Banking deposit moves existing fictional J$ from the member's transaction
@@ -136,3 +138,12 @@ changes will change the result.
 Displayed projections are informational. The append-only accrual and ledger
 records determine the exact posted amount.
 
+
+## Stage 1 loan design status
+
+The console contains an unavailable loan-offer panel, not a disbursement form.
+The new design uses reserve-funded lending and a reviewed catalog, member
+acceptance and weekly rates. The catalog remains unconfigured, so no principal,
+term, penalty or automatic issue policy is silently enabled. Contracts and
+repayment/accrual evidence are draft schema work; deposits/loans are still not
+operational. Read [Stage 1 decisions](../../joe-stock-exchange/docs/stage-1/DECISIONS.md).

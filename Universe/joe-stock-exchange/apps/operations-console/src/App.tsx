@@ -1,3 +1,4 @@
+import { BankEconomyDesk } from "./features/joe-bank/BankEconomyDesk";
 import type {
   Asset,
   ConsoleLoan,
@@ -26,6 +27,7 @@ import {
 import { useEffect, useState } from "react";
 import {
   apiReferenceUrl,
+  demoMode,
   cancelPendingRegistration,
   consoleLogin,
   createInvitation,
@@ -42,6 +44,7 @@ import { AuditLog } from "./features/audit-log/AuditLog";
 import { CommentModeration } from "./features/comment-moderation/CommentModeration";
 import { EventDesk } from "./features/event-desk/EventDesk";
 import { JoeBankDesk } from "./features/joe-bank/JoeBankDesk";
+import { BankEconomyFoundation } from "./features/joe-bank/BankEconomyFoundation";
 import { InvitationManager } from "./features/invitations/InvitationManager";
 import { MarketMonitor } from "./features/market-monitor/MarketMonitor";
 import { MemberManagement } from "./features/member-management/MemberManagement";
@@ -192,10 +195,18 @@ export function App() {
             <div>MO</div>
             <span>
               <strong>
-                {localTesting ? "local.operator" : "Authorized operator"}
+                {demoMode
+                  ? "preview.operator"
+                  : localTesting
+                    ? "local.operator"
+                    : "Authorized operator"}
               </strong>
               <small>
-                {localTesting ? "Local staff preview" : "Staff account"}
+                {demoMode
+                  ? "Sample data"
+                  : localTesting
+                    ? "Local staff preview"
+                    : "Staff account"}
               </small>
             </span>
             <ChevronDown size={14} />
@@ -229,7 +240,12 @@ export function App() {
           </label>
           <div className="console-header-actions">
             <div className="console-live">
-              <i></i> {localTesting ? "Local testing" : "Connected"}
+              <i></i>{" "}
+              {demoMode
+                ? "Visual preview"
+                : localTesting
+                  ? "Local testing"
+                  : "Connected"}
             </div>
             <button>
               <Bell size={17} />
@@ -237,6 +253,12 @@ export function App() {
           </div>
         </header>
         <div className="console-content">
+          {demoMode && (
+            <div className="local-console-notice" role="status">
+              Visual preview · sample data · no Banking connection. New
+              financial actions are unavailable.
+            </div>
+          )}
           {localTesting && (
             <div className="local-console-notice">
               LOCAL OPERATOR PREVIEW · Alice and Bob share their balances with
@@ -348,43 +370,9 @@ export function App() {
               }}
             />
           )}
-          {page === "bank" && centralMode && (
-            <section
-              className="console-card connected-bank-card"
-              aria-labelledby="connected-bank-title"
-            >
-              <header className="connected-bank-heading">
-                <span className="connected-bank-icon">
-                  <Landmark size={26} />
-                </span>
-                <div>
-                  <span className="eyebrow">SHARED ECONOMY</span>
-                  <h2 id="connected-bank-title">Joe Banking</h2>
-                </div>
-              </header>
-              <div className="connected-bank-copy">
-                <p>
-                  Joe Banking manages the same liquid J$ balance used by this
-                  exchange. Open orders reserve funds there, and completed
-                  member trades settle there.
-                </p>
-                <p>
-                  Account identity and recovery are managed by JoeAuth. Deposits
-                  and lending are still being developed.
-                </p>
-              </div>
-              <footer className="connected-bank-footer">
-                <span>One banking balance across the Joe Universe.</span>
-                <a
-                  href="https://bank.joe-univer.se"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Open Joe Banking
-                </a>
-              </footer>
-            </section>
-          )}
+          {page === "bank" &&
+            centralMode &&
+            (demoMode ? <BankEconomyFoundation /> : <BankEconomyDesk />)}
           {page === "bank" && !centralMode && (
             <JoeBankDesk
               loans={data.loans}

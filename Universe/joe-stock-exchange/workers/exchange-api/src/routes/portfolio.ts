@@ -62,15 +62,23 @@ export async function handlePortfolio(
     const assetValueCents = holdings
       .filter((holding) => holding.kind !== "shareholding")
       .reduce((total, holding) => total + holding.marketValueCents, 0);
+    const bankSnapshot =
+      env.BANKING_MODE === "connected" && user.bankCustomerId
+        ? await bankBalance(env, user.bankCustomerId)
+        : null;
     const summary: UserSummary = {
       id: user.id,
       username: user.username,
       email: user.email,
       role: user.role,
       disposableBalanceCents:
-        env.BANKING_MODE === "connected" && user.bankCustomerId
-          ? (await bankBalance(env, user.bankCustomerId)).available_cents
-          : user.disposableBalanceCents,
+        bankSnapshot?.available_cents ?? user.disposableBalanceCents,
+      ...(bankSnapshot
+        ? {
+            postedBalanceCents: bankSnapshot.posted_cents,
+            heldBalanceCents: bankSnapshot.held_cents,
+          }
+        : {}),
       frozenAssetValueCents,
       assetValueCents,
       borrowedCents: user.borrowedPrincipalCents,
