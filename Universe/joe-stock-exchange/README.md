@@ -1,6 +1,6 @@
 # JOE Stock Exchange
 
-> Current development status (November 26, 2026): Stage 3 implementation and local checks are complete. See the [Stage 3 report and test guide](../../STAGE_3_REPORT_AND_TEST_GUIDE.txt), [restart procedure](docs/stage-2/STAGE_3.md) and [economy implementation](docs/stage-2/README.md). Policies stay unconfigured until reviewed approval; deposit funding and Discussion remain unavailable. The three local websites are ready for owner review.
+> Current development status (November 26, 2026): Stage 3 and local review fixes are implemented. My Company is restricted to founders/frozen shareholders, the guide is rewritten, and local Banking now has J$100,000 reserves with a 1.000% weekly Joe Rate. Loan products remain disabled pending the [loan proposal](../joe-banking/docs/loan-system-proposal.md). Deposit funding and Discussion remain unavailable. See the [restart procedure](docs/stage-2/STAGE_3.md); the [Stage 3 report](../../STAGE_3_REPORT_AND_TEST_GUIDE.txt) records the earlier handoff.
 
 JOESE is the Joe Universe's fictional market. **J$ has no real-world value and
 cannot be purchased, cashed out, or redeemed for goods, services or prizes.**

@@ -1,0 +1,19 @@
+.stat-label { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.stat-help-anchor { display: inline-flex; align-items: center; flex: none; vertical-align: middle; }
+.stat-help-anchor .stat-help-trigger {
+  display: inline-grid; place-items: center; width: 22px; height: 22px;
+  min-width: 22px; min-height: 22px; padding: 0; margin: 0 0 0 5px;
+  border: 1px solid #7d8da3; border-radius: 50%; background: transparent;
+  color: #d5dfed; font: 700 14px/1 system-ui, sans-serif;
+  text-transform: none; letter-spacing: normal; cursor: help;
+}
+.stat-help-anchor .stat-help-trigger:hover { background: #293448; color: #fff; }
+.stat-help-anchor .stat-help-trigger:focus-visible { outline: 2px solid #f2c973; outline-offset: 3px; }
+.stat-help-popover {
+  position: fixed; z-index: 1000; box-sizing: border-box; display: block;
+  max-height: calc(100dvh - 32px); overflow-y: auto;
+  background: #202c3c; color: #edf3fb; border: 1px solid #7b8da5;
+  border-radius: 9px; padding: 13px 15px; box-shadow: 0 8px 30px #0008;
+  font: 400 14px/1.65 system-ui, sans-serif; letter-spacing: normal;
+  text-transform: none; white-space: normal; overflow-wrap: anywhere;
+}

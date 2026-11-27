@@ -1,613 +1,467 @@
 import { BookOpen, Landmark } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
+import { bankSiteUrl } from "../../../../../../shared/economy/links";
 
 const chapters = [
-  ["stocks", "1. What are stocks and how to trade"],
-  ["crypto", "2. What are crypto and how to trade"],
-  ["balances", "3. Disposable Balance, Assets and Frozen Assets explained"],
-  ["transactions", "4. Transactions and Asset Transactions"],
-  ["going-public", "5. Going Public, how to do joint ventures"],
-  ["company-income", "6. Company updates, services, income and bank offers"],
+  ["start", "1. Your account and navigation"],
+  ["balances", "2. Cash, assets and bank debt"],
+  ["transactions", "3. Transactions and private share offers"],
+  ["stocks", "4. Stock and crypto trading"],
+  ["going-public", "5. Going public and joint ventures"],
+  ["company-income", "6. Using My Company"],
+  ["payments", "7. Purchases, subscriptions and refunds"],
+  ["circulation", "8. Income, tax and money circulation"],
+  ["banking", "9. Bank reserves and the Joe Rate"],
+  ["loans", "10. Loans and repayment"],
+  ["deposits", "11. Deposits: current availability"],
+  ["community", "12. News, Posts and Discussion"],
+  ["help", "13. Receipts, mistakes and getting help"],
 ] as const;
-
 function Chapter({ index, children }: { index: number; children: ReactNode }) {
   const [id, title] = chapters[index];
   return (
     <section className="guide-section" id={id} aria-labelledby={`${id}-title`}>
       <h2 id={`${id}-title`}>{title}</h2>
       {children}
-      <a className="guide-top-link" href="#contents">
-        Back to contents
-      </a>
+      <a className="guide-top-link" href="#contents">Back to contents</a>
     </section>
   );
 }
-
+function Table({ label, headings, rows }: { label: string; headings: string[]; rows: string[][] }) {
+  return (
+    <div className="guide-table-wrap" role="region" aria-label={label} tabIndex={0}>
+      <table>
+        <thead><tr>{headings.map((h) => <th key={h} scope="col">{h}</th>)}</tr></thead>
+        <tbody>{rows.map(([name, ...cells]) => (
+          <tr key={name}><th scope="row">{name}</th>{cells.map((cell, i) => <td key={i}>{cell}</td>)}</tr>
+        ))}</tbody>
+      </table>
+    </div>
+  );
+}
 export function MemberGuide() {
   useEffect(() => {
     const previousTitle = document.title;
     document.title = "JoeSE Member Guide — Joe Universe";
-    return () => {
-      document.title = previousTitle;
-    };
+    return () => { document.title = previousTitle; };
   }, []);
-
   return (
     <div className="guide-page">
-      <a className="guide-skip" href="#guide-content">
-        Skip to guide
-      </a>
+      <a className="guide-skip" href="#guide-content">Skip to guide</a>
       <header className="guide-header">
         <a className="guide-brand" href="/" aria-label="JoeSE home">
-          <span className="brand-gem">J</span>
-          <strong>JOESE</strong>
-          <span>Member guide</span>
+          <span className="brand-gem">J</span><strong>JOESE</strong><span>Member guide</span>
         </a>
-        <a className="guide-return" href="/">
-          Back to exchange
-        </a>
+        <a className="guide-return" href="/account">Back to exchange</a>
       </header>
       <main className="guide-shell" id="guide-content">
         <div className="guide-hero">
-          <span className="guide-kicker">
-            <BookOpen size={18} aria-hidden="true" /> THE JOESE HANDBOOK
-          </span>
-          <h1>
-            Your guide to
-            <br />
-            the JoeSE economy.
-          </h1>
-          <p>
-            Learn how to trade, move J$, understand your portfolio, and build a
-            member-owned company in the Joe Universe.
-          </p>
+          <span className="guide-kicker"><BookOpen size={18} aria-hidden="true" /> THE MEMBER HANDBOOK</span>
+          <h1>Your place in<br />the Joe economy.</h1>
+          <p>A practical guide to JoeSE, Joe Banking, company ownership and the J$ that connects them.</p>
           <div className="guide-simulation">
             <Landmark size={22} aria-hidden="true" />
-            <p>
-              <strong>A fictional economy, shared by members.</strong> J$ and
-              all JoeSE assets have no real-world value. You cannot buy J$ with
-              real money or redeem it for external money, goods, services or
-              prizes. Company checkout concerns fictional in-universe access
-              only.
+            <p><strong>Everything here belongs to a fictional economy.</strong>
+              J$ has no real-world value. You cannot buy it with real money or redeem it for outside money,
+              goods, services, prizes or cryptocurrency. Company checkout is for fictional in-universe access.
             </p>
           </div>
         </div>
         <div className="guide-layout">
-          <nav
-            className="guide-contents"
-            id="contents"
-            aria-label="Guide contents"
-          >
+          <nav className="guide-contents" id="contents" aria-label="Guide contents">
             <h2>In this guide</h2>
-            {chapters.map(([id, title]) => (
-              <a href={`#${id}`} key={id}>
-                {title}
-              </a>
-            ))}
-            <p>
-              Available to everyone. No sign-in is needed to read or share this
-              page.
-            </p>
+            {chapters.map(([id, title]) => <a href={`#${id}`} key={id}>{title}</a>)}
+            <p>Public and shareable. Reading this guide does not require signing in.</p>
           </nav>
           <div className="guide-article">
             <div className="guide-getting-started">
-              <span className="guide-kicker">START HERE</span>
+              <span className="guide-kicker">CURRENT RELEASE</span>
               <h2>One identity. One spendable balance.</h2>
-              <p>
-                Sign in to the exchange through JoeAuth. Your exchange
-                membership is linked to your Joe Banking account, so both
-                products use the same available J$. Signing in does not create a
-                second balance or automatically grant operator access.
-              </p>
-              <p>
-                Use the left navigation for Account Overview, Stock Listings and
-                News. On a small screen, open navigation with the menu; your
-                initials return to Account Overview. The <strong>Inbox</strong>{" "}
-                holds incoming transactions and share offers;{" "}
-                <strong>Guide</strong> brings you back here.
-              </p>
+              <p>JoeAuth identifies you. Joe Banking records your cash. JoeSE records your listings,
+                holdings and trades. A purchase in either product uses the same available J$.</p>
+              <p>Loan offers work only when the bank has approved products and a lending budget.
+                The new application and penalty design is awaiting approval. Deposit funding and
+                Discussion posting are not available yet. Their sections below explain these limits.</p>
             </div>
 
             <Chapter index={0}>
-              <p>
-                A stock is a share of a company's fictional JoeSE listing. A
-                ticker is its short label: stock tickers have three letters,
-                such as <strong>JAI</strong>. Its displayed price is the current
-                reference value of one share.
-              </p>
-              <h3>Place a stock order</h3>
-              <ol className="guide-steps">
-                <li>
-                  Open <strong>Stock Listings</strong>, then{" "}
-                  <strong>Equities</strong> in the listings panel and select a
-                  company. Read its profile, price chart and Joe Wire news.
-                </li>
-                <li>
-                  In the <strong>Order ticket</strong>, choose{" "}
-                  <strong>Buy</strong> or <strong>Sell</strong> and enter a
-                  positive whole number of shares, such as 1 or 10.
-                </li>
-                <li>
-                  Check your disposable J$ for a buy, or your freely tradable
-                  stock holdings for a sale. The estimate uses the reference
-                  price; the actual quote and fee can make the final amount
-                  different.
-                </li>
-                <li>
-                  Select <strong>Open buy order</strong> or{" "}
-                  <strong>Open sell order</strong>. This submits the order
-                  immediately. Read the result before submitting again.
-                </li>
-                <li>
-                  Check your portfolio and Banking balance. A completed purchase
-                  adds shares; a completed sale adds net J$. An open order may
-                  wait for a compatible order, or fill only part of its
-                  quantity.
-                </li>
-              </ol>
-              <h3>Quotes, fees and timing</h3>
-              <p>
-                The buy quote is slightly above the reference price and the sell
-                quote slightly below it. The standard quote spread is 0.5% in
-                total. A trading fee of <strong>0.25% on each side</strong> also
-                applies, rounded to the nearest J$0.01. The reference value
-                shown in your portfolio is not a guaranteed sale price.
-              </p>
-              <p>
-                A buy order reserves J$ in Banking while it waits; a sell order
-                reserves the offered assets. Only a successful fill exchanges
-                assets for J$. Neither Joe Banking nor the exchange promises to
-                buy your holdings back.
-              </p>
-              <p>
-                Follow the live market badge. The normal session runs every day
-                in the New York afternoon and evening, with brief trading locks
-                around hourly price updates. Orders cannot be opened while the
-                market is closed or updating.
-              </p>
-              <div className="guide-note">
-                <strong>
-                  Stock holdings and founder shares behave differently.
-                </strong>{" "}
-                Ordinary stock holdings use the Order ticket. Frozen company
-                shares under <strong>Shareholdings</strong> use a private{" "}
-                <strong>Offer</strong>, explained in section 4. A newly launched
-                company may have only frozen shares available.
-              </div>
-              <p>
-                A stock is delisted after three consecutive daily closes below
-                J$1. Its shares then have zero market value, with no automatic
-                refund of the original contribution or purchase price.
-              </p>
+              <p>Use your JoeAuth identity to sign in when the live service is connected. Membership,
+                account linking and operator permissions are reviewed separately; signing in does not
+                give someone staff access or another opening balance.</p>
+              <p>The intended starting balance is a once-only J$10,000 grant for a reviewed eligible
+                member. Existing accounts need their earlier grant checked rather than receiving it again.
+                Alice and Bob are fictional local test accounts whose existing balances are kept.</p>
+              <Table label="Member navigation" headings={["Section", "What you can do"]} rows={[
+                ["Account Overview", "Compare disposable cash, holdings, held money and debt. Open transactions and Inbox; manage payments, bank offers and employee agreements."],
+                ["Stock Listings", "Search stocks and crypto, read profiles and charts, place orders and use + Add Listing."],
+                ["News", "Read published Joe Wire articles and effective bank-rate bulletins."],
+                ["Posts", "Read company updates. Eligible developers and settled shareholders can publish."],
+                ["Discussion", "A planned place for general opinions. Posting is not enabled yet."],
+                ["My Company", "View companies you established or hold frozen company shares in. Ordinary market investments do not qualify."],
+              ]} />
+              <p>On smaller screens, open the menu for navigation. In Stock Listings, <strong>Browse listings</strong>
+                opens the listing drawer and <strong>View portfolio</strong> opens your holdings panel.
+                On a wide screen the portfolio is already visible. Your initials return to Account Overview.</p>
+              <p>Open <strong>Guide</strong> to return here. Hover over a statistic's <strong>?</strong>
+                button for an explanation; keyboard users can focus it, and touch users can tap it.
+                Escape or a tap elsewhere dismisses the explanation.</p>
             </Chapter>
 
             <Chapter index={1}>
-              <p>
-                JoeSE crypto assets are simulated units listed in the{" "}
-                <strong>Crypto</strong> group. They have four-letter tickers,
-                such as <strong>CORN</strong>, and appear under{" "}
-                <strong>Crypto holdings</strong> in your portfolio. They are not
-                external cryptocurrency: there is no blockchain wallet, external
-                deposit or withdrawal.
-              </p>
-              <ol className="guide-steps">
-                <li>
-                  In <strong>Stock Listings</strong>, select a listing in{" "}
-                  <strong>Crypto</strong> and read its profile and price
-                  history.
-                </li>
-                <li>
-                  Choose <strong>Buy</strong> or <strong>Sell</strong> in the
-                  Order ticket.
-                </li>
-                <li>
-                  Enter a quantity with up to two decimal places, such as{" "}
-                  <strong>0.25</strong> or <strong>1.50</strong>. The smallest
-                  unit is <strong>0.01</strong>; extra decimal places are
-                  rejected.
-                </li>
-                <li>
-                  Check the estimate, then open the order. The same quote
-                  spread, trading fees, Banking reservations and matching rules
-                  apply as for ordinary stocks.
-                </li>
-              </ol>
-              <p>
-                You can sell only units you own that are not already reserved by
-                another order. Changes in the displayed price do not put J$ into
-                your account; net proceeds arrive only when a sale settles.
-              </p>
+              <Table label="Balance definitions" headings={["Figure", "Meaning", "How you can use it"]} rows={[
+                ["Disposable balance", "Shared bank transaction cash after active holds.", "Available for a new wire, payment, trade or confirmed founding contribution."],
+                ["Held J$", "Cash reserved for pending outgoing wires or buy orders; still part of posted cash.", "It cannot fund another payment. An unfilled cancellation or declined wire releases the unused hold."],
+                ["Asset value", "Reference value of ordinary stock and simulated crypto holdings.", "It becomes cash only when a sale actually settles with a buyer."],
+                ["Frozen assets", "Reference value of frozen company shareholdings.", "Sell an exact quantity through a private offer accepted by a named member. The bank does not buy them back."],
+                ["Bank loan debt", "Outstanding loan principal plus accrued interest already recorded.", "Repay from available transaction cash. An offer you have not accepted creates no debt."],
+                ["Simulated net position", "Posted cash including held funds, plus ordinary and frozen assets, minus loan debt.", "A portfolio estimate; it is not a spendable balance or guaranteed sale price."],
+              ]} />
+              <div className="guide-example">
+                <h3>Borrowing does not make you richer</h3>
+                <p>If J$100 of loan cash arrives, both your cash and your debt increase by J$100.
+                  Before interest, those changes cancel out in net position. Repaying principal reduces
+                  both cash and debt. Paying interest reduces cash without adding an asset.</p>
+              </div>
+              <p>A displayed gain from a rising share price has not paid J$ into your bank. Company
+                operating cash, locked founding capital, member holdings and bank reserves are separate
+                figures. Adding them all together can count the same economic value more than once.</p>
             </Chapter>
 
             <Chapter index={2}>
-              <p>
-                Your portfolio separates spendable money from the estimated
-                value of what you own.
-              </p>
-              <div
-                className="guide-table-wrap"
-                role="region"
-                aria-label="Balance types"
-                tabIndex={0}
-              >
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Portfolio card</th>
-                      <th>What it means</th>
-                      <th>How it becomes spendable</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <th scope="row">Disposable Balance</th>
-                      <td>
-                        Your transaction-account J$ in Joe Banking, minus active
-                        wire and exchange-order holds.
-                      </td>
-                      <td>
-                        Already available for a new trade, transaction or
-                        confirmed company contribution.
-                      </td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Assets</th>
-                      <td>
-                        The current reference value of ordinary stock and crypto
-                        holdings. The site labels this card{" "}
-                        <strong>Asset value</strong>.
-                      </td>
-                      <td>
-                        A matching buyer purchases your assets through an order.
-                        Fees and the quote affect the proceeds.
-                      </td>
-                    </tr>
-                    <tr>
-                      <th scope="row">Frozen Assets</th>
-                      <td>
-                        The current value of company shareholdings, including
-                        shares you founded or acquired through a private offer.
-                      </td>
-                      <td>
-                        Another member accepts your offer to buy an exact number
-                        of shares. Unsold shares stay frozen.
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <h3>Held money has not necessarily been spent</h3>
-              <p>
-                A pending outgoing transaction or buy order reduces your
-                disposable balance immediately because the money is reserved. It
-                may still be part of your posted bank balance. A declined wire
-                or canceled unfilled order releases its unused hold. A settled
-                purchase spends the corresponding amount.
-              </p>
+              <h3>Send J$ to another member</h3>
+              <ol className="guide-steps">
+                <li>Open <strong>New transaction</strong> in JoeSE, or <strong>Transaction</strong> in Joe Banking.</li>
+                <li>Enter the receiver's exact username or school email, an amount with at most two decimal places,
+                  and a message explaining the transfer.</li>
+                <li>Send it to the receiver's Inbox. Your cash is held immediately; the receiver has not been paid yet.</li>
+                <li>The named receiver chooses <strong>Receive</strong> or <strong>Decline</strong>.
+                  Receive transfers the cash; Decline releases the sender's hold.</li>
+              </ol>
+              <p>Pending wires can be canceled by their sender through Joe Banking. A completed wire
+                cannot be canceled like an unaccepted one. There is no wire fee, payment-request feature
+                or automatic reversal. Agree a return transfer or ask an operator about a recorded mistake.</p>
+              <h3>Sell frozen shares through a private offer</h3>
+              <ol className="guide-steps">
+                <li>Under <strong>Shareholdings</strong>, choose <strong>Offer</strong> for your company.</li>
+                <li>Identify the buyer, enter an exact whole quantity of available frozen shares, and enter
+                  the <strong>total asking price for the bundle</strong>, not a per-share price.</li>
+                <li>Review the buyer's total debit and your net proceeds. Sending reserves the shares;
+                  it does not credit you any sale cash.</li>
+                <li>The named buyer reviews the offer in Inbox and accepts or declines. Acceptance
+                  exchanges exactly those shares and the J$, with a 0.25% fee on each side.</li>
+              </ol>
               <div className="guide-example">
-                <h3>A founding contribution</h3>
-                <p>
-                  Alice starts with J$10,000 available. She confirms J$5,000 for
-                  1,000 founder shares. Her disposable balance becomes J$5,000,
-                  and the shares initially represent J$5,000 of frozen assets.
-                  The contribution has become company capital; it is not a bank
-                  deposit she can withdraw.
-                </p>
-                <p>
-                  Later prices can change the frozen value. If Alice sells 100
-                  shares to Bob, only those 100 shares move. The remaining 900
-                  stay hers and stay frozen.
-                </p>
+                <h3>Example: 100 shares for J$1,000</h3>
+                <p>The buyer pays J$1,002.50 and receives 100 frozen shares. The seller receives J$997.50.
+                  The buyer does not receive J$1,000 in disposable cash. Unsold shares stay frozen.</p>
               </div>
-              <p>
-                The simulated net position combines posted transaction J$
-                (including held funds when available), asset values and frozen
-                values, minus any displayed borrowing. It is a portfolio
-                estimate, not a cash balance or a promise that every asset can
-                be sold. Borrowing includes outstanding bank loan principal and
-                accrued interest. Deposit funding remains unavailable.
-              </p>
+              <p>A normal wire moves cash only; it does not transfer ownership. A private share offer
+                already includes its payment, so sending a separate wire for the same purchase would
+                pay twice. Pending offers do not make the buyer a shareholder. Free share gifts are
+                not supported by the current form.</p>
             </Chapter>
 
             <Chapter index={3}>
-              <h3>Transactions: send J$ to another member</h3>
+              <p>A stock is a unit in a fictional company listing. Stocks have three-letter tickers,
+                such as JAI. Read its profile, price history and news before deciding what to do.
+                Price movements are part of the simulation and do not guarantee gains.</p>
               <ol className="guide-steps">
-                <li>
-                  Open your portfolio and choose{" "}
-                  <strong>New transaction</strong>.
-                </li>
-                <li>
-                  Enter the receiver's exact username or school email, the J$
-                  amount and a message explaining its purpose.
-                </li>
-                <li>
-                  Select <strong>Send to inbox</strong>. Banking reserves the
-                  J$; the receiver has not received it yet.
-                </li>
-                <li>
-                  The receiver opens <strong>Inbox</strong> and chooses{" "}
-                  <strong>Receive</strong> or <strong>Decline</strong>.
-                  Receiving moves the J$ to their available balance; declining
-                  releases the sender's hold.
-                </li>
+                <li>In <strong>Stock Listings</strong>, select a listing under <strong>Equities</strong> or <strong>Crypto</strong>.</li>
+                <li>In the order ticket choose Buy or Sell. Stocks use whole shares; simulated crypto
+                  allows two decimal places, with a minimum unit of 0.01.</li>
+                <li>Check your available cash or unreserved holdings, quantity and estimated value.</li>
+                <li><strong>Open buy order</strong> or <strong>Open sell order</strong> submits immediately.
+                  Read the result before submitting again.</li>
+                <li>A matched fill exchanges cash and assets. An unmatched or partially filled order
+                  stays open until filled or canceled. Only an unfilled remainder can be canceled.</li>
               </ol>
-              <p>
-                These are the same receiver-approved wires used by Joe Banking.
-                There is no wire fee in the current system. A transaction moves
-                J$ only: it does not assign company shares or request payment
-                from another member.
-              </p>
-              <h3>Asset Transactions: sell frozen shares to a named member</h3>
-              <p>
-                In this version, an asset transaction is a private share offer.
-                The seller starts it from <strong>Shareholdings</strong>; the
-                buyer cannot take shares or debit an owner without an offer.
-              </p>
-              <ol className="guide-steps">
-                <li>
-                  In your portfolio, find the company under{" "}
-                  <strong>Shareholdings</strong> and select{" "}
-                  <strong>Offer</strong>.
-                </li>
-                <li>
-                  Enter the buyer's exact username or school email, a whole
-                  number of available frozen shares, and the{" "}
-                  <strong>Total asking price</strong> for the entire bundle.
-                  This is not a price per share.
-                </li>
-                <li>
-                  Review your net proceeds and the buyer's full debit, including
-                  the 0.25% fee on each side. Select{" "}
-                  <strong>Send private offer</strong>. The shares are reserved,
-                  but no sale proceeds have arrived.
-                </li>
-                <li>
-                  The named buyer opens <strong>Inbox</strong>, checks the
-                  ticker, quantity and total debit, then chooses{" "}
-                  <strong>Accept offer</strong> or <strong>Decline</strong>.
-                </li>
-                <li>
-                  Acceptance settles the J$ and transfers exactly those shares.
-                  The buyer receives frozen shareholdings; the seller receives
-                  net disposable J$. Decline releases the seller's share
-                  reservation without moving J$.
-                </li>
-              </ol>
-              <div className="guide-example">
-                <h3>Asking price is the bundle total</h3>
-                <p>
-                  For an offer of 100 shares at a total asking price of{" "}
-                  <strong>J$1,000</strong>, the buyer pays{" "}
-                  <strong>J$1,002.50</strong> and the seller receives{" "}
-                  <strong>J$997.50</strong>. The buyer gets 100 shares, not
-                  J$1,000 of disposable money.
-                </p>
-              </div>
-              <p>
-                There is no free share-gift option in the current offer form,
-                and the bank cannot redeem frozen shares. Ordinary stock and
-                crypto sales use the Order ticket instead.
-              </p>
+              <p>The standard quote spread is 0.5% in total, with the buy quote above and sell quote
+                below the reference price. A fee of 0.25% on each side also applies, rounded to a cent.
+                The displayed chart price is a reference, not a guaranteed execution price or bank redemption offer.</p>
+              <p>Open buy orders hold cash; open sell orders reserve assets. Cancellation releases
+                the unfilled portion, while completed fills remain final. A company with only frozen
+                founder shares uses private offers rather than the ordinary Sell ticket.</p>
+              <p>The authenticated exchange API supports order cancellation. The current member site
+                has no order-history or cancellation panel; keep the order reference and ask an operator
+                for help checking an open order. An opposite order does not cancel the first one.</p>
+              <h3 id="crypto">Simulated crypto stays inside JoeSE</h3>
+              <p>Crypto listings have four-letter tickers, such as CORN. These are fictional units,
+                not outside cryptocurrency. There is no blockchain wallet, external deposit or withdrawal.
+                The same matching, cash holds, fees and cancellation rules apply.</p>
+              <h3>Market timing and delisting</h3>
+              <p>The normal order session is daily in the New York afternoon and evening, with brief
+                locks around hourly price updates. Follow the live market badge. Local testing may keep
+                order entry open while the price engine still follows its normal hourly session.</p>
+              <p>Prices incorporate the market model, trades and eligible news within movement caps.
+                A stock closing below J$1 on three consecutive days is delisted: its shares have zero
+                market value and founding or purchase costs are not automatically refunded.</p>
             </Chapter>
 
             <Chapter index={4}>
-              <p>
-                Going public creates a company listing that other members can
-                see. The current launch form has one founder, who receives the
-                initial frozen shares. A joint venture is built by agreeing on
-                the project together, launching it, and using member share
-                offers to allocate ownership.
-              </p>
-              <h3>Launch a listing</h3>
+              <h3>Establish a company</h3>
               <ol className="guide-steps">
-                <li>
-                  Agree on the project, its developer, the proposed ownership
-                  split and the J$ each person will pay. Keep a written record
-                  of the agreed share counts and whether quoted amounts include
-                  fees.
-                </li>
-                <li>
-                  Open the listings panel and select{" "}
-                  <strong>+ Add Listing</strong>. Enter a unique three-letter
-                  stock ticker, company name, description, HTTPS project URL,
-                  founding contribution and whole number of shares.
-                </li>
-                <li>
-                  The founder needs at least{" "}
-                  <strong>J$5,000 of disposable balance</strong>. Select{" "}
-                  <strong>Submit for review</strong>. Submitting does not move
-                  money.
-                </li>
-                <li>
-                  An operator reviews the proposal. Staff can also prepare a
-                  proposal for you, but they cannot confirm your contribution on
-                  your behalf.
-                </li>
-                <li>
-                  Return to{" "}
-                  <strong>+ Add Listing → Your listing requests</strong>. When
-                  approved, check the exact contribution and share count, tick
-                  the confirmation box and select{" "}
-                  <strong>Fund &amp; launch</strong>.
-                </li>
+                <li>Use <strong>Stock Listings → + Add Listing</strong>. Provide a unique three-letter ticker,
+                  company name, description, HTTPS project URL, contribution and whole share count.</li>
+                <li>The founder needs at least J$5,000 disposable cash. Submit the proposal for operator
+                  review; submission alone does not debit cash.</li>
+                <li>After approval, return to <strong>Your listing requests</strong>, check the exact contribution
+                  and shares, and explicitly confirm <strong>Fund &amp; launch</strong>.</li>
+                <li>Funding records locked company capital and gives the founder the specified frozen shares.
+                  The company becomes available in My Company.</li>
               </ol>
-              <p>
-                At launch, Banking records the contribution as company capital
-                and the founder receives the specified frozen shares. The new
-                company does not automatically create a separate public float or
-                a second set of shares for partners.
-              </p>
-              <h3>
-                Build a joint venture using transactions and asset transactions
-              </h3>
-              <p>
-                Use a normal <strong>transaction</strong> for a separately
-                agreed J$ contribution, reimbursement or other cash transfer.
-                Use an <strong>asset transaction</strong> when J$ is being
-                exchanged for a specific ownership stake. The two actions have
-                different effects.
-              </p>
-              <div className="guide-note">
-                <strong>
-                  Use the private offer for the share purchase payment.
-                </strong>{" "}
-                Accepting it already debits the buyer and credits the seller.
-                Sending a separate wire for that same purchase, then accepting a
-                full-price offer, pays twice. A wire by itself does not reserve
-                or guarantee any shares.
-              </div>
+              <p>A staff-prepared proposal still requires the founder's consent. Launching does not
+                automatically create public float, extra partner shares, company operating cash or website permissions.</p>
+              <h3>Build a joint venture</h3>
+              <p>Agree the project, duties, ownership split, quantities and fee treatment with your partners.
+                The current launch accepts one founder. After launch, use private share offers to
+                allocate ownership to other members. A wire can cover a separate contribution or reimbursement,
+                but does not assign any shares.</p>
               <div className="guide-example">
-                <h3>Example: Alice 70%, Bob 30%</h3>
-                <ol className="guide-steps">
-                  <li>
-                    Alice launches a company with J$5,000 and 1,000 frozen
-                    shares. Initially she owns all 1,000.
-                  </li>
-                  <li>
-                    Alice and Bob agree that Bob will acquire 300 shares for a
-                    total asking price of J$1,500.
-                  </li>
-                  <li>
-                    Alice uses <strong>Offer</strong> to send Bob exactly 300
-                    shares at that bundle price. Bob accepts in his Inbox,
-                    paying J$1,503.75 including his fee. Alice receives
-                    J$1,496.25 after her fee.
-                  </li>
-                  <li>
-                    Alice now holds 700 shares and Bob 300: a 70/30 split. All
-                    1,000 remain frozen shareholdings. Each member checks their
-                    portfolio and Banking activity.
-                  </li>
-                </ol>
+                <h3>Alice 70%, Bob 30%</h3>
+                <p>Alice contributes J$5,000 for 1,000 frozen shares. She offers Bob 300 shares for a
+                  bundle price of J$1,500. If Bob accepts, he pays J$1,503.75 and Alice receives J$1,496.25.
+                  Alice keeps 700 shares and Bob owns 300.</p>
+                <p>The company still has the original J$5,000 of locked capital. Bob's payment went to
+                  Alice for her shares, not into the company operating account.</p>
               </div>
-              <p>
-                This member sale reimburses Alice for part of her stake; it does
-                not add another J$1,500 to the company's original capital. The
-                sale price is agreed between the members and need not equal the
-                reference value.
-              </p>
-              <p>
-                If partners choose to send contributions before launch, record
-                that arrangement explicitly. The initial shares still go only to
-                the founder. The current system has no automatic split, escrow,
-                refund agreement or link between an earlier wire and a later
-                share offer. Free allocation and simultaneous multi-founder
-                funding are not implemented.
-              </p>
-              <p>
-                Project duties and website permissions are agreed separately.
-                Holding shares does not automatically grant a console role,
-                project access or a guaranteed payment.
-              </p>
+              <p>There is no automatic multi-founder funding, free allocation, escrow or link between
+                a preliminary wire and a later offer. Keep your agreement clear before anyone transfers J$.</p>
             </Chapter>
+
             <Chapter index={5}>
-              <h3>Posts and My Company</h3>
-              <p>
-                Open Posts to read company updates. A developer or member with
-                settled ordinary or frozen shares can select that company and
-                publish a title and update. A pending share offer does not grant
-                publishing permission. You can withdraw your own post, or delete
-                its title and body, even after selling your shares. Console
-                operators can moderate posts.
-              </p>
-              <p>
-                My Company lists your developed companies and settled company
-                interests. Reports show weekly and lifetime revenue, refunds,
-                employee payments, operating cash, verified locked founding
-                capital, share market value and shareholder quantities. An
-                unavailable earlier weekly close stays unavailable. Owning
-                shares gives access to aggregate reports, while service, receipt
-                and employee management belong to the registered company
-                manager.
-              </p>
-              <h3>Company services and employee payments</h3>
-              <p>
-                A developer initializes company banking without moving founding
-                capital. The manager requests approval for the service’s JoeAuth
-                app, then creates a server-priced purchase or subscription plan.
-                A service checkout link opens Account Overview with the exact
-                company, price, payment terms and recurring interval. Read those
-                terms and check the consent box to authorize a payment. A link
-                alone cannot debit J$.
-              </p>
-              <p>
-                Manage subscriptions in Account Overview or Joe Banking’s Loans
-                section. Cancel future charges there. An insufficient-funds
-                renewal becomes past due and needs your explicit retry; missed
-                charges are not stacked automatically. Full refunds come from
-                company operating cash and may remain pending if that company
-                lacks funds.
-              </p>
-              <p>
-                Managers configure the share of net service revenue assigned to
-                employees and invite employees with exact allocation weights. An
-                employee accepts the displayed pool and allocation in Account
-                Overview. A funded closed-week payroll moves company operating
-                cash to employees; stock ownership alone does not automatically
-                earn an employee payment. Founding capital remains locked.
-                Revenue does not directly rewrite share prices.
-              </p>
-              <h3>Weekly income tax and redistribution</h3>
-              <p>
-                A New York week runs Monday midnight through the following
-                Monday. Tax applies to posted wages and deposit interest, plus
-                net realized trading gains after costs and fees. Trading losses
-                offset that week’s gains, not wages. Transfers, loan principal,
-                opening grants, redistribution and unrealized share values are
-                excluded.
-              </p>
-              <p>
-                The selected rate applies to the whole taxable income: up to
-                J$500 is 0%; over J$500 to J$2,000 is 2%; over J$2,000 to
-                J$3,500 is 3%; over J$3,500 to J$5,000 is 5%; above J$5,000 is
-                10%. These brackets have jumps at their thresholds. J$1,000
-                wages plus J$600 realized gain gives J$1,600 income and J$32
-                tax.
-              </p>
-              <p>
-                Your weekly statements appear in Account Overview. Unknown
-                historical costs hold an assessment for evidence review.
-                Collection uses available cash and leaves unpaid tax on the
-                statement; it does not spend held funds or force a sale.
-                Reviewed corrections can refund excess tax. Redistribution needs
-                an approved, actually funded bank budget and eligible members;
-                it is not a guaranteed allowance.
-              </p>
-              <h3>Bank offers and rate news</h3>
-              <p>
-                An operator may offer a loan from the approved bank catalog.
-                Read its principal, term, fixed or variable weekly rate and
-                expiry in Account Overview or Joe Banking’s Loans page. Cash and
-                interest begin only after you explicitly accept the exact terms.
-                Repayments pay accrued interest first, then principal. A
-                variable offer may need refreshing if the starting rate changes
-                before acceptance. There are no automatic late fees or forced
-                sales in this version.
-              </p>
-              <p>
-                Applied Joe Rate changes appear in News with their actual
-                effective time and operation reference. A cut adds a mild
-                bullish model signal; an increase adds a mild bearish one.
-                Prices still follow the bounded market engine, so a bulletin
-                does not guarantee a return. Scheduled or canceled operations do
-                not appear as applied news.
-              </p>
-              <p>
-                Discussion is a planned destination. Its separate posting and
-                moderation details are still being designed; listing-specific
-                comments remain available in Stock Listings.
-              </p>
+              <p><strong>My Company is for companies you established or own frozen company shares in.</strong>
+                Ordinary stock-market purchases remain visible in Account Overview and Stock Listings;
+                they do not unlock My Company statistics or private bank reports. A pending private
+                offer also gives no access until its shares settle.</p>
+              <p>Select a company to see market capitalization, weekly price change, service revenue,
+                refunds, employee payouts, operating cash, locked founding capital and the shareholder table.
+                The ? buttons explain each figure. A missing earlier weekly price is shown as unavailable.</p>
+              <p>Market capitalization uses all outstanding ordinary and frozen shares at the reference price,
+                including issuer inventory when present. The table shows member share quantities and their
+                proportion of all outstanding shares. This is separate from the company's bank cash.</p>
+              <h3>What the founder or registered manager can do</h3>
+              <ol className="guide-steps">
+                <li>Initialize company banking if needed. This identifies its operating account and proven
+                  locked founding capital; it does not unlock or spend that capital.</li>
+                <li>Request approval for a company service and its JoeAuth app. After operator approval,
+                  create an exact-price purchase or recurring plan.</li>
+                <li>Manage service plans, inspect payment receipts, and issue or retry a full service refund.</li>
+                <li>Set the employee revenue pool, invite employees with allocation weights, and run funded
+                  payroll for a closed revenue week.</li>
+              </ol>
+              <p>Other frozen shareholders can read aggregate reports and share quantities. They do
+                not receive another manager's customer receipts, employee records or payment controls.
+                Shares alone do not grant a staff role, an automatic dividend or access to project code.</p>
+              <p>Service revenue adds company operating cash. Employee payments and refunds reduce it.
+                Retained revenue stays with the company; it does not directly rewrite the stock price
+                or become every shareholder's personal spendable cash.</p>
+            </Chapter>
+
+            <Chapter index={6}>
+              <h3>Authorize a company payment</h3>
+              <ol className="guide-steps">
+                <li>Follow an approved service's checkout link to <strong>Account Overview → Banking activity</strong>.</li>
+                <li>Read the named company, item, exact amount and terms. A recurring plan also shows its interval.</li>
+                <li>Check the consent box and choose <strong>Authorize</strong>. A link alone cannot debit your J$.</li>
+                <li>Keep the payment receipt/reference. Your cash and the company's funded revenue update after posting.</li>
+              </ol>
+              <p>Purchase means one payment. Subscription means an initial payment followed by the
+                recurring amount you accepted. A newly created plan does not silently replace your accepted price.</p>
+              <h3>Renewal, cancellation and failed payment</h3>
+              <p>Recurring dates follow the New York time of your consent and the plan's calendar-day interval.
+                Daylight-saving changes can make a calendar day 23 or 25 hours. Check the displayed next charge.</p>
+              <p>Manage subscriptions in Account Overview, or in Joe Banking under Loans &amp; service payments.
+                <strong>Cancel future charges</strong> prevents later renewals; it does not automatically refund
+                an earlier payment. A renewal already posted before cancellation remains a completed payment.</p>
+              <p>An unfunded renewal becomes <strong>past due</strong>. The system does not stack automatic
+                charges for every missed interval. Add available cash and explicitly choose Retry payment,
+                or cancel future charges. An active plan cannot be charged early with that retry button.</p>
+              <h3>Refunds and service access</h3>
+              <p>Ask the company manager about a mistaken service payment. The current refund is a full,
+                linked refund funded from company operating cash. If the company cannot fund it, the
+                refund remains pending; that status does not mean J$ has arrived. Partial refunds are not available.</p>
+              <p>A payment receipt records the payment. The service also needs to recognize its approved
+                receipt before granting access. If a paid service is still unavailable, keep the receipt
+                and contact its manager rather than making a second purchase to try again.</p>
+            </Chapter>
+
+            <Chapter index={7}>
+              <h3>Ways J$ moves through the system</h3>
+              <Table label="Money circulation" headings={["Activity", "Where the cash goes"]} rows={[
+                ["Reviewed opening grant", "Once-only opening cash is issued to an eligible new member. Existing grants must be reconciled."],
+                ["Accepted bank loan", "Existing bank reserve cash moves to the borrower, with matching debt. Principal is not income."],
+                ["Member trade or wire", "Existing cash moves between accounts. It does not issue a new opening grant."],
+                ["Service purchase", "Member cash becomes company operating revenue."],
+                ["Employee payroll", "Funded company operating cash moves to consenting employees."],
+                ["Tax or loan repayment", "Paid cash returns to the bank reserve. Only the interest portion of loan repayment is bank interest income."],
+                ["Redistribution", "An approved, actually funded bank distribution returns cash to eligible members."],
+              ]} />
+              <h3>Employees earn revenue payments</h3>
+              <p>A manager chooses the fraction of net service revenue assigned to employees and each
+                employee's share of that pool. Each employee must accept the displayed agreement.
+                Accepted allocation weights must total 100% before payroll. Being a founder or shareholder
+                does not automatically make someone an employee.</p>
+              <p>Payroll uses a closed New York week and funded company operating cash. It cannot spend
+                held member cash or locked founding capital. Underfunded payroll needs funding and retry;
+                expected wages are not spendable cash until actually posted.</p>
+              <h3>Weekly income tax</h3>
+              <p>A New York week starts Monday at midnight. Taxable income includes posted wages,
+                posted deposit interest if that product becomes available, and net realized stock,
+                crypto and frozen-share gains after exact costs and fees. Trading losses offset
+                that week's trading gains, not wages.</p>
+              <p>Wires, loan principal, opening grants, redistribution and unrealized price changes
+                are excluded. A share sale's entire proceeds are not its taxable gain.</p>
+              <Table label="Weekly tax brackets" headings={["Taxable weekly income", "Rate on the whole amount"]} rows={[
+                ["J$0–J$500", "0%"], ["Over J$500–J$2,000", "2%"],
+                ["Over J$2,000–J$3,500", "3%"], ["Over J$3,500–J$5,000", "5%"],
+                ["Over J$5,000", "10%"],
+              ]} />
+              <div className="guide-example"><h3>A whole-income bracket</h3>
+                <p>J$1,000 of wages plus J$600 of net realized gains is J$1,600 taxable income.
+                  The 2% bracket gives J$32 tax. These are whole-income brackets, so crossing a threshold
+                  changes the rate for the full amount.</p>
+              </div>
+              <p>Read statements in Account Overview. Unknown historical costs hold an assessment for
+                review. Collection uses available cash; it leaves unpaid amounts outstanding instead
+                of spending held cash or forcing asset sales. Later evidence requires a reviewed
+                correction; excess collected tax can be refunded.</p>
+              <h3>Redistribution is conditional</h3>
+              <p>Only an approved budget, actually received taxes and loan interest, reviewed eligible
+                members, and sufficient reserve headroom can fund redistribution. Pending refunds must
+                be covered first. It is an equal funded payment, not a guaranteed recurring allowance.</p>
+            </Chapter>
+
+            <Chapter index={8}>
+              <p><a href={bankSiteUrl(window.location.hostname)}>Open Joe Banking</a> to see Account Balance,
+                Transaction, Interest Rate, Deposits, Loans and Inbox. The same identity link and
+                available balance connect it to JoeSE.</p>
+              <p>The bank starts with J$100,000 of its own reserve cash. Below J$90,000 is a danger warning.
+                This reserve is separate from member balances and company capital. Loan payments can
+                return cash to it; unpaid interest and market-valued shares are not reserve cash.</p>
+              <h3>Reading the weekly Joe Rate</h3>
+              <p>The Joe Rate is quoted <strong>per week</strong>, not per year, and stays between
+                0.300% and 2.000%. Check Banking → Interest Rate for the current approved value and history.
+                A rate adjustment is a change of 0.005–0.200 percentage points in 0.005 steps,
+                with at most two effective adjustments in a New York week.</p>
+              <p>For example, moving from 1.000% to 0.995% is a decrease of 0.005 percentage points.
+                A future operation can be canceled before execution. A change affects variable loan
+                interest prospectively; accepted fixed terms keep their rate. It does not automatically
+                credit interest to member transaction cash.</p>
+              <p>Effective changes create a published bulletin. A cut adds a mild positive model signal
+                for one eligible stock tick, and an increase adds a mild negative signal. Crypto is
+                excluded from this particular signal. Price caps and other inputs still apply; a
+                bulletin does not promise that every affected stock will move in that direction.</p>
+              <p>The console's daily snapshot is due at New York noon. A late capture shows when it
+                actually occurred. A provisional snapshot has not verified the shared cutoff; a
+                reconciled snapshot has. Daily observations are not a live second-by-second total.
+                Average assets are a monitoring figure, not a rule forcing everyone to hold J$10,000.</p>
+            </Chapter>
+
+            <Chapter index={9}>
+              <div className="guide-note"><strong>Current offers and proposed rules are different.</strong>
+                The bank already supports explicit loan offers and repayments. Products and a lending
+                budget must be approved before offers can be made. A member application flow and
+                overdue penalties are still a proposal; no proposed penalty applies to an existing loan.
+              </div>
+              <ol className="guide-steps">
+                <li>An operator offers a product from the approved catalog. If none is enabled,
+                  no member loan is currently available; ask the bank operator rather than a company manager.</li>
+                <li>Open the offer in Account Overview → Banking activity or Joe Banking → Loans.
+                  Read principal, weekly rate, fixed/variable type, term, expiry and repayment terms.</li>
+                <li>Explicitly accept the exact displayed terms to receive reserve-funded cash,
+                  or decline. No principal or interest begins merely because an offer exists.</li>
+                <li>Repay from available transaction cash with the Repayment amount and Repay loan button.
+                  Check the updated principal, interest and receipt.</li>
+              </ol>
+              <h3>What interest and repayment mean</h3>
+              <p>Current loan interest is simple on outstanding principal and prorated for elapsed time.
+                Unpaid interest is not itself principal for compounding. Fractional cents are carried
+                until they become a whole cent. Early principal repayment reduces later interest.
+                Each repayment pays accrued interest first, then principal; overpayment is rejected.</p>
+              <p>A fixed loan keeps its accepted weekly rate. A variable loan follows the Joe Rate
+                plus its accepted spread, split at actual effective rate changes. If the starting
+                variable rate changes before acceptance, the bank must provide a refreshed offer.</p>
+              <div className="guide-example"><h3>A simple loan example</h3>
+                <p>At an unchanged 1.000% weekly rate, J$100 outstanding for seven complete days
+                  accrues J$1 interest. A J$20 repayment then pays J$1 interest and J$19 principal,
+                  leaving J$81 principal. Actual shorter intervals and rate changes alter the amount.</p>
+              </div>
+              <p>The displayed due date is not automatic forgiveness. Under the current engine,
+                simple contractual interest continues while principal remains outstanding. There are
+                no automatic late fees, forced asset sales or new penalty rates. If you cannot pay,
+                contact an operator with the loan reference and an affordable proposed repayment plan.
+                Reading access and your identity are not a form of collateral.</p>
+            </Chapter>
+
+            <Chapter index={10}>
+              <div className="guide-note"><strong>Deposit funding is currently unavailable.</strong>
+                Seeing a deposit catalog, a flexible-savings figure or the Joe Rate does not open
+                a savings contract, lock money or earn a payment. Term maturity and deposit-interest
+                posting are not active features.</div>
+              <p>A future deposit would move existing J$ from disposable cash into a separate savings
+                product. It would not accept outside money or create a real-world claim. Planned
+                flexible deposits would permit withdrawal and use the variable Joe Rate; planned term
+                deposits would lock principal and keep their accepted fixed weekly rate.</p>
+              <Table label="Deposit catalog preview only" headings={["Planned term", "Preview fixed weekly rate"]} rows={[
+                ["2 weeks", "1.000%"], ["4 weeks", "1.500%"], ["8 weeks", "2.250%"],
+              ]} />
+              <p>These are catalog previews, not available products or payment promises. Before deposit
+                funding is released, members must be shown principal, withdrawal and maturity rules,
+                interest method, reserve funding and exact accepted terms. Do not send a member wire
+                expecting it to create a deposit or earn interest.</p>
+            </Chapter>
+
+            <Chapter index={11}>
+              <h3>News: published information</h3>
+              <p>News contains published console articles and effective bank-rate bulletins. Read the
+                affected tickers, direction, severity and effective time. Scheduled or canceled rate
+                operations are not reported as completed changes; internal operator notes stay private.</p>
+              <h3>Posts: company updates</h3>
+              <p>All members can read published Posts. A current developer or holder of settled
+                ordinary stock or frozen company shares can publish about that specific company.
+                Ordinary stock still gives this publishing permission even though it does not unlock
+                My Company reports. Crypto and pending share offers do not qualify.</p>
+              <ol className="guide-steps">
+                <li>Open Posts and choose one of your eligible companies.</li>
+                <li>Enter a plain-text title and progress update, then Publish update.</li>
+                <li>Withdraw your post to hide it, or Delete post to remove its stored title and body.
+                  You retain removal access to your own post even after selling the shares.</li>
+              </ol>
+              <p>Console operators can moderate posts. Deletion keeps an audit record of the action,
+                not a copy of the deleted text. Check your wording before publishing and use removal
+                controls carefully; the current interface has no restore action.</p>
+              <h3>Discussion: planned, with listing comments available</h3>
+              <p>The Discussion destination is reserved for all members' opinions, but its posting,
+                threading and moderation rules have not been implemented. For the current listing-specific
+                conversation, open Stock Listings → News &amp; discussion → Comments. Comments are separate
+                from company Posts and can be moderated by operators.</p>
+              <p>Keep updates accurate and respectful. Do not post passwords, identity tokens, private
+                account information or someone else's personal details.</p>
+            </Chapter>
+
+            <Chapter index={12}>
+              <h3>Check the state before trying again</h3>
+              <p>Pending wire means reserved cash awaiting the receiver. Open order means the unfilled
+                portion is still waiting. Past-due subscription means its renewal was not paid. Pending
+                refund means the company has not yet returned the cash. A temporary settlement outage
+                can require recovery even after one part completed.</p>
+              <p>If an action times out, check Inbox, your holdings, Banking activity and the receipt
+                first. Repeatedly creating a new transaction or checkout can create a second intended
+                payment. Keep the reference, member, ticker/service, amount and approximate time and
+                contact an operator when the outcome remains unclear.</p>
+              <h3>Who can help?</h3>
+              <p>Ask the receiver about a pending wire, the company manager about a service purchase
+                or refund, and a bank/exchange operator about account access, settlements, tax evidence
+                or loan terms. A guide explanation does not replace the exact terms shown on an offer.</p>
+              <h3>Local testing</h3>
+              <p>Alice/Bob switches are available only in the local test environment. The console's
+                operator is separate from member trading. Demonstration records persist after reloads;
+                switching accounts or signing in does not restore J$10,000 or erase debt. No password
+                is needed for these synthetic test accounts.</p>
             </Chapter>
             <footer className="guide-footer">
-              <p>
-                Need to make a transaction? Return to the exchange and use your
-                own portfolio and Inbox. If a settlement remains pending
-                unexpectedly, keep its details and ask an operator before
-                submitting a replacement.
-              </p>
-              <a className="guide-return" href="/">
-                Back to exchange
-              </a>
+              <p>Ready to continue? Use your own Account Overview and Inbox to check every cash or ownership change.</p>
+              <a className="guide-return" href="/account">Open Account Overview</a>
             </footer>
           </div>
         </div>

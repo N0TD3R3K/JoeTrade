@@ -29,6 +29,14 @@ Deposit funding, Discussion, production migration and live SSO verification rema
 separate work. See the [Stage 3 report and test guide](STAGE_3_REPORT_AND_TEST_GUIDE.txt).
 No production data has been migrated and no websites have been deployed.
 
+The subsequent local review restricts **My Company** reports to founders and
+frozen company shareholders, adds statistic explanations, and replaces the public
+[member guide](http://127.0.0.1:4173/guide). The local bank now has J$100,000 reserves
+and a 1.000% weekly Joe Rate. The [proposed loan and overdue-payment design](Universe/joe-banking/docs/loan-system-proposal.md)
+awaits approval; lending products and budgets remain disabled.
+See the [local review report](REVIEW_FIXES_REPORT.txt) for the completed fixes,
+initialization, data-preservation results and 118 passing tests.
+
 Start with the [development plan](DEVELOPMENT_PLAN.md) for milestones, open
 decisions, migration requirements, and launch checks.
 
@@ -100,11 +108,12 @@ Do not rerun bank seeds against these existing working stores.
 
 Scheduled jobs run every minute during this local preview. Price changes still
 follow the engine's New York afternoon/evening session and do not force a tick.
-In **Console → Joe Bank → Bank policy configuration**, review an initial rate,
-budgets and loan catalog, save a draft and approve the exact version. Reserve
-initialization is a separate once-only action. No sample QA policy was approved
-in the working databases. The [test guide](STAGE_3_REPORT_AND_TEST_GUIDE.txt)
-explains the remaining setup and suggested test flows.
+The local review has now initialized reserve cash and the base rate through
+**Console → Joe Bank → Bank policy configuration**. New loan products and budgets
+still need approval after the [loan proposal](Universe/joe-banking/docs/loan-system-proposal.md)
+is reviewed. Do not initialize reserves a second time or reissue member grants.
+The [Stage 3 test guide](STAGE_3_REPORT_AND_TEST_GUIDE.txt) records the earlier
+handoff; its uninitialized-bank status predates this review.
 
 ### Set up a fresh checkout
 

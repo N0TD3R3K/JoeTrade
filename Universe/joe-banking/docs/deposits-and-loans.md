@@ -1,6 +1,6 @@
 # Deposits and loans
 
-> Current development status (November 26, 2026): Stage 2 services and UI are implemented. See [implemented loan accounting](../../joe-stock-exchange/docs/stage-2/ACCOUNTING.md) and the root Stage 2 TXT report. Earlier Stage 1/foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposits remain unavailable. Final owner review is Stage 3.
+> Current development status (November 26, 2026): Local bank reserves and a 1.000% weekly Joe Rate are initialized. New member applications, reserve-floor lending rules, installments and overdue penalties are specified in the [unapproved loan proposal](loan-system-proposal.md); they are not active features. The implemented offer/repayment engine is described in [loan accounting](../../joe-stock-exchange/docs/stage-2/ACCOUNTING.md). Deposit funding remains unavailable. Earlier product designs below are historical proposals.
 
 ## 1. Meaning of a deposit
 

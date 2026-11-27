@@ -91,7 +91,7 @@ export const connectedOpenApi = {
   paths: {
     "/companies": {
       get: op(
-        "Own company reports with scoped aggregate revenue and shareholder display names",
+        "Company reports for the founder or settled frozen-share holders; ordinary stock investments do not qualify",
       ),
     },
     "/companies/register": {
@@ -100,6 +100,9 @@ export const connectedOpenApi = {
         true,
         body({ companyId: { type: "string" } }, ["companyId"]),
       ),
+    },
+    "/posts/companies": {
+      get: op("Minimal company publishing choices for developers and settled stock/frozen shareholders, without revenue or bank reports"),
     },
     "/posts": {
       get: op("Published company updates and own removed posts"),

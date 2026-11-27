@@ -135,6 +135,9 @@
   display: grid;
   gap: 6px;
   scroll-margin-top: 100px;
+  max-height: calc(100dvh - 124px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .guide-contents h2 {
   margin: 0 0 12px;
@@ -316,6 +319,8 @@
   }
   .guide-contents {
     position: static;
+    max-height: none;
+    overflow-y: visible;
     padding: 24px;
     border: 1px solid #2c333e;
     border-radius: 12px;

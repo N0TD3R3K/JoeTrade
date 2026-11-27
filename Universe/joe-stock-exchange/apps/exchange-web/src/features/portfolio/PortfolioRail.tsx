@@ -1,4 +1,5 @@
 import type { Holding, PortfolioSnapshot } from "@joese/contracts";
+import { StatHelp } from "../../../../shared/StatHelp";
 import { formatJoellars, formatPercent, formatQuantity } from "@joese/ui";
 import {
   ArrowLeftRight,
@@ -119,6 +120,8 @@ export function PortfolioRail({
   ];
   return (
     <aside
+      id={variant === "rail" ? "market-portfolio" : undefined}
+      aria-label={variant === "rail" ? "Market portfolio" : "Account portfolio"}
       className={`portfolio-rail ${variant === "overview" ? "portfolio-overview" : ""}`}
     >
       <div className="portfolio-topline">
@@ -159,7 +162,7 @@ export function PortfolioRail({
           const content = (
             <>
               <div>
-                <span>{label}</span>
+                <span className="stat-label">{label}{!action && <StatHelp label={label} />}</span>
                 <Icon size={16} />
               </div>
               <strong>
@@ -191,6 +194,7 @@ export function PortfolioRail({
       <div className="portfolio-total">
         <span>
           Simulated net position
+          <StatHelp label="Simulated net position" />
           {summary.postedBalanceCents !== undefined
             ? " · including held J$"
             : ""}

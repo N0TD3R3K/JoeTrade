@@ -60,6 +60,12 @@ async function eligibility(e: Env, user: SessionUser, id: string) {
       user.id,
       id,
     ),
+    shareholder = await row(
+      e,
+      "SELECT 1 FROM holdings WHERE user_id=? AND asset_id=? AND holding_kind='shareholding' AND quantity>0",
+      user.id,
+      id,
+    ),
     manager =
       a.developer_user_id === user.id ||
       Boolean(
@@ -76,7 +82,7 @@ async function eligibility(e: Env, user: SessionUser, id: string) {
       a.active === 1 &&
       user.role === "member" &&
       (a.developer_user_id === user.id || Boolean(holder)),
-    view: a.developer_user_id === user.id || Boolean(holder) || manager,
+    view: a.developer_user_id === user.id || Boolean(shareholder),
     manager,
   };
 }
@@ -86,15 +92,15 @@ export async function companies(
 ): Promise<CompanyView[]> {
   const assets = await rows(
     e,
-    "SELECT DISTINCT a.* FROM assets a LEFT JOIN holdings h ON h.asset_id=a.id AND h.user_id=? AND h.quantity>0 AND h.holding_kind IN ('stock','shareholding') LEFT JOIN company_product_roles r ON r.asset_id=a.id AND r.user_id=? AND r.role='manager' AND r.revoked_at IS NULL WHERE a.asset_type='stock' AND (a.developer_user_id=? OR h.id IS NOT NULL OR r.user_id IS NOT NULL) ORDER BY a.ticker",
-    user.id,
+    "SELECT DISTINCT a.* FROM assets a LEFT JOIN holdings h ON h.asset_id=a.id AND h.user_id=? AND h.quantity>0 AND h.holding_kind='shareholding' WHERE a.asset_type='stock' AND (a.developer_user_id=? OR h.id IS NOT NULL) ORDER BY a.ticker",
     user.id,
     user.id,
   );
   const result: CompanyView[] = [];
   for (const a of assets) {
-    const access = await eligibility(e, user, a.id),
-      holdings = await rows(
+    const access = await eligibility(e, user, a.id);
+    if (!access.view) continue;
+    const holdings = await rows(
         e,
         "SELECT u.username AS name,SUM(h.quantity) AS quantity FROM holdings h JOIN users u ON u.id=h.user_id WHERE h.asset_id=? AND h.holding_kind IN ('stock','shareholding') AND h.quantity>0 AND u.role='member' GROUP BY u.id ORDER BY quantity DESC,u.username",
         a.id,
@@ -143,6 +149,16 @@ export async function companies(
     result.push(report);
   }
   return result;
+}
+/** Publishing choices expose no company reports or bank data to market investors. */
+async function publishingCompanies(e: Env, user: SessionUser) {
+  const list = await rows(
+    e,
+    "SELECT DISTINCT a.id,a.ticker,a.name FROM assets a LEFT JOIN holdings h ON h.asset_id=a.id AND h.user_id=? AND h.quantity>0 AND h.holding_kind IN ('stock','shareholding') WHERE a.asset_type='stock' AND a.active=1 AND (a.developer_user_id=? OR h.id IS NOT NULL) ORDER BY a.ticker",
+    user.id,
+    user.id,
+  );
+  return list.map((company) => ({ ...company, canPublish: true }));
 }
 export async function posts(
   e: Env,
@@ -352,6 +368,8 @@ export async function handleCompanyEconomy(
         ),
       );
     if (u.pathname === "/v1/companies") return json(await companies(e, user));
+    if (u.pathname === "/v1/posts/companies")
+      return json(await publishingCompanies(e, user));
     if (u.pathname === "/v1/posts" || u.pathname === "/v1/console/posts")
       return json(await posts(e, user, isConsole));
     if (u.pathname === "/v1/economy/me")

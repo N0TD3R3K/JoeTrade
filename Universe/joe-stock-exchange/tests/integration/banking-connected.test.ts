@@ -754,6 +754,8 @@ describe("JoeTrade connected economy", () => {
       title: "Company progress",
       body: "A real developer update.",
     });
+    expect((await call(alice, "/companies")).data.map((c: any) => c.id)).toContain(asset);
+    expect((await call(bob, "/companies")).data).toEqual([]);
     expect(published.status, JSON.stringify(published)).toBe(200);
     expect(
       (await call(bob, `/posts/${published.data.id}/delete`, { version: 1 }))
@@ -762,6 +764,7 @@ describe("JoeTrade connected economy", () => {
     expect(
       (await call(bob, `/share-offers/${pending.data.id}/accept`, {})).status,
     ).toBe(200);
+    expect((await call(bob, "/companies")).data.map((c: any) => c.id)).toContain(asset);
     expect(
       (
         await call(bob, "/posts", {
@@ -774,6 +777,7 @@ describe("JoeTrade connected economy", () => {
     db.db
       .prepare("UPDATE assets SET developer_user_id='demo-bob' WHERE id=?")
       .run(asset);
+    expect((await call(alice, "/companies")).data).toEqual([]);
     expect(
       (
         await call(alice, "/posts", {
@@ -802,6 +806,25 @@ describe("JoeTrade connected economy", () => {
     expect(
       JSON.stringify(db.db.prepare("SELECT * FROM company_commands").all()),
     ).not.toContain("A real developer update.");
+  });
+  it("keeps ordinary market investments out of company reports while preserving scoped post publishing", async () => {
+    const buy = await call(bob, "/orders", { ticker: "JAI", side: "buy", quantity: 1 });
+    expect(buy.status).toBe(201);
+    expect(buy.data.status).toBe("filled");
+    const reports = await call(bob, "/companies");
+    expect(reports.status).toBe(200);
+    expect(reports.data).toEqual([]);
+    const choices = await call(bob, "/posts/companies");
+    expect(choices.status).toBe(200);
+    expect(choices.data).toHaveLength(1);
+    expect(choices.data[0]).toMatchObject({ ticker: "JAI", canPublish: true });
+    expect(Object.keys(choices.data[0]).sort()).toEqual(["canPublish", "id", "name", "ticker"]);
+    expect((await call(bob, `/companies/${choices.data[0].id}`)).status).toBe(404);
+    expect((await call(bob, "/posts", {
+      companyId: choices.data[0].id, title: "Investor update", body: "Ordinary stock still allows a company post.",
+    })).status).toBe(200);
+    db.db.prepare("UPDATE holdings SET quantity=0 WHERE user_id='demo-bob' AND holding_kind='stock'").run();
+    expect((await call(bob, "/posts/companies")).data).toEqual([]);
   });
   it("supports operator moderation and scopes company revenue/payment data to managers", async () => {
     await policyV2();

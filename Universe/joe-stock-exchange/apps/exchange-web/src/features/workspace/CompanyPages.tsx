@@ -1,19 +1,21 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { CompanyPostView, CompanyView } from "@joese/contracts";
 import { centralRequest } from "../../../../shared/central-client";
+import { StatHelp } from "../../../../shared/StatHelp";
 import {
   economyAction,
   money,
   toCents,
 } from "../../../../shared/economy-client";
-function useCompanies() {
-  const [companies, setCompanies] = useState<CompanyView[]>([]),
+type CompanyChoice = Pick<CompanyView, "id" | "ticker" | "name" | "canPublish">;
+function useCompanies<T extends CompanyChoice = CompanyView>(path = "/companies") {
+  const [companies, setCompanies] = useState<T[]>([]),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true);
   const load = async () => {
     setLoading(true);
     try {
-      setCompanies(await centralRequest("member", "/companies"));
+      setCompanies(await centralRequest("member", path));
       setError("");
     } catch (e) {
       setError((e as Error).message);
@@ -32,7 +34,7 @@ export function CompanyPosts() {
       error: companyError,
       loading: companyLoading,
       load: loadCompanies,
-    } = useCompanies(),
+    } = useCompanies<CompanyChoice>("/posts/companies"),
     [posts, setPosts] = useState<CompanyPostView[]>([]),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
@@ -261,7 +263,10 @@ export function MyCompany() {
       <div className="workspace-heading">
         <span className="workspace-eyebrow">OWNERSHIP & REVENUE</span>
         <h1>My Company</h1>
-        <p>Company cash and revenue are separate from your personal balance.</p>
+        <p>
+          Reports for companies you founded or hold frozen company shares in.
+          Ordinary stock-market investments stay in your portfolio.
+        </p>
       </div>
       {(error || actionError) && (
         <div className="economy-alert" role="alert">
@@ -272,10 +277,10 @@ export function MyCompany() {
       {notice && <p role="status">{notice}</p>}
       {!company ? (
         <div className="workspace-state">
-          <h2>No company interests yet</h2>
+          <h2>No company shareholdings yet</h2>
           <p>
-            Your developed companies and settled stock or frozen shares will
-            appear here.
+            Companies you establish and settled frozen company shares appear
+            here. Buying ordinary stock does not grant access to these reports.
           </p>
           <a href="/market">Browse stock listings</a>
         </div>
@@ -659,7 +664,7 @@ export function MyCompany() {
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="workspace-card economy-metric">
-      <span>{label}</span>
+      <span className="stat-label">{label}<StatHelp label={label} /></span>
       <strong>{value}</strong>
     </div>
   );

@@ -1,6 +1,6 @@
 # Joe Banking
 
-> Current development status (November 26, 2026): Stage 3 implementation and local checks are complete. See the [Stage 3 report and test guide](../../STAGE_3_REPORT_AND_TEST_GUIDE.txt) and [economy implementation](../joe-stock-exchange/docs/stage-2/README.md). Earlier foundation descriptions below are historical. Policies stay unconfigured until reviewed approval; deposit funding remains unavailable. The three local websites are ready for owner review.
+> Current development status (November 26, 2026): Stage 3 and local review fixes are implemented. The owner-requested local setup has J$100,000 reserves and a 1.000% weekly Joe Rate. Loan products and lending budgets remain disabled pending the [loan proposal](docs/loan-system-proposal.md). Deposit funding is unavailable. The [Stage 3 report](../../STAGE_3_REPORT_AND_TEST_GUIDE.txt) and foundation descriptions below preserve their earlier release status.
 
 Joe Banking is the fictional banking layer of the Joe Universe. It manages a
 member's liquid Joellars (J$), person-to-person wires, savings deposits, term
@@ -31,7 +31,7 @@ Deposit funding, term-deposit contracts and deposit interest posting remain
 unavailable. Weekly rate operations, bank-owned loans, accrual and the Joe Bank
 console are implemented and require reviewed policy configuration. Production
 linking/migration remains separate. Local JOESE settlement is described in
-[the exchange integration notes](../joe-stock-exchange/docs/connected-economy.md). No real initial rate has been chosen. No new service has
+[the exchange integration notes](../joe-stock-exchange/docs/connected-economy.md). The local base rate is initialized; production policy remains separate. No new service has
 been deployed.
 
 See [implementation status](docs/implementation-status.md) and the

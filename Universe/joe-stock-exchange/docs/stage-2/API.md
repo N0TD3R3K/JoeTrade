@@ -10,9 +10,10 @@ an authorization boundary. Banking rechecks its own linked roles and company sco
 
 | Method/path under `/v1`                  | Behavior                                                                                                                 |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| GET `/companies`                         | Own developer/settled-shareholder reports and shareholder display names. Manager fields are scoped at Banking.           |
+| GET `/companies`                         | Founder or settled frozen-shareholder reports. Ordinary stock holdings do not grant access. Manager fields are scoped at Banking. |
 | POST `/companies/register`               | `{companyId}`; registered developer initializes operating metadata and proven locked-capital attribution. No cash grant. |
 | GET `/posts`                             | Published posts plus own removed entries.                                                                                |
+| GET `/posts/companies`                   | Only `{id,ticker,name,canPublish}` for current publishing choices; ordinary stock holders qualify without receiving company statistics. |
 | POST `/posts`                            | `{companyId,title,body}`; current ownership checked at insertion.                                                        |
 | POST `/posts/{id}/withdraw` or `/delete` | `{version}`; author or scoped moderator. Deleted title/body are null.                                                    |
 | GET `/economy/me`                        | Own loans, subscriptions, employee agreements and latest tax statements.                                                 |

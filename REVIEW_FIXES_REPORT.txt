@@ -1,0 +1,109 @@
+JOETRADE — LOCAL REVIEW FIXES
+Completed November 26, 2026, America/New_York.
+
+1. MY COMPANY ACCESS
+My Company now returns company reports only for the registered founder/developer
+or a member with positive settled frozen company shareholdings. Ordinary stock
+investments and pending offers do not grant these reports. The restriction is
+enforced by the API, not merely by hiding items in the selector.
+
+Posts keeps its existing developer/ordinary-stock/frozen-share publishing rules.
+A separate GET /v1/posts/companies returns only id, ticker, name and canPublish;
+it does not disclose company statistics or Banking reports to ordinary investors.
+Manager-only service, customer receipt and employee fields remain scoped.
+Both test members see DRK/TST reports; Alice's JEI/JOE and Bob's JAI ordinary
+investments are excluded from My Company.
+
+2. PORTFOLIO CONTROL
+View portfolio has a designed purpose: it opens the compact-screen holdings
+drawer. It now toggles open/closed and is hidden when the wide-screen portfolio
+is already visible. Its controls stay above the side-panel overlay, with bottom
+space reserved so the buttons do not cover portfolio contents. Accessible
+expanded/control labels identify the panel.
+
+3. LOCAL BANK INITIALIZATION AND STATISTIC HELP
+Approved local policy version 1 and initialized the reserve through existing
+audited commands at November 26, 2:59 PM New York time:
+  Bank reserve: J$100,000.00, initialized once.
+  Weekly Joe Rate: 1.000%, rate history version 1.
+  Lending budget: zero. Loan catalog: empty.
+  Redistribution budget: zero. New opening grants: disabled.
+The last three restrictions keep unapproved terms and duplicate grants inactive.
+No working rate-adjustment slots were consumed by tests. A reconciled noon
+snapshot revision records the actual later capture time.
+
+The ? buttons explain bank, company and portfolio figures on hover, keyboard
+focus or tap; Escape and outside interactions dismiss them. Tooltips stay within
+the viewport. Banking's rate screen now distinguishes loading or an unavailable
+service from an unapproved rate, avoiding a misleading initial placeholder.
+
+4. MEMBER GUIDE REWRITE
+The public /guide page is completely rewritten with thirteen chapters covering:
+account/navigation; cash/assets/debt; wires/private share offers; stock/crypto;
+going public/joint ventures; My Company; purchases/subscriptions/refunds;
+wages/tax/circulation; bank reserves/rates; loans; deposit availability;
+News/Posts/Discussion; and receipts/error handling/help.
+
+The guide explains whole-income tax brackets, exact share quantities and fees,
+loan consent and repayment, and the separation between company cash, capital,
+share prices and member balances. It explicitly identifies deposit funding,
+Discussion posting and the new loan application/penalty rules as unavailable.
+It also notes that ordinary-order cancellation exists in the authenticated API
+but the current member site has no order-history/cancel panel. No missing UI
+control is presented as available. The old public chapter anchors remain valid.
+
+5. LOAN DESIGN — AWAITING APPROVAL, NOT IMPLEMENTED
+Design file: Universe/joe-banking/docs/loan-system-proposal.md
+
+The proposal contains reserve-capacity equations and offer reservations, a
+J$90,000 protected floor for new lending, an initial J$10,000 lending budget,
+J$100–J$1,000 member loans, one outstanding loan per member, 2/4-week terms,
+weekly principal installments, exact consent and simple interest.
+
+Proposed overdue rules include reminders, seven-day grace, a temporary restriction
+on new borrowing, and one 1% late fee capped at J$10 for the whole loan. It proposes
+fee-last repayment, hardship/extension review and attributed recovery/writeoff.
+No forced asset sale, identity restriction, recurring penalty, compound penalty
+interest or background collection is proposed. Existing accepted contracts would
+keep their terms. All numbers remain subject to owner approval before coding.
+
+DATA PRESERVATION
+Both working stores were backed up before initialization to:
+/Users/lizexi/Documents/joelib/JoeTrade/.wrangler/backups/pre-review-fixes-20261126T195855Z/
+
+Final comparison with this backup confirms member balances and all shareholdings
+unchanged, all eleven existing posted journals preserved, clean foreign keys,
+balanced journals and no pending/planning settlement. The only new working cash
+journal is economy_reserve_initialization. All current user trades made before
+this review are preserved; no balances were restored to an older Stage 3 value.
+The source Dev_Note, HANDOFF and staged_dev_note TXT files remain unchanged.
+No migrations, seeds, credential changes, commit, push, DNS or deployment occurred.
+
+VERIFICATION
+Full checks passed: 71 Banking tests + 47 Exchange tests = 118 tests, type checks,
+three frontend builds and three Worker deployment dry runs. The affected frontend
+builds were rerun after the last UI/CSS changes.
+
+Eight checks passed through actual local Worker HTTP APIs on a separate copy:
+reserve/base rate, future scheduling/cancellation, invalid-step rejection,
+applied-cut retry protection, one public bullish bulletin without private notes,
+applied-increase bearish bulletin, two-operation weekly quota, and native Banking
+current rate/history. The working base rate remains 1.000%, with no adjustment
+operations recorded. Temporary QA servers on 8789/8790 are stopped.
+
+Browser checks confirmed both members' filtered My Company selectors, ordinary
+Posts publishing choices, initialized bank rate/history, console reserve/rate and
+enabled adjustment dialog, tooltip text/Escape/viewport bounds, portfolio open and
+close at 1000px/390px and hidden redundant button at 1440px. All thirteen guide
+anchors resolve; mobile tables scroll within their regions and the desktop
+contents panel is bounded to the viewport. No page-wide horizontal overflow was
+found. Working website/background health checks return success.
+
+LOCAL PREVIEWS LEFT RUNNING
+JoeSE: http://127.0.0.1:4173/account
+Guide: http://127.0.0.1:4173/guide
+Console: http://127.0.0.1:4174/
+Banking: http://127.0.0.1:4180/
+Use Alice/Bob and the separate operator. Local changes persist.
+From the JoeTrade root: npm run dev:all; stop with npm run stop:local.
+Ignored operation/proof summaries and logs remain under .wrangler/local/.

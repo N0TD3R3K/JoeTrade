@@ -414,12 +414,15 @@ export function App() {
               Browse listings
             </button>
             <button
+              className="market-portfolio-toggle"
+              aria-expanded={mobilePanel === "portfolio"}
+              aria-controls="market-portfolio"
               onClick={() => {
                 setRightOpen(true);
-                setMobilePanel("portfolio");
+                setMobilePanel((current) => current === "portfolio" ? null : "portfolio");
               }}
             >
-              View portfolio
+              {mobilePanel === "portfolio" ? "Close portfolio" : "View portfolio"}
             </button>
           </div>
           <div className="exchange-grid">

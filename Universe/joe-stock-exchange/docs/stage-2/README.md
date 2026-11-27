@@ -8,8 +8,10 @@ implemented services. Final owner review belongs to Stage 3.
 Stage 3 integration and checks completed November 26, 2026. The working databases
 are now backed up and migrated through Banking `0004` and exchange `0009`, with
 original financial/share records preserved. See the [completion report](../../../../STAGE_3_REPORT_AND_TEST_GUIDE.txt)
-and [current local review procedure](STAGE_3.md). Policy and reserve remain
-unconfigured in the working stores until the operator reviews them.
+and [current local review procedure](STAGE_3.md). At Stage 3 handoff the policy
+and reserve remained unconfigured. The subsequent owner-requested local setup
+initializes J$100,000 reserves and a 1.000% weekly Joe Rate; loan products and
+lending/redistribution budgets remain disabled pending review.
 
 The implementation adds company Posts and removal/moderation, My Company reports,
 company operating accounts, service approval and immutable billing plans, member
@@ -39,9 +41,12 @@ No sample commercial policy was approved in the owner's working database.
 
 Developers initialize company banking from My Company. Matched founding journals
 are attributed to the company without moving cash out of locked `joese-capital`.
-The developer receives company Banking management scope. Shareholders can see
+The developer receives company Banking management scope. Frozen company shareholders can see
 aggregate revenue and the shareholder table; customer receipts, employee agreements
 and service configuration are returned only to the company manager.
+Ordinary stock-market purchases do not grant My Company reports. Posts has a
+separate minimal publishing-choice endpoint, so its ordinary-stock eligibility
+does not expose company statistics or Banking data.
 
 Managers propose an app/service; a bank operator approves the JoeAuth app mapping.
 Managers then create immutable purchase/subscription plans, configure the employee

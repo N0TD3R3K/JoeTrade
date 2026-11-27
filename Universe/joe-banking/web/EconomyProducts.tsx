@@ -7,7 +7,8 @@ export function BankRate() {
     [history, setHistory] = useState<
       { version: number; rate_ppm: number; effective_at: number }[]
     >([]),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [loading, setLoading] = useState(true);
   useEffect(() => {
     void Promise.all([
       api<{ weekly_rate_ppm: number | null }>("/rates/current"),
@@ -17,15 +18,20 @@ export function BankRate() {
         setRate(r.weekly_rate_ppm);
         setHistory(h);
       })
-      .catch((e) => setError((e as Error).message));
+      .catch((e) => setError((e as Error).message))
+      .finally(() => setLoading(false));
   }, []);
   return (
     <section className="panel banking-products">
       <span className="eyebrow">WEEKLY JOE RATE</span>
       <h2>
-        {rate === null
-          ? "Initial rate awaits policy approval"
-          : `${(rate / 10000).toFixed(3)}% per week`}
+        {loading
+          ? "Loading weekly Joe Rate…"
+          : error
+            ? "Weekly Joe Rate unavailable"
+            : rate === null
+              ? "Initial rate awaits policy approval"
+              : `${(rate / 10000).toFixed(3)}% per week`}
       </h2>
       <p>
         Rate changes affect prospective variable interest. Accepted fixed loan

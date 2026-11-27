@@ -55,12 +55,13 @@ not kill unrelated processes or overwrite live JoeAuth credentials.
 
 ## Configuration to review in the console
 
-The working policy, initial rate, lending catalog and budgets are deliberately
-unapproved; the reserve is uninitialized. In **Joe Bank → Bank policy
-configuration**, enter the reviewed settings, save a draft and approve that exact
-version. Then use the separate once-only reserve initialization if testing lending.
-The initial reserve is J$100,000. A zero lending/distribution budget disables that
-use. The sample policy used in isolated QA was not copied into the working stores.
+At the original Stage 3 handoff, the policy and reserve were uninitialized.
+The owner's subsequent request authorized local initialization: policy version 1
+now has a 1.000% weekly Joe Rate, a once-only J$100,000 reserve, no loan products,
+zero lending/redistribution budgets and no duplicate opening grants. Rate
+scheduling and cancellation are available in **Joe Bank**. Review the separate
+[loan proposal](../../../joe-banking/docs/loan-system-proposal.md) before approving
+a lending catalog. Do not repeat reserve initialization.
 
 Rates, service billing, bank offers, employee payroll, tax and redistribution have
 been tested on an isolated copy. Eligibility grants need a real, reviewed JoeAuth

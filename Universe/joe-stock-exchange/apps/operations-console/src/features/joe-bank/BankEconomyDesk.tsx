@@ -13,6 +13,7 @@ import {
   toCents,
 } from "../../../../shared/economy-client";
 import { EconomyDialog } from "../../../../shared/EconomyDialog";
+import { StatHelp } from "../../../../shared/StatHelp";
 import "./bank-economy.css";
 type Status = EconomyStatus & {
   services: {
@@ -1225,7 +1226,7 @@ function Metric({
 }) {
   return (
     <div className="bank-metric">
-      <span>{label}</span>
+      <span className="stat-label">{label}<StatHelp label={label} /></span>
       <strong>{value}</strong>
       {detail && <small>{detail}</small>}
     </div>

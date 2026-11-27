@@ -110,7 +110,7 @@
   position: fixed;
   right: 16px;
   bottom: 16px;
-  z-index: 20;
+  z-index: 40;
   display: flex;
   gap: 8px;
 }
@@ -125,6 +125,9 @@
   box-shadow: 0 4px 20px #0008;
 }
 .market-browsebar button:first-child {
+  display: none;
+}
+.market-browsebar .market-portfolio-toggle {
   display: none;
 }
 .workspace-page {
@@ -375,6 +378,9 @@
   outline-offset: 4px;
 }
 @media (max-width: 1360px) {
+  .market-browsebar .market-portfolio-toggle {
+    display: block;
+  }
   .has-member-navigation .exchange-grid,
   .has-member-navigation.portfolio-collapsed .exchange-grid {
     grid-template-columns: 220px minmax(0, 1fr);
@@ -389,6 +395,7 @@
     z-index: 35;
     width: min(360px, 90vw);
     box-shadow: -20px 0 45px #0009;
+    padding-bottom: 74px;
   }
   .has-member-navigation .exchange-panel-scrim {
     display: block;
